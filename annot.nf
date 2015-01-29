@@ -38,13 +38,14 @@ pseudochr_seq_augustus_ctg = Channel.create()
 pseudochr_seq_make_gaps = Channel.create()
 pseudochr_seq_dist = Channel.create()
 pseudochr_seq_tmhmm = Channel.create()
+pseudochr_seq_orthomcl = Channel.create()
 pseudochr_seq_splitsplice = Channel.create()
 pseudochr_seq.separate(pseudochr_seq_tRNA, pseudochr_seq_ncRNA,
                        pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
                        pseudochr_seq_snap, pseudochr_seq_dist,
                        pseudochr_seq_make_gaps, pseudochr_seq_splitsplice,
-                       pseudochr_seq_tmhmm,
-                       pseudochr_seq_exonerate) { a -> [a, a, a, a, a, a, a, a, a, a]}
+                       pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
+                       pseudochr_seq_exonerate) { a -> [a, a, a, a, a, a, a, a, a, a, a]}
 
 scaffolds_seq_augustus = Channel.create()
 scaffolds_seq_make_gaps = Channel.create()
@@ -61,6 +62,9 @@ pseudochr_agp_make_gaps = Channel.create()
 pseudochr_agp.separate(pseudochr_agp_augustus,
                        pseudochr_agp_make_gaps) { a -> [a, a]}
 
+// TRNA PREDICTION
+// ===============
+
 process predict_tRNA {
     input:
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_tRNA
@@ -68,8 +72,6 @@ process predict_tRNA {
     output:
     file 'aragorn.gff3' into trnas
     stdout into statuslog
-
-    statuslog.bind("tRNA detection started")
 
     """
     ${params.ARAGORN_DIR}/aragorn -t pseudo.pseudochr.fasta | grep -E -C2 '(nucleotides|Sequence)' > 1
@@ -79,20 +81,8 @@ process predict_tRNA {
     """
 }
 
-process make_ref_peps {
-    input:
-    file ref_annot
-    file ref_seq
-
-    output:
-    file 'ref.pep' into ref_pep
-
-    """
-    ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids ${ref_annot} > 1
-    ${params.GT_DIR}/bin/gt extractfeat -matchdescstart -seqfile ${ref_seq} \
-      -join -type CDS -translate -retainids 1 > ref.pep
-    """
-}
+// NCRNA PREDICTION
+// ================
 
 process cmpress {
     input:
@@ -107,7 +97,6 @@ process cmpress {
 }
 
 ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
-
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
@@ -116,8 +105,6 @@ process predict_ncRNA {
     output:
     file 'cm_out' into cmtblouts
     stdout into statuslog
-
-    statuslog.bind("ncRNA detection started")
 
     """
     cmsearch --tblout cm_out --cut_ga models.cm chunk > /dev/null
@@ -140,8 +127,22 @@ process merge_ncrnas {
     """
 }
 
-// better way to do conditional processes?
+// better way to do conditional processes? -> see Gitter chat 2015-01-29
 if (params.run_exonerate) {
+    process make_ref_peps {
+        input:
+        file ref_annot
+        file ref_seq
+
+        output:
+        file 'ref.pep' into ref_pep
+
+        """
+        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids ${ref_annot} > 1
+        ${params.GT_DIR}/bin/gt extractfeat -matchdescstart -seqfile ${ref_seq} \
+          -join -type CDS -translate -retainids 1 > ref.pep
+        """
+    }
     exn_prot_chunk = ref_pep.splitFasta( by: 20)
     exn_genome_chunk = pseudochr_seq_exonerate.splitFasta( by: 3)
     process run_exonerate {
@@ -150,14 +151,14 @@ if (params.run_exonerate) {
 
         output:
         file 'exn_out' into exn_results
-
-        statuslog.bind("exonerate runs started")
+        stdout into statuslog
 
         """
         exonerate -E false --model p2g --showvulgar no --showalignment no \
           --showquerygff no --showtargetgff yes --percent 80 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
            genome.fasta > exn_out
+        echo "exonerate finished"
         """
     }
     process make_hints {
@@ -207,6 +208,7 @@ process run_augustus_pseudo {
         | ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids \
         > augustus.full.tmp.2
     augustus_mark_partial.lua augustus.full.tmp.2 > augustus.gff3
+    echo "AUGUSTUS finished"
     """
 }
 
@@ -359,7 +361,8 @@ process split_splice_models_at_gaps {
     # splice genes at inter-contig gaps, get rid of short partials
     splice_genes_at_gaps.lua tmp3 | \
       ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy | \
-      ${params.GT_DIR}/bin/gt select -rule_files ${params.FILTER_SHORT_PARTIALS_RULE} \
+      ${params.GT_DIR}/bin/gt select \
+          -rule_files ${params.FILTER_SHORT_PARTIALS_RULE} \
       > tmp4
 
     # get rid of genes still having stop codons
@@ -400,11 +403,115 @@ process run_tmhmm {
     """
 }
 
+process get_proteins_for_orthomcl {
+    input:
+    file 'input.gff3' from genemodels_with_tmhmm_gff3
+    file 'pseudo.pseudochr.fasta' from pseudochr_seq_orthomcl
+
+    output:
+    file 'input.gff3' into genemodels_orthomcl_gff3
+    file 'proteins.fas' into proteins_orthomcl_gff3
+
+    """
+    ${params.GT_DIR}/bin/gt extractfeat -type CDS -translate -join -retainids \
+        -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
+        | truncate_header.lua > proteins.fas
+
+
+    ${params.GT_DIR}/bin/gt extractfeat -type pseudogenic_exon -translate \
+        -join -retainids \
+        -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
+        | truncate_header.lua >> proteins.fas
+    """
+}
+
+pepfiles = Channel.from(params.OMCL_PEPFILES)
+process make_ref_input_for_orthomcl {
+    tag { shortname }
+
+    input:
+    set shortname, pepfile from pepfiles
+
+    output:
+    file 'out.gg' into gg_file
+    file 'out.map' into mapfile
+    file 'shortname' into shortname
+    file 'mapped.fasta' into mapped_fasta
+
+    """
+    truncate_header.lua < ${pepfile} > pepfile.trunc
+    map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
+    make_gg_line.lua ${shortname} mapped.fasta > out.gg
+    echo "${shortname}" > shortname
+    """
+}
+
+process make_target_input_for_orthomcl {
+    input:
+    file 'pepfile.fas' from proteins_orthomcl_gff3
+
+    output:
+    file 'out.gg' into gg_file_ref
+    file 'out.map' into mapfile_ref
+    file 'shortname' into shortname_ref
+    file 'mapped.fasta' into mapped_fasta_ref
+
+    """
+    truncate_header.lua < pepfile.fas > pepfile.trunc
+    map_protein_names.lua ${params.GENOME_PREFIX} pepfile.trunc out.map > mapped.fasta
+    make_gg_line.lua ${params.GENOME_PREFIX} mapped.fasta > out.gg
+    echo "${params.GENOME_PREFIX}" > shortname
+    """
+}
+full_gg = gg_file.mix(gg_file_ref).collectFile()
+full_shortnames = shortname.mix(shortname_ref).collectFile()
+full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
+full_mapfile = mapfile.mix(mapfile_ref).collectFile()
+
+process blast_for_orthomcl {
+    cpus 8
+    echo true
+
+    input:
+    file 'mapped.fasta' from full_mapped_fasta
+
+    output:
+    file 'blastout' into orthomcl_blastout
+
+    """
+    formatdb -i mapped.fasta
+    blastall -p blastp -F 'm S' -a 10 -e 1e-5 -d mapped.fasta \
+      -m 8 -i mapped.fasta > blastout
+    """
+}
+
+process run_orthomcl {
+    echo true
+
+    input:
+    file 'blastout' from orthomcl_blastout
+    file 'ggfile' from full_gg
+
+    output:
+    file 'orthomcl_out' into orthomcl_cluster_out
+
+    """
+    ${params.OMCL_DIR}/orthomcl.pl --mode 3 \
+      --blast_file blastout \
+      --gg_file ggfile
+
+    ORTHOMCL_OUTFILE =`find . -mindepth 1 -name all_orthomcl.out`
+    if [ -e $ORTHOMCL_OUTFILE ]; then
+      cp $ORTHOMCL_OUTFILE orthomcl_out
+    fi
+    """
+}
+
 // ========  REPORTING ========
 
 process report {
     input:
-    file 'models.gff3' from genemodels_with_tmhmm_gff3
+    file 'models.gff3' from genemodels_orthomcl_gff3
 
     output:
     stdout into result
@@ -412,7 +519,7 @@ process report {
     """
     ls -HAl models.gff3
     ${params.GT_DIR}/bin/gt stat models.gff3
-    cat models.gff3
+ #   cat models.gff3
     """
 }
 
@@ -421,5 +528,5 @@ result.subscribe {
 }
 
 statuslog.subscribe {
-    println "log:  " + it
+   // println "log:  " + it
 }
