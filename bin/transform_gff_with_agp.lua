@@ -30,7 +30,6 @@ end
 
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
-local lfs = require("lfs")
 
 gff = arg[1]
 agp = arg[2]
