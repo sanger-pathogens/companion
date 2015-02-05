@@ -1,0 +1,1 @@
+for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ;       do bsub -J out.$x -R "select[type==X86_64 && mem > 6000] rusage[mem=6000]" -M6000000 -o output2.$x.o -e output2.$x.e "~tdo/Bin/goTilingGraph.pl $x.coords  $contig Res"; done 
