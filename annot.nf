@@ -5,6 +5,7 @@ statuslog = Channel.create()
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
+go_obo = file(params.go_obo)
 ncrna_models = file(params.ncrna_models)
 
 process contiguate_pseudochromosomes {
@@ -20,7 +21,7 @@ process contiguate_pseudochromosomes {
     file 'pseudo.contigs.fasta' into contigs_seq
 
     """
-    PATH=${params.ABACAS_DIR}/:$PATH ${params.ABACAS_DIR}/abacas2.nonparallel.sh \
+    abacas2.nonparallel.sh \
       ${ref_seq} ${genome_file}
     abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
       "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
@@ -31,6 +32,7 @@ process contiguate_pseudochromosomes {
 // make multiple copies of the sequences (better way to do this?!! XXX)
 pseudochr_seq_tRNA = Channel.create()
 pseudochr_seq_ncRNA = Channel.create()
+pseudochr_seq_ratt = Channel.create()
 pseudochr_seq_exonerate = Channel.create()
 pseudochr_seq_augustus = Channel.create()
 pseudochr_seq_snap = Channel.create()
@@ -40,12 +42,12 @@ pseudochr_seq_dist = Channel.create()
 pseudochr_seq_tmhmm = Channel.create()
 pseudochr_seq_orthomcl = Channel.create()
 pseudochr_seq_splitsplice = Channel.create()
-pseudochr_seq.separate(pseudochr_seq_tRNA, pseudochr_seq_ncRNA,
-                       pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
-                       pseudochr_seq_snap, pseudochr_seq_dist,
-                       pseudochr_seq_make_gaps, pseudochr_seq_splitsplice,
-                       pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
-                       pseudochr_seq_exonerate) { a -> [a, a, a, a, a, a, a, a, a, a, a]}
+pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
+                   pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
+                   pseudochr_seq_snap, pseudochr_seq_dist,
+                   pseudochr_seq_make_gaps, pseudochr_seq_splitsplice,
+                   pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
+                   pseudochr_seq_exonerate)
 
 scaffolds_seq_augustus = Channel.create()
 scaffolds_seq_make_gaps = Channel.create()
@@ -74,9 +76,10 @@ process predict_tRNA {
     stdout into statuslog
 
     """
-    ${params.ARAGORN_DIR}/aragorn -t pseudo.pseudochr.fasta | grep -E -C2 '(nucleotides|Sequence)' > 1
+    aragorn -t pseudo.pseudochr.fasta \
+        | grep -E -C2 '(nucleotides|Sequence)' > 1
     aragorn_to_gff3.lua < 1 > 2
-    ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids 2 > aragorn.gff3
+    gt gff3 -sort -tidy -retainids 2 > aragorn.gff3
     echo "tRNA finished"
     """
 }
@@ -84,7 +87,7 @@ process predict_tRNA {
 // NCRNA PREDICTION
 // ================
 
-process cmpress {
+process cmpress_ncrna_models {
     input:
     file ncrna_models
 
@@ -113,6 +116,8 @@ process predict_ncRNA {
 }
 
 process merge_ncrnas {
+    cache 'deep'
+
     input:
     file 'cmtblout' from cmtblouts.collectFile()
 
@@ -122,10 +127,13 @@ process merge_ncrnas {
 
     """
     infernal_to_gff3.lua < ${cmtblout} > 1
-    ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids 1 > ncrna.gff3
+    gt gff3 -sort -tidy -retainids 1 > ncrna.gff3
     echo "ncRNA merged"
     """
 }
+
+// PROTEIN-DNA ALIGNMENT
+// =====================
 
 // better way to do conditional processes? -> see Gitter chat 2015-01-29
 if (params.run_exonerate) {
@@ -138,8 +146,8 @@ if (params.run_exonerate) {
         file 'ref.pep' into ref_pep
 
         """
-        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids ${ref_annot} > 1
-        ${params.GT_DIR}/bin/gt extractfeat -matchdescstart -seqfile ${ref_seq} \
+        gt gff3 -sort -tidy -retainids ${ref_annot} > 1
+        gt extractfeat -matchdescstart -seqfile ${ref_seq} \
           -join -type CDS -translate -retainids 1 > ref.pep
         """
     }
@@ -179,6 +187,64 @@ if (params.run_exonerate) {
     }
 }
 
+// RATT
+// ====
+
+process ratt_make_ref_embl {
+    input:
+    file ref_annot
+    file go_obo
+    file ref_seq
+
+    output:
+    file '*.embl' into ref_embl
+    stdout into statuslog
+
+    """
+    # split away
+    gt inlineseq_split -seqfile /dev/null -gff3file ref_without_seq.gff3 ${ref_annot}
+    gt inlineseq_add -seqfile ${ref_seq} -matchdescstart ref_without_seq.gff3 > ref_with_seq.gff3
+    gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo
+    """
+}
+
+process run_ratt {
+    input:
+    file 'in*.embl' from ref_embl
+    file 'pseudo.pseudochr.fasta' from pseudochr_seq_ratt
+
+    output:
+    file 'Out*.final.embl' into ratt_result
+    file 'Out*.Report.txt' into ratt_reports
+    stdout into statuslog
+
+    """
+    start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
+    """
+}
+
+process ratt_to_gff3 {
+    input:
+    file 'in*.embl' from ratt_result
+    file 'in*.report' from ratt_reports
+
+    output:
+    file 'ratt.gff3' into ratt_gff3
+    stdout into statuslog
+
+    """
+    ratt_embl_to_gff3.lua in*.embl | \
+      gt gff3 -sort -retainids -tidy > \
+      ratt.tmp.gff3
+    ratt_remove_problematic.lua ratt.tmp.gff3 in*report | \
+      gt gff3 -sort -retainids -tidy > \
+      ratt.gff3
+    """
+}
+
+// AUGUSTUS
+// ================
+
 process run_augustus_pseudo {
     input:
     //file 'augustus.hints' from exn_hints
@@ -195,7 +261,7 @@ process run_augustus_pseudo {
 
     """
     export AUGUSTUS_CONFIG_PATH=${params.AUGUSTUS_CONFIG_PATH}
-    ${params.AUGUSTUS_DIR}/augustus \
+    augustus \
         --species=${params.AUGUSTUS_SPECIES} \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both \
@@ -205,7 +271,7 @@ process run_augustus_pseudo {
         --extrinsicCfgFile=${params.AUGUSTUS_EXTRINSIC_CFG} \
         pseudo.pseudochr.fasta > augustus.full.tmp
     augustus_to_gff3.lua < augustus.full.tmp \
-        | ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids \
+        | gt gff3 -sort -tidy -retainids \
         > augustus.full.tmp.2
     augustus_mark_partial.lua augustus.full.tmp.2 > augustus.gff3
     echo "AUGUSTUS finished"
@@ -226,14 +292,14 @@ process run_augustus_contigs {
 
     """
     export AUGUSTUS_CONFIG_PATH=${params.AUGUSTUS_CONFIG_PATH}
-    ${params.AUGUSTUS_DIR}/augustus --species=${params.AUGUSTUS_SPECIES} \
+    augustus --species=${params.AUGUSTUS_SPECIES} \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both --genemodel=partial \
         --gff3=on \
         --noInFrameStop=true \
         pseudo.contigs.fasta > augustus.ctg.tmp
     augustus_to_gff3.lua < augustus.ctg.tmp \
-        | ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids \
+        | gt gff3 -sort -tidy -retainids \
         > augustus.ctg.tmp.2
     augustus_mark_partial.lua augustus.ctg.tmp.2 > augustus.ctg.gff3
 
@@ -242,18 +308,18 @@ process run_augustus_contigs {
         pseudo.scaffolds.agp \
         pseudo.contigs.fasta \
         pseudo.scaffolds.fasta | \
-        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids > \
+        gt gff3 -sort -tidy -retainids > \
         augustus.ctg.scaf.mapped.gff3
     transform_gff_with_agp.lua \
         augustus.ctg.scaf.mapped.gff3 \
         pseudo.pseudochr.agp \
         pseudo.scaffolds.fasta \
         pseudo.pseudochr.fasta | \
-        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids > \
+        gt gff3 -sort -tidy -retainids > \
         augustus.scaf.pseudo.mapped.tmp.gff3
     clean_accessions.lua \
         augustus.scaf.pseudo.mapped.tmp.gff3 | \
-        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids > \
+        gt gff3 -sort -tidy -retainids > \
         augustus.scaf.pseudo.mapped.gff3
     """
 }
@@ -267,43 +333,51 @@ process run_snap {
     stdout into statuslog
 
     """
-    ${params.SNAP_DIR}/snap -gff -quiet  ${params.SNAP_MODEL} \
+    snap -gff -quiet  ${params.SNAP_MODEL} \
         pseudo.pseudochr.fasta > snap.tmp
     snap_gff_to_gff3.lua snap.tmp > snap.gff3
     """
 }
 
 process integrate_genemodels {
+    cache 'deep'
+
     input:
     file 'augustus.full.gff3' from augustus_pseudo_gff3
     file 'augustus.ctg.gff3' from augustus_ctg_gff3
     file 'snap.full.gff3' from snap_gff3
+    file 'ratt.full.gff3' from ratt_gff3
 
     output:
     file 'integrated.fixed.sorted.gff3' into integrated_gff3
 
     """
     unset GT_RETAINIDS
-    ${params.GT_DIR}/bin/gt gff3 -fixregionboundaries -retainids no -sort -tidy \
-        augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 \
+    gt gff3 -fixregionboundaries -retainids no -sort -tidy \
+        augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 ratt.full.gff3 \
         > merged.gff3
     export GT_RETAINIDS=yes
 
     # choose best gene model for overlapping region
     integrate_gene_calls.lua merged.gff3 | \
-        ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids \
+        gt gff3 -sort -tidy -retainids \
         > integrated.gff3
 
-    # make this parameterisable
+    # TODO: make this parameterisable
     fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
 
     # make sure final output is sorted
-    ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids \
+    gt gff3 -sort -tidy -retainids \
       integrated.fixed.gff3 > integrated.fixed.sorted.gff3
     """
 }
 
+// MERGE ALL GENES TO FINAL SET AND CLEANUP
+// ========================================
+
 process merge_structural {
+    cache 'deep'
+
     input:
     file 'ncrna.gff3' from ncrnafile
     file 'trna.gff3' from trnas
@@ -313,7 +387,7 @@ process merge_structural {
     file 'structural.full.gff3' into genemodels_gff3
 
     """
-    ${params.GT_DIR}/bin/gt gff3 -sort -tidy ncrna.gff3 trna.gff3 integrated.gff3 \
+    gt gff3 -sort -tidy ncrna.gff3 trna.gff3 integrated.gff3 \
         > structural.full.gff3
     """
 }
@@ -331,13 +405,14 @@ process add_gap_features {
 
     """
     make_contig_features_from_agp.lua pseudo.scaffolds.agp "within scaffold" | \
-      ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids > contigs.gff3
+      gt gff3 -sort -tidy -retainids > contigs.gff3
 
     transform_gff_with_agp.lua contigs.gff3 \
-      pseudo.pseudochr.agp pseudo.scaffolds.fasta pseudo.pseudochr.fasta "between scaffolds" | \
-      ${params.GT_DIR}/bin/gt gff3 -sort -tidy -retainids > contigs2.gff3
+      pseudo.pseudochr.agp pseudo.scaffolds.fasta \
+      pseudo.pseudochr.fasta "between scaffolds" | \
+      gt gff3 -sort -tidy -retainids > contigs2.gff3
 
-    ${params.GT_DIR}/bin/gt merge -force -o merged_out.gff3 \
+    gt merge -force -o merged_out.gff3 \
       merged_in.gff3 contigs2.gff3
     """
 }
@@ -352,23 +427,23 @@ process split_splice_models_at_gaps {
 
     """
     # sort
-    ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy < input.gff3 > tmp2
+    gt gff3 -sort -retainids -tidy < input.gff3 > tmp2
 
     # split genes at inter-scaffold gaps
     split_genes_at_gaps.lua tmp2 | \
-      ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy > tmp3
+      gt gff3 -sort -retainids -tidy > tmp3
 
     # splice genes at inter-contig gaps, get rid of short partials
     splice_genes_at_gaps.lua tmp3 | \
-      ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy | \
-      ${params.GT_DIR}/bin/gt select \
+      gt gff3 -sort -retainids -tidy | \
+      gt select \
           -rule_files ${params.FILTER_SHORT_PARTIALS_RULE} \
       > tmp4
 
     # get rid of genes still having stop codons
     filter_genes_with_stop_codons.lua \
       tmp4 pseudo.pseudochr.fasta | \
-      ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy > merged_out.gff3
+      gt gff3 -sort -retainids -tidy > merged_out.gff3
     """
 }
 
@@ -385,6 +460,9 @@ process add_polypeptides {
     """
 }
 
+// TMHMM
+// =====
+
 process run_tmhmm {
     input:
     file 'input.gff3' from genemodels_with_polypeptides_gff3
@@ -394,31 +472,39 @@ process run_tmhmm {
     file 'output.gff3' into genemodels_with_tmhmm_gff3
 
     """
-    ${params.GT_DIR}/bin/gt extractfeat -type CDS -join -translate \
+    gt extractfeat -type CDS -join -translate \
         -seqfile pseudo.pseudochr.fasta -matchdescstart \
         input.gff3 > proteins.fas
-    ${params.TMHMM_DIR}/tmhmm --noplot < proteins.fas > tmhmm.out
+    tmhmm --noplot < proteins.fas > tmhmm.out
     tmhmm_to_gff3.lua tmhmm.out input.gff3 | \
-        ${params.GT_DIR}/bin/gt gff3 -sort -retainids -tidy > output.gff3
+        gt gff3 -sort -retainids -tidy > output.gff3
     """
 }
 
+// ORTHOMCL AND FUNCTIONAL TRANSFER
+// ================================
+
+genemodels_for_omcl_proteins = Channel.create()
+genemodels_for_omcl_annot = Channel.create()
+genemodels_with_tmhmm_gff3.into(genemodels_for_omcl_proteins,
+                                genemodels_for_omcl_annot)
+
 process get_proteins_for_orthomcl {
     input:
-    file 'input.gff3' from genemodels_with_tmhmm_gff3
+    file 'input.gff3' from genemodels_for_omcl_proteins
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_orthomcl
 
     output:
     file 'input.gff3' into genemodels_orthomcl_gff3
-    file 'proteins.fas' into proteins_orthomcl_gff3
+    file 'proteins.fas' into proteins_orthomcl
 
     """
-    ${params.GT_DIR}/bin/gt extractfeat -type CDS -translate -join -retainids \
+    gt extractfeat -type CDS -translate -join -retainids \
         -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
         | truncate_header.lua > proteins.fas
 
 
-    ${params.GT_DIR}/bin/gt extractfeat -type pseudogenic_exon -translate \
+    gt extractfeat -type pseudogenic_exon -translate \
         -join -retainids \
         -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
         | truncate_header.lua >> proteins.fas
@@ -448,7 +534,7 @@ process make_ref_input_for_orthomcl {
 
 process make_target_input_for_orthomcl {
     input:
-    file 'pepfile.fas' from proteins_orthomcl_gff3
+    file 'pepfile.fas' from proteins_orthomcl
 
     output:
     file 'out.gg' into gg_file_ref
@@ -470,7 +556,7 @@ full_mapfile = mapfile.mix(mapfile_ref).collectFile()
 
 process blast_for_orthomcl {
     cpus 8
-    echo true
+    cache 'deep'
 
     input:
     file 'mapped.fasta' from full_mapped_fasta
@@ -486,7 +572,7 @@ process blast_for_orthomcl {
 }
 
 process run_orthomcl {
-    echo true
+    cache 'deep'
 
     input:
     file 'blastout' from orthomcl_blastout
@@ -496,14 +582,38 @@ process run_orthomcl {
     file 'orthomcl_out' into orthomcl_cluster_out
 
     """
-    ${params.OMCL_DIR}/orthomcl.pl --mode 3 \
+    orthomcl.pl --mode 3 \
       --blast_file blastout \
       --gg_file ggfile
 
-    ORTHOMCL_OUTFILE =`find . -mindepth 1 -name all_orthomcl.out`
-    if [ -e $ORTHOMCL_OUTFILE ]; then
-      cp $ORTHOMCL_OUTFILE orthomcl_out
-    fi
+    cp `find orthomcl* -mindepth 1 -name all_orthomcl.out` orthomcl_out
+    """
+}
+
+process annotate_orthologs {
+    cache 'deep'
+
+    input:
+    file 'orthomcl_out' from orthomcl_cluster_out
+    file 'mapfile' from full_mapfile
+    file 'input.gff3' from genemodels_for_omcl_annot
+
+    output:
+    file 'with_func.gff3' into gff3_with_ortho_transferred
+    file 'orthomcl.gaf' into gaf_with_ortho_transferred
+
+    """
+    # annotate GFF with ortholog clusters and members
+    map_clusters_gff.lua input.gff3 orthomcl_out mapfile > with_clusters.gff3
+
+    # transfer functional annotation from orthologs
+    transfer_annotations_from_gff.lua with_clusters.gff3 \
+        ${params.OMCL_GFFFILE} > with_func.gff3
+
+    # transfer GOs from orthologs GAF
+    transfer_annotations_from_gaf.lua with_func.gff3 \
+        ${params.OMCL_GAFFILE} ${params.OMCL_DB} \
+        ${params.OMCL_TAXON_ID} > orthomcl.gaf
     """
 }
 
@@ -511,15 +621,15 @@ process run_orthomcl {
 
 process report {
     input:
-    file 'models.gff3' from genemodels_orthomcl_gff3
+    file 'models.gff3' from gff3_with_ortho_transferred
 
     output:
     stdout into result
 
     """
     ls -HAl models.gff3
-    ${params.GT_DIR}/bin/gt stat models.gff3
- #   cat models.gff3
+    gt stat models.gff3
+    #cat models.gff3
     """
 }
 
