@@ -49,9 +49,8 @@ ADD https://github.com/genometools/genometools/archive/master.zip /opt/genometoo
 RUN cd /opt && \
     unzip genometools-master.zip && \
     cd /opt/genometools-master && \
-    make -j3 && \
-    make -j3 install && \
-    make cleanup && \
+    make -j3 amalgamation=yes && \
+    make -j3 amalgamation=yes install && \
     cd / && \
     rm -rf /opt/genometools-master*
 
