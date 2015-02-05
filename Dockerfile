@@ -19,21 +19,17 @@ RUN echo "deb http://http.debian.net/debian testing main" > /etc/apt/sources.lis
 RUN apt-get update -q -q
 
 #
-# Install utils
-#
-RUN apt-get install build-essential --yes --force-yes
-
-#
 # Install dependencies from Debian
 #
-RUN apt-get install aragorn hmmer lua5.1 ncbi-blast+ snap --yes --force-yes
-RUN apt-get install liblua5.1-0 libcairo2 zlib1g libbz2-1.0 libexpat1 libpth20 \
-                    libncurses5 libsqlite3-0 libpango-1.0-0  \
+RUN apt-get install build-essential aragorn hmmer lua5.1 ncbi-blast+ snap \
+                    liblua5.1-0 libcairo2 zlib1g libbz2-1.0 libexpat1 libpth20 \
+                    libncurses5 libsqlite3-0 libpango-1.0-0 \
                     libpangocairo-1.0-0 libtre5 python-ctypes liblua5.1-0-dev \
                     lua-md5-dev lua-filesystem-dev lua-lpeg-dev libcairo2-dev \
                     zlib1g-dev libbz2-dev libexpat1-dev libncurses5-dev \
                     libsqlite3-dev libbam-dev libpango1.0-dev libtre-dev \
-                    python --yes --force-yes
+                    python unzip bioperl libstorable-perl mummer \
+                    --yes --force-yes
 
 #
 # Install AUGUSTUS
@@ -45,11 +41,6 @@ RUN cd /opt && \
     mv augustus* augustus && \
     cd augustus && \
     make
-
-#
-# Install Git
-#
-RUN apt-get install unzip --yes --force-yes
 
 #
 # Install GenomeTools (most recent git master)
@@ -67,7 +58,6 @@ RUN cd /opt && \
 #
 # Install OrthoMCL
 #
-RUN apt-get install bioperl libstorable-perl --yes --force-yes
 ADD http://www.orthomcl.org/common/downloads/software/unsupported/v1.4/ORTHOMCL_V1.4_mcl-02-063.tar /opt/omcl.tar
 RUN cd /opt && \
     tar -xvf omcl.tar && \
@@ -91,18 +81,18 @@ ADD http://geneontology.org/ontology/go.obo /opt/go.obo
 ADD ./RATT /opt/RATT
 
 #
-# clean up dev stuff
+# clean up dev stuff (not strictly necessary)
 #
 RUN apt-get purge build-essential --yes --force-yes
-RUN apt-get remove liblua5.1-0-dev \
-                   lua-md5-dev lua-filesystem-dev lua-lpeg-dev libcairo2-dev \
-                   zlib1g-dev libbz2-dev libexpat1-dev libncurses5-dev \
-                   libsqlite3-dev libbam-dev libpango1.0-dev libtre-dev \
-                   --yes --force-yes
+RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
+                   libcairo2-dev zlib1g-dev libbz2-dev libexpat1-dev \
+                   libncurses5-dev libsqlite3-dev libbam-dev libpango1.0-dev \
+                   libtre-dev --yes --force-yes
 
 # TODO: add ABACAS
 
-# TODO: add ref species
+
+# TODO: add ref species models etc.
 # ADD fgram_base /opt/augustus/config/species/
 
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
