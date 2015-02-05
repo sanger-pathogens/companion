@@ -17,7 +17,6 @@ RUN echo "deb http://http.debian.net/debian testing main" > /etc/apt/sources.lis
 # Update apt
 #
 RUN apt-get update -q -q
-RUN apt-get upgrade --yes --force-yes
 
 #
 # Install utils
