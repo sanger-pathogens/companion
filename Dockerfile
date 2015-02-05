@@ -102,4 +102,4 @@ ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
 ENV PERL5LIB /opt/ORTHOMCLV1.4/:$PERL5LIB
 ENV PATH_TO_ORTHOMCL /opt/ORTHOMCLV1.4/
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2
