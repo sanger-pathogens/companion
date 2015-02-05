@@ -81,6 +81,11 @@ ADD http://geneontology.org/ontology/go.obo /opt/go.obo
 ADD ./RATT /opt/RATT
 
 #
+# install ABACAS (keep up to date from build directory)
+#
+ADD ./ABACAS2 /opt/ABACAS2
+
+#
 # clean up dev stuff (not strictly necessary)
 #
 RUN apt-get purge build-essential --yes --force-yes
@@ -88,9 +93,6 @@ RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
                    libcairo2-dev zlib1g-dev libbz2-dev libexpat1-dev \
                    libncurses5-dev libsqlite3-dev libbam-dev libpango1.0-dev \
                    libtre-dev --yes --force-yes
-
-# TODO: add ABACAS
-
 
 # TODO: add ref species models etc.
 # ADD fgram_base /opt/augustus/config/species/
