@@ -12,5 +12,5 @@ fi
 
 grep Contig $pre.*.contigs.gff | perl -nle '/label=\"\S*contig=(\S+)\";note/;print $1' > List.mappingcontig.fofn
 
-perl ~tdo/Bin/Assembly.deleteContigs.pl List.mappingcontig.fofn $contig $resultName
+Assembly.deleteContigs.pl List.mappingcontig.fofn $contig $resultName
 #rm  List.mappingcontig.fofn
