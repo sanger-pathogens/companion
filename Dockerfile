@@ -18,6 +18,10 @@ RUN echo "deb http://http.debian.net/debian testing main" > /etc/apt/sources.lis
 #
 RUN apt-get update -q -q
 
+# better for bioperl SearchIO?
+# RUN cpanm Math::CDF Math::Round && \
+# rm -rf /root/.cpanm/work/
+
 #
 # Install dependencies from Debian
 #
