@@ -103,6 +103,6 @@ RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
-ENV PERL5LIB /opt/ORTHOMCLV1.4/:$PERL5LIB
+ENV PERL5LIB /opt/ORTHOMCLV1.4/:/opt/RATT:$PERL5LIB
 ENV PATH_TO_ORTHOMCL /opt/ORTHOMCLV1.4/
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2
