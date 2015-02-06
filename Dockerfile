@@ -32,15 +32,13 @@ RUN apt-get install build-essential aragorn hmmer lua5.1 ncbi-blast+ snap \
                     --yes --force-yes
 
 #
-# Install AUGUSTUS
+# Install AUGUSTUS (binaries)
 #
 ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz /opt/augustus-3.0.3.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
-    mv augustus* augustus && \
-    cd augustus && \
-    make
+    mv augustus* augustus
 
 #
 # Install GenomeTools (most recent git master)
@@ -55,9 +53,9 @@ RUN cd /opt && \
     rm -rf /opt/genometools-master*
 
 #
-# Add Bio::SearchIO (needed for OrthoMCL)
+# Add Perl deps (needed for OrthoMCL)
 #
-RUN cpanm Bio::SearchIO && \
+RUN cpanm --force Carp Bio::SearchIO List::Util Getopt::Long && \
     rm -rf /root/.cpanm/work/
 
 #
@@ -105,6 +103,6 @@ RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
-ENV PERL5LIB /opt/ORTHOMCLV1.4/:/opt/RATT:$PERL5LIB
+ENV PERL5LIB /opt/ORTHOMCLV1.4/:/opt/RATT/:/opt/ABACAS2/:$PERL5LIB
 ENV PATH_TO_ORTHOMCL /opt/ORTHOMCLV1.4/
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2:$PATH
