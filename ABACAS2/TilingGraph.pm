@@ -1,7 +1,7 @@
 package TilingGraph;
 
 # tdo 01.11.09: include that when new contig, the contig with max
-# overhang left, is take 
+# overhang left, is take
 
 
 
@@ -26,7 +26,7 @@ our @ISA = qw(Exporter);
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
 our %EXPORT_TAGS = ( 'all' => [ qw(
-        
+
 ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
@@ -69,9 +69,9 @@ This model will be able to join contigs of different assemblers to a
 pseudo molecule. The ordering is done by mapping the congitig with
 nucmer (mummer package) against a given Reference: doNumcer()
 For better performance the contigs itself will be blasted against each
-others to define there potential overlap, see 
+others to define there potential overlap, see
 blastOverlaps.pl blast contigs.fasta contigs.fasta output_prefix
--report_overlaps -minLength 50 -endTolerance 10 -annotate 
+-report_overlaps -minLength 50 -endTolerance 10 -annotate
 of mh12.
 
 This porgram will load the nucmer and the overlap files, and define if
@@ -121,15 +121,15 @@ sub startTiling
   my $contigFile       = shift;
   my $resultname       = shift;
 
-  
+
   if (!defined( $CHECK_OVERLAP)) {
 	$CHECK_OVERLAP=1;
   }
 
   $countIT=0;
   $NAME=$resultname;
-  
-  
+
+
   ### load contigs
   my $ref_contigSeq= loadFasta($contigFile);
 
@@ -146,11 +146,11 @@ sub startTiling
 
   ### construct the sequence
   my ($ref_Sequence,$ref_referenceCoverage,$ref_contigGFF,$ref_gapsGFF) = printPositionGraph($ref_positionGraph,$ref_contigLength,$ref_overlapGraph,$ref_contigSeq,$ref_contigStrand);
-  
+
 
   ### WRITE THE FILES
   save($resultname,$ref_Sequence,$ref_referenceCoverage,$ref_contigGFF,$ref_gapsGFF);
-  
+
 }
 
 sub save{
@@ -158,19 +158,19 @@ sub save{
   my $ref_Sequence  = shift;
   my $ref_referenceCoverage = shift;
   my $ref_contigGFF = shift;
-  my $ref_gapsGFF      = shift; 
+  my $ref_gapsGFF      = shift;
   my $count=0;
-  
-  
+
+
   foreach my $chr ( sort keys %$ref_Sequence) {
-	
-	
+
+
 	open (F, "> $resultName.$chr.fna") or die "Couldn't open $resultName: $!\n";
 	print F ">$chr\n";
 	print F join('',$$ref_Sequence{$chr});
 	print F "\n";
 	close(F);
-	
+
 #	open (F, "> $resultName$chr.gaps.gff") or die "Couldn't open $resultName.gff: $!\n";
 #	print F $$ref_gapsGFF;
 #	close(F);
@@ -185,27 +185,27 @@ sub save{
 	my $res = join('',@{$$ref_referenceCoverage{$chr}});
 	print F $res;
 	close(F);
-	
+
 	open (F, "> $resultName.$chr.contigs.gff") or die "Couldn't open $resultName.gff: $!\n";
 	print F $$ref_contigGFF{$chr};
 	close(F);
   }
-  
+
 
 }
 
 =head2 makeOverlap
-        
+
         Usage           :
 
         Arg [1]         : Overlap report
 
-        Example         : 
+        Example         :
 
         Description     : generate the overlap of two contigs and returns  %contigOverlaps
 
         Returntype      : reference to %contigOverlaps
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -215,55 +215,55 @@ sub makeOverlap{
   my $contig2 = shift;
   my $ref_contigSeq = shift;
   my $NAME= shift;
-  
-  
+
+
   $countIT++;
   system("rm tmp.$NAME.$countIT.* &> /dev/null");
-  
+
   open (F, "> tmp.$NAME.$countIT.fasta" ) or die "Couldnprobelm s\n";
   print F ">$contig1\n".join('',@{$$ref_contigSeq{$contig1}}),"\n>$contig2\n", join('',@{$$ref_contigSeq{$contig2}}),"\n";
   close(F) or die "Problems, I couldn't close the file handle: $! \n";
 
   while (!(-R "tmp.$NAME.$countIT.fasta" && -s "tmp.$NAME.$countIT.fasta")) {
 	sleep(3);
-	
+
   }
 
- 	sleep(3); 
+ 	sleep(3);
   ## extract the contigs
-  my $call="export PERL5LIB; perl ~tdo/pathogen/user/mh12/perl/blastOverlaps.pl blast tmp.$NAME.$countIT.fasta tmp.$NAME.$countIT.fasta tmp.$NAME.$countIT.run -report_overlaps -minLength 50 -endTolerance $MAX_CONTIG_END -annotate -annotate_only";
+  my $call="export PERL5LIB; blastOverlaps.pl blast tmp.$NAME.$countIT.fasta tmp.$NAME.$countIT.fasta tmp.$NAME.$countIT.run -report_overlaps -minLength 50 -endTolerance $MAX_CONTIG_END -annotate -annotate_only";
  # print $call,"\n";
 #  $ENV{PERL5LIB}="/software/badger/lib/perl5:/software/pathogen/psu_cvs/genlib/perl/src:/software/pathogen/external/lib/site_perl:/software/pathogen/external/lib/perl:/software/pathogen/external/lib/perl/lib:/software/pathogen/external/lib/perl/lib/site_perl:/software/pathogen/external/lib/perl5:/software/pubseq/PerlModules/Modules:/software/badger/lib/perl5:/software/noarch/badger/lib/perl5:/nfs/users/nfs_t/tdo/bin/oldPerl:/nfs/users/nfs_t/tdo/pathogen/user/mh12/perl/lib:/software/pathogen/projects/protocols/lib/perl5";
  # system("set ");
 #  print("$call");
-  
-  
+
+
   !system("$call " ) or die "Problem with: $call";
 
   while (!(-R "tmp.$NAME.$countIT.run.blast.annotated.gz" && -s "tmp.$NAME.$countIT.run.blast.annotated.gz")) {
 	sleep(3);
   }
   sleep(3);
-  
+
   # system ("zcat  tmp.$NAME.$countIT.run.blast.annotated.gz ");
   my ($ref_overlapGraph,$ref_repeatContigs) = loadOverlap("tmp.$NAME.$countIT.run.blast.annotated.gz");
-  
+
   #  system("rm tmp.$NAME.$countIT.*");
-  
+
   return ($ref_overlapGraph,$ref_repeatContigs)
 }
 =head2 loadOverlap
-        
+
         Usage           :
 
         Arg [1]         : Overlap report
 
-        Example         : 
+        Example         :
 
         Description     : load the Overlap into a hash %contigOverlaps
 
         Returntype      : reference to %contigOverlaps
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -271,14 +271,14 @@ sub makeOverlap{
 sub loadOverlap
 {
 # quick if rep OVERLAP All.overlap.blast.annotated >
-# All.overlap.blast.annotated.Overlap 
+# All.overlap.blast.annotated.Overlap
   my $overlapFile = shift;
 
 
   my %contigOverlaps;
   my %repeatContigs;
 
-  
+
   open(F, "gunzip -c $overlapFile | ") ||
 	die "Couldn't open File $overlapFile: $!\n";
 
@@ -287,24 +287,24 @@ sub loadOverlap
   close(F);
 
   my ($contig1,$contig2,$id,$overlap,$start1,$end1,$start2,$end2);
-  
+
   foreach (@F) {
 	#	print ;
-	
+
 	if (/OVERLAP/) {
 	  ($contig1,$contig2,$id,$overlap,$start1,$end1,$start2,$end2) = $_ =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+\d+\s+\d+\s(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s/;
 	  #by definition, there can be just one overlap between contigs;
 	  # but they are summetric!
 	  #	  print "$id 90 \n";
-	  
+
 	  if (($id>=100 && $overlap >= 20)
 		  ||
 		  (($id>=99 && $overlap >= 100))
 		 ) {
-		
+
 		#construct the overlap adjactace graph. Each node is
-		#(orientation contig1, ori. contig2, 
-		
+		#(orientation contig1, ori. contig2,
+
 		#get orientation: general code not just for blast
 		my $contigOrientation1="+";
 		my $contigOrientation2="+";
@@ -319,30 +319,30 @@ sub loadOverlap
 		$contigOverlaps{$contig1}{$contig2}="$contigOrientation1,$contigOrientation2,$start1,$end1,$start2,$end2";
 	  }
 	}
-	
+
   }
-  
+
   if (!defined($contigOverlaps{$contig1}{$contig2})) {
 	my %longestOverlap;
 	$longestOverlap{$contig1}{$contig2}=0;
 	$longestOverlap{$contig2}{$contig1}=0;
-	
+
 	foreach (@F) {
 	  #	  print ;
-	  
+
 	  ($contig1,$contig2,$id,$overlap,$start1,$end1,$start2,$end2) = $_ =~ /^(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+\d+\s+\d+\s(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s/;
 	  #by definition, there can be just one overlap between contigs;
 	  # but they are summetric!
 	  #	  print "$id 90 \n";
-	  
-	  
+
+
 	  if ($id>=99 && $overlap >= 500 && $contig1 ne $contig2)		{
-		
+
 #		print "took it!!!\n";
-		
+
 		#construct the overlap adjactace graph. Each node is
-		#(orientation contig1, ori. contig2, 
-		
+		#(orientation contig1, ori. contig2,
+
 		#get orientation: general code not just for blast
 		my $contigOrientation1="+";
 		my $contigOrientation2="+";
@@ -354,22 +354,22 @@ sub loadOverlap
 		}
 		if (!defined($longestOverlap{$contig1}{$contig2}) || $overlap > $longestOverlap{$contig1}{$contig2}) {
 		  #		  print "Booked it";
-		  
+
 		  #	print "$contigOrientation1,$contigOrientation2,$start1,$end1,$start2,$end2";
 		  $contigOverlaps{$contig1}{$contig2}="$contigOrientation1,$contigOrientation2,$start1,$end1,$start2,$end2";
 		  $longestOverlap{$contig1}{$contig2}=$overlap
 		}
-		
+
 	  }
 	}
   }
   #  print Dumper %contigOverlaps;
-  
+
   return (\%contigOverlaps,\%repeatContigs)
 }
 
 =head2 loadShowTiling
-        
+
         Usage           :
 
         Arg [1]         : Showtiling arquive of all cointigs agianst the reference. IMPORTANT to generate it with with "show-coords -bcloTq -I 95 ALL.Chab.filter.delta > ALL.Chab.filter.coords". The delta-filta should have be done with delta-filter -q. There will be a functino doing this.
@@ -377,7 +377,7 @@ sub loadOverlap
         Description     : Load the order of the contigs in a hash(chromsom) of array postion hash which contigs covere
 
         Returntype      : reference of this structure.
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -397,22 +397,22 @@ sub loadShowTiling
   my %contigMappingLength;
   my %contigLength;
   my %contigStrand;
-  
+
   my $ref_positionGraph;
-  
+
   my @overlapPositions=('','','','','','');
   my $previousContig='';
   my $previousReference;
   my ($refS,$refE,$contigS,$contigE,$alignRef,$alignContig,$id,$similarity,$refLength,$contigLength,$strand1,$strand2,$reference,$contig,$dummper);
   my $countStrand=0;
   my $iteration=0;
-  
+
   foreach (@F) {
 	if (/^\d+/) {
 	  $iteration++;
-	  
+
 	  # parse through the show-coords 50641 58342 1 7794 7702 7794
-	  #498452 34679 1.55 22.47 Morphed.Chab.10.chr02 Contig_0000760 
+	  #498452 34679 1.55 22.47 Morphed.Chab.10.chr02 Contig_0000760
 	  #242546  245015  19586   17135   2470    2452    98.74   1168589 20540   1       -1      Morphed.Chab.10.chr07   contig2142
 
 	  if (defined($ENV{'ABA_COMPARISON'}) && $ENV{'ABA_COMPARISON'} eq "promer") {
@@ -428,15 +428,15 @@ sub loadShowTiling
 	  # longer the hits, more it counts. $strand is 1 / -1
 
 
-	  if ($previousContig ne $contig && $iteration > 1 ) { 
+	  if ($previousContig ne $contig && $iteration > 1 ) {
 
 		if ($previousContig ne '' ) {
-		  
+
 		  $ref_positionGraph=fillPositionGraph($ref_positionGraph,\@overlapPositions,$previousReference,$previousContig,\%contigLength,\%contigMappingLength);
-		  
-		  
+
+
 		}
-		
+
 		$$ref_leftHandPosContig{$contig}=9999999;
 		@overlapPositions=($refS,$refE,$contigS,$contigE,$strand1,$strand2);
 		print "1>> $iteration >$contig - Countstrand $countStrand $strand2 $alignRef \n";
@@ -446,8 +446,8 @@ sub loadShowTiling
 		else {
 		  $contigStrand{$previousContig}=-1;
 		}
-	
-		
+
+
 		$contigLength{$contig}=$contigLength;
 		$contigMappingLength{$contig}+=$alignContig;
 		$previousContig=$contig;
@@ -456,12 +456,12 @@ sub loadShowTiling
 		$countStrand=0
 
 	  } # end $previousContig ne $contig
- 	  
+
 	  elsif ($iteration > 1){
 		if ($previousReference eq $reference    && #$strand2 eq $contigStrand{$contig} &&
 			abs($refS-$overlapPositions[0]) < 2*   $contigLength{$contig}
 		   ) {
-		
+
 		  $contigMappingLength{$contig}+=$alignContig;
 		  #check if Reference is mapping reverse
 		  if ($refS<$overlapPositions[0]) {
@@ -471,7 +471,7 @@ sub loadShowTiling
 			$overlapPositions[1]=$refE
 		  }
 
-		
+
 		  # check also for the contigs, which could be a problem with
 		  # show-coords -r
 		  if ($contigS<$overlapPositions[2]) {
@@ -482,11 +482,11 @@ sub loadShowTiling
 		}
 		else {
 		  debug(40,"ignore line $_");
-		  
+
 		}
-		
-	
-	  } ## in first iteration	  
+
+
+	  } ## in first iteration
 	  else {
 		$previousContig=$contig;
 		$previousReference=$reference;
@@ -495,20 +495,20 @@ sub loadShowTiling
 		$contigMappingLength{$contig}+=$alignContig;
 		@overlapPositions=($refS,$refE,$contigS,$contigE,$strand1,$strand2);
 
-	  } 
-	  
+	  }
+
 	  $countStrand+=($strand2*$alignRef);
 	  print "2>> $iteration >$contig - Countstrand $countStrand $strand2 $alignRef \n";
 	} ## end if /d
-	 
-	
+
+
 	# Fill last line;
   }
 
   ### last contigs...
   $ref_positionGraph=fillPositionGraph($ref_positionGraph,\@overlapPositions,$reference,$contig,\%contigLength,\%contigMappingLength);
   @overlapPositions=('','','','','',''); # jsut in case ofor empty line;
-  
+
   print "1>> $iteration >$contig - Countstrand $countStrand $strand2 $alignRef \n";
   if ($countStrand >= 0) {
 	$contigStrand{$contig}=1
@@ -516,22 +516,22 @@ sub loadShowTiling
   else {
 	$contigStrand{$contig}=-1;
   }
-		
+
   $contigLength{$contig}=$contigLength;
   $contigMappingLength{$contig}+=$alignContig;
-  
+
   return ($ref_positionGraph,\%contigLength,\%contigStrand)
 }
 
 
-=head2 
-        
+=head2
+
         Usage           : Private
 
         Description     : Fills the Postion graph
 
         Returntype      : none
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -551,15 +551,15 @@ sub fillPositionGraph
   debug(120,"$referenceName $contigName ".$$ref_positions[0] ." - ". $$ref_positions[1]);
 
   my $overlap=($$ref_positions[1]-$$ref_positions[0]);
-  
+
   if (defined($$ref_contigLength{$contigName}) && ($overlap/$$ref_contigLength{$contigName}*100>$MIN_OVERLAP)) {
-  
+
 	if (defined($$ref_leftHandPosContig{$contigName}) && $$ref_positions[0] > $$ref_leftHandPosContig{$contigName}) {
 	  $$ref_leftHandPosContig{$contigName}= $$ref_positions[0]
 	}
 
 	debug(40,"Fill $contigName from $$ref_positions[0] to $$ref_positions[1]");
-	
+
 	for ($$ref_positions[0]..$$ref_positions[1])
 	  {
 		$$ref_positionGraph{$referenceName}[$_]{$contigName}=$contigName;
@@ -569,13 +569,13 @@ sub fillPositionGraph
 
   else {
 	debug(120,"Contig $contigName not engouh  overlap $overlap / " .$$ref_contigLength{$contigName} );
-	
+
   }
-  
+
   return $ref_positionGraph
 }
-=head2 
-        
+=head2
+
         Usage           :
 
         Arg [1]         : LSF queue for jobs
@@ -584,12 +584,12 @@ sub fillPositionGraph
 
         Arg [3]         : faidx index file for reference
 
-        Example         : 
+        Example         :
 
         Description     : write the poostios of the contigs, in like abacas order
 
         Returntype      : none
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -601,7 +601,7 @@ sub printPositionGraph
   my $ref_overlapGraph   = shift;
   my $ref_contigSeq      = shift;
   my $ref_contigStrand   = shift;
-  
+
   my %visitedContigs;
   my %layout;
   my %sequence;
@@ -612,8 +612,8 @@ sub printPositionGraph
   my %core;
   my $setcore=0;
 
-  
-  
+
+
   if (-f "list.core.txt") {
 	open (F,"list.core.txt") or die "Weird error openeing list.core.txt\n";
 	while (<F>) {
@@ -623,19 +623,19 @@ sub printPositionGraph
 	  }
 	}
 	$setcore=1;
-	
+
   }
 
 #  print Dumper %$ref_positionGraph;
-  
+
   ### the gff annotation files for the contigs and the gaps
   my ($ref_contigGFF,$ref_gapsGFF);
-  
-  
+
+
   # loop over chromosomes of reference
   foreach my $chr (keys %$ref_positionGraph) {
 	debug(10,"Work on $chr");
-	
+
 	# set loop varialbes per chromosome
 	my $amountUsedContigs=0;     # maount of build in contigs
 	my $amountGaps       = 0;  # amount of gaps
@@ -643,10 +643,10 @@ sub printPositionGraph
                                # the next
 	my $gapSizeCount     = 0;
 	my $pseudoPosition   = 1;
-	
-	 
+
+
 	my $chrLength=(scalar(@{$$ref_positionGraph{$chr} })-1);
-	
+
 	my $pos       =1;    # actual position of chrosmome $chr
 	my $actualContig='';
 	my (@actualPos)=('','');
@@ -658,7 +658,7 @@ sub printPositionGraph
 
 	  if ($DEBUG>80) {
 		if (($pos%2000)==0) {
-		
+
 		}
 	  }
 	  ### get there the coverage of the reference
@@ -675,14 +675,14 @@ sub printPositionGraph
 			defined($core{$chr}[0]) and # set a range for a chr
 			$core{$chr}[0] <= $pos and
 			$pos <= $core{$chr}[1]
-		   
+
 		   )
 		 ) {
 	  	if (($pos%2000)==0) {
 #		print "pos $pos\n";
-		
+
 		}
-		
+
 		### no contig at all on position $pos
 		if (!defined($$ref_positionGraph{$chr}[$pos]) &&
 			$actualContig eq '') {
@@ -696,17 +696,17 @@ sub printPositionGraph
 		  debug(40, "Found contig $actualContig on pos $pos STRAND  $$ref_contigStrand{$actualContig}");
 		  (@actualPos)=($pos,$pos);
 		}
-		
+
 		### actualcontig is coming to an end
 		elsif (! defined($$ref_positionGraph{$chr}[$pos]{$actualContig})
 			  ){
 		  debug (40,"Search ($pos) overlap Contig $actualContig (".$$ref_contigLength{$actualContig}.") \t$actualPos[0] \t $actualPos[1] ");
 
-		  
-		  
+
+
 		  my ($newContig,$posNew)=getNextContig($$ref_positionGraph{$chr},$ref_contigLength,$pos);
 		  debug(100," Acutal $actualContig NewContig - $newContig STRAND  $$ref_contigStrand{$actualContig};");
-		  
+
 		  ($ref_sequence,$actualContig,$contigStartSeq,$amountGaps,$pseudoPosition,$ref_contigGFF)
 			=buildOverlap($ref_sequence,
 						  $actualContig,$newContig,$ref_contigSeq,
@@ -716,41 +716,41 @@ sub printPositionGraph
 						  $pos,
 						  $pseudoPosition,$ref_contigGFF,
 						  $gapSizeCount,$actualPos[0]);
-		  
+
 		  # new gap might start, put count to zero
 		  $gapSizeCount=0;
-		  
+
 		  if ($actualContig ne '') {
 			$actualPos[0]=$pos;  $actualPos[1]=$pos;
 			$pos=($posNew-1); # the position might be new set from
-			
-			# getNextContig 
+
+			# getNextContig
 #			$pos+=10;
-			
+
 		  }
 		  else {
 			debug(100,"gaps");
 
 			# do this, as a contig is found, so this will be used.
 		#	$pos+=100;
-			
+
 		  }
-		  
+
 		}
-		
+
 		### just contig on the same contig
 		else {
 		  $actualPos[1]=$pos;
 		}
-		
+
 	  } # end if core
-	  
+
 	  #increment the position in thePositionGraph
 	  $pos++;
-	  
+
 	} # end while pos
 	### END MAINLOOP
-	
+
 	if (defined($actualContig) && $actualContig ne '') {
 	  ($ref_sequence,$actualContig,$contigStartSeq,$amountGaps,$pseudoPosition,$ref_contigGFF)
 		  =buildOverlap($ref_sequence,
@@ -763,42 +763,42 @@ sub printPositionGraph
 }
 	$amountGaps--;
 	debug(0,"Statistics:\nAmount of gaps $chr: $amountGaps\nUsed contigs: $amountUsedContigs\n");
-	
+
   } # end loop chromoms
-  
-  
+
+
   return ($ref_sequence,\%referenceCoverage,$ref_contigGFF,$ref_gapsGFF);
-  
+
 }
 
 sub getContig{
   my $ref_Contigs      = shift;
   my $ref_ContigLength = shift;
-  
+
   my $length=0;
   my $longestContig='';
   foreach my $contig ( keys %$ref_Contigs ) {
 	if ($$ref_ContigLength{$contig} > $length){
 	  $length=$$ref_ContigLength{$contig};
 	  $longestContig=$contig;
-		}	
+		}
   }
-  return $longestContig;	
+  return $longestContig;
 }
 
 sub getContigNewContig{
   my $ref_Contigs      = shift;
   my $ref_ContigLength = shift;
-  
+
   my $minPos=99999999999;
   my $longestContig='';
   foreach my $contig ( keys %$ref_Contigs ) {
 	if ($$ref_leftHandPosContig{$contig} < $minPos){
 	  $minPos=$$ref_leftHandPosContig{$contig};
 	  $longestContig=$contig;
-	}	
+	}
   }
-  return $longestContig;	
+  return $longestContig;
 }
 
 
@@ -807,15 +807,15 @@ sub getContigBorder{
   my $ref_ContigLength = shift;
   my $pos              = shift;
   my $offset           = shift;
-  
+
   #pos is already for the new cointg
   my $previousPos=($pos-$offset);
-  
-  
+
+
   my $length=0;
   my $longestContig='';
 #  print "$pos -- $previousPos\n";
-  
+
 #  print Dumper $$ref_Contigs[$pos];
 #  print Dumper $$ref_Contigs[$previousPos];
 
@@ -829,9 +829,9 @@ sub getContigBorder{
 		$$ref_ContigLength{$contig} > $length){
 	  $length=$$ref_ContigLength{$contig};
 	  $longestContig=$contig;
-	}	
+	}
   }
-  return $longestContig;	
+  return $longestContig;
 }
 sub getNextContig{
   my $ref_Contigs      = shift;
@@ -839,15 +839,15 @@ sub getNextContig{
   my $pos              = shift;
 
 
-  
+
   my $maxWalk=1000;
-  
+
   my $notFound=1;
 
   # check, if short gap overlapping contig exists.
   my $longestContig=getContigBorder($ref_Contigs,$ref_ContigLength,$pos,500);
   print "longest $longestContig \n";
-  
+
   if ($longestContig eq '') {
 	$longestContig=getContigBorder($ref_Contigs,$ref_ContigLength,$pos,75);
 	if ($longestContig eq '') {
@@ -857,15 +857,15 @@ sub getNextContig{
 		while ($pos < ($pos+$maxWalk) && $notFound) {
 		  if (defined($$ref_Contigs[$pos])) {
 			$notFound=0;
-			
+
 			$longestContig=getContig($$ref_Contigs[$pos],$ref_ContigLength);
-			
+
 		  }
 		  $pos++;
 		}
 	  }
 	}
-	
+
   }
   return($longestContig,($pos-1))
 }
@@ -873,13 +873,13 @@ sub getNextContig{
 
 sub loadFasta{
   my $fasta=shift;
-  
+
   open F, $fasta or die "prob couldn't find fasta file: $fasta $!  \n";
 
   my %h;
   my @ar;
   my $name;
-  
+
   while (<F>) {
         chomp;
         if (/^>(\S+)/){
@@ -896,11 +896,11 @@ sub loadFasta{
   return \%h;
 }
 
-=head2 
-        
+=head2
+
         Usage           : debug(level,msg)
 
-        Arg [1]         : level when to printsub 
+        Arg [1]         : level when to printsub
 
         Arg [2]         : msg as string
 
@@ -909,7 +909,7 @@ sub loadFasta{
         Description     : Prinst debug informat
 
         Returntype      : none
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -922,13 +922,13 @@ sub debug
 
   if ($code <= $DEBUG) {
 	print $msg."\n";
-	
+
   }
 #code for the function goes here
 
 }
-=head2 
-        
+=head2
+
         Usage           : privagter
 
         Arg [1]         : LSF queue for jobs
@@ -937,12 +937,12 @@ sub debug
 
         Arg [3]         : faidx index file for reference
 
-        Example         : 
+        Example         :
 
         Description     : Will join two contigs
 
         Returntype      : string hash, Startposition new contigs
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut
@@ -956,19 +956,19 @@ sub buildOverlap
   my $ref_contigStrand = shift;
   my $ref_overlapGraph_= shift;
   my $chr              = shift;
-  my $contigStartSeq   = shift;  
+  my $contigStartSeq   = shift;
   my $amountGaps       = shift;
   my $position         = shift;
   my $pseudoPosition   = shift;
   my $ref_contigGFF    = shift;
   my $gapSizeCount     = shift;
   my $start_Ref_map    = shift;
-  
-  
+
+
   my $contigUsedLength=0;
 
 #  print Dumper $$ref_contigSeq{$actualContig};
-  
+
   my $contigLength=(scalar(@{$$ref_contigSeq{$actualContig}})-1);
 
   my $ref_cont=\@{$$ref_contigSeq{$actualContig}};
@@ -978,14 +978,14 @@ sub buildOverlap
 	debug(23, "Gap away: $chr - $position - $gapSizeCount ".($contigLength-$position)." -  $start_Ref_map ");
 	my $gapEnd=($start_Ref_map-1);
 	my $gapStart=( $gapEnd-$gapSizeCount);
-  
+
 
 $gapSizeCount=$GAP_SIZE;
 	### tdo Nov 2014 - gap size fixed to 100bp
 	### tdo Sep 2014 maximal gap size
 	if ($gapSizeCount> $MAX_GAP_SIZE) {
 	  $gapSizeCount=$GAP_SIZE;
-	  
+
 	}
 # taken out, just one gap, of $GAP_SIZE
 #	$$ref_contigGFF{$chr}.="unknown\tGAP\tGAP\t$pseudoPosition\t".($pseudoPosition+$gapSizeCount-1)."\t0\t+\t.\tcolor=9;label=\"GAP\";note=\"Gap+of+size+$gapSizeCount+REFERENCE=$chr:$gapStart-$gapEnd\"\n";
@@ -996,39 +996,39 @@ $gapSizeCount=$GAP_SIZE;
 
   my ($ref_overlapGraph,$ref_nothing);
   print "Building Overlap $actualContig $newContig\n";
-  
+
   if ($CHECK_OVERLAP && defined($newContig) && $newContig ne '' ) {
 	($ref_overlapGraph,$ref_nothing) = makeOverlap($actualContig,$newContig,$ref_contigSeq,$chr);
   }
 #  print Dumper $ref_overlapGraph;
-  
+
   ### here we have to also check, if the real end of the contig is
   ### doing the overlap.
   # (a) if contig Strand actual Contig +, end must overlap
   my $overlapOK=0;
-  
+
   if ($CHECK_OVERLAP && defined($newContig) && defined($$ref_overlapGraph{$actualContig}{$newContig})) {
 	$overlapOK=checkOverlap($ref_overlapGraph,$actualContig,$newContig,$ref_contigStrand,$ref_contigSeq)
   }
-  
+
   if ($overlapOK) {
 	debug(50,"Report overlap $actualContig $newContig fro $chr");
 	# my ($ref_overlapData) =
 	# split(/\,/,$$ref_overlapGraph{$actualContig}{$newContig});
-	
+
 	my (@overlapData) = split(/\,/,$$ref_overlapGraph{$actualContig}{$newContig});
-	
-	
+
+
 	if ($DEBUG>500) {
 	  system("grep $actualContig.*$newContig *.overlap");
 	  system("egrep \"$actualContig|$newContig\" *.coords");
 	}
-	
+
 	# join the actual contig to the pseudo sequence
 	if ($$ref_contigStrand{$actualContig}==1){
 	  debug(50,"Report +  overlap $actualContig $newContig $contigStartSeq-1 $overlapData[3] ");
 	  $contigUsedLength=(($overlapData[2])-($contigStartSeq)+1);
-	  
+
 	  $$ref_sequence{$chr} .= join('',@$ref_cont[($contigStartSeq-1)..($overlapData[2]-2)]);
 	  $$ref_contigGFF{$chr}.="unknown\tContig\tContig\t$pseudoPosition\t".($pseudoPosition+$contigUsedLength)."\t0\t+\t.\tcolor=3;label=\"contig=$actualContig\";note=\"$actualContig+($contigLength)\"\n";;
 	  if ($overlapData[1] eq"+") {
@@ -1042,7 +1042,7 @@ $gapSizeCount=$GAP_SIZE;
 	  # here the $contigSart is pretty high
 	  $contigUsedLength=($contigLength-$overlapData[3]-($contigStartSeq-1));
 	  debug (23," $overlapData[3] : $contigLength : $contigStartSeq \n");
-	  
+
 	  $$ref_sequence{$chr} .=revcomp( join('',@$ref_cont[($overlapData[3])..($contigLength-$contigStartSeq)]));
 	  $$ref_contigGFF{$chr}.="unknown\tContig\tContig\t$pseudoPosition\t".($pseudoPosition+$contigUsedLength-1)."\t0\t-\t.\tcolor=3;label=\"REVERSED.contig=$actualContig\";note=\"$actualContig+($contigLength)\"\n";
 	  debug(50,"Report -  overlap $actualContig with $newContig \nTake sequencd from ".($overlapData[3])." to  $contigLength minus ".($contigStartSeq-1)." length $contigUsedLength. New StartSeq  $overlapData[5] ");
@@ -1052,28 +1052,28 @@ $gapSizeCount=$GAP_SIZE;
 	  else {
 		$contigStartSeq=((scalar(@{$$ref_contigSeq{$newContig}})-1)-$overlapData[5]);
 	  }
-	  
+
 	}
 
 	# set pos where to set now feature
 	$pseudoPosition+=($contigUsedLength-1);
-	
+
 	$$ref_sequence{$chr} .="\n";
-	
+
 
 
 	$actualContig=$newContig;
-	
-  }    ### 
-  
+
+  }    ###
+
 	### no overlap, just put the contig
   else {
 	debug(40,"Position $position");
-	
+
 	$amountGaps++;
 	$contigUsedLength=($contigLength-($contigStartSeq-1));
 	debug(40,"Gap found: use $contigUsedLength of $contigLength. $actualContig ".($contigStartSeq)." ".(scalar( @$ref_cont) -1));
-	
+
 
 	if ($$ref_contigStrand{$actualContig}==1){
 	  $$ref_sequence{$chr} .=join('',@$ref_cont[($contigStartSeq-1)..($contigLength-1)]);
@@ -1081,33 +1081,33 @@ $gapSizeCount=$GAP_SIZE;
 	}
 	else {
 	  $$ref_sequence{$chr} .=revcomp(join('',@$ref_cont[0..($contigLength-1-($contigStartSeq-1))]));
-	  
+
 	  $$ref_contigGFF{$chr}.="unknown\tContig\tContig\t$pseudoPosition\t".($pseudoPosition+$contigUsedLength-1)."\t0\t-\t.\tcolor=4;label=\"REVERSED.contig=$actualContig\";note=\"$actualContig+($contigLength)\"\n";
 	}
 
 	# adapt pos with contigs size
 	$pseudoPosition+=($contigUsedLength);
-	
+
 	$$ref_contigGFF{$chr}.="unknown\tGAP\tGAP\t".($pseudoPosition)."\t".($pseudoPosition+$GAP_SIZE-1)."\t0\t+\t.\tcolor=7;label=\"GAP2\";note=\"Gap+as+no+Overlap+found.+Size+prefixed+$MIN_GAP_SIZE\"\n";
 
 	$$ref_sequence{$chr} .= makeN($GAP_SIZE);
 	$pseudoPosition+=($GAP_SIZE);
 	print 	$pseudoPosition."\n";
-	
 
-	
+
+
 	#include here the gpas GFFnd the contigs GFF.
 	$contigStartSeq=1;
 	$actualContig='';
-	
+
   }
-  
+
   return ($ref_sequence,$actualContig,$contigStartSeq,$amountGaps,$pseudoPosition,$ref_contigGFF)
 }
 
 
 #
-#	$overlapOK=checkOverlap($ref_overlapGraph,$actualContig,$newContig,$ref_contigStrand,$ref_contigSeq) 
+#	$overlapOK=checkOverlap($ref_overlapGraph,$actualContig,$newContig,$ref_contigStrand,$ref_contigSeq)
 
 sub checkOverlap{
   my ($ref_overlapGraph,$actualContig,$newContig,$ref_contigStrand,$ref_contigSeq) = @_;
@@ -1130,7 +1130,7 @@ sub checkOverlap{
   # where 1 is actual contig and 2 is newContig
   my ($strand1,$strand2,$start1,$end1,$start2,$end2)=
 	split(/,/,$$ref_overlapGraph{$actualContig}{$newContig});
-  
+
   if (
 	  ($strand1 eq '+')
 	 ){
@@ -1149,12 +1149,12 @@ sub checkOverlap{
   }
   else {
 	die "this shouldn't occur!\n";
-	
-	
+
+
   }
-  
+
   print "Strand Actual $strandActual $alignmentActual\n";
-  
+
   if (
 	  ($strandActual == 1 && $alignmentActual eq 'Begin')
 	  or
@@ -1164,7 +1164,7 @@ sub checkOverlap{
 #	  $overlapOK=1;
 	  debug(10,"No overlap Actual due to $strandActual $alignmentActual --- ignored...  ")
 	}
-  
+
   #### ckeck now the second contig
   if (
 	  ($strand2 eq '+')
@@ -1185,12 +1185,12 @@ sub checkOverlap{
   else {
 	### overlap is -
 	if ($end2 < $MAX_CONTIG_END)  {
-	  debug(10,"New Overlap -Begin");	
+	  debug(10,"New Overlap -Begin");
 	  $alignmentNew='Begin';
 	}
 	elsif ($start2 > ($lenNew-$MAX_CONTIG_END)) {
 	  debug(10,"New Overlap - End")	;
-	  
+
 	  $alignmentNew='End';
 	}
 	else {
@@ -1207,22 +1207,22 @@ sub checkOverlap{
 	  $overlapOK=0;
 	  debug(10,"No overlap -- New ")
 	}
-  
-  
+
+
   return $overlapOK;
-  
+
 }
 sub makeN{
   my $num    = shift;
   my $str='';
-  
+
   for (1..$num) {
 	$str.="N";
-	
+
   }
 
   return "$str\n";
-  
+
 }
 sub revcomp{
   my $str = shift;
@@ -1230,12 +1230,12 @@ sub revcomp{
   my $str2= reverse($str);
 
 	$str2 =~ tr/atgcATGC/tacgTACG/;
-	
-  
+
+
   return $str2;
 }
-=head2 
-        
+=head2
+
         Usage           :
 
         Arg [1]         : LSF queue for jobs
@@ -1244,12 +1244,12 @@ sub revcomp{
 
         Arg [3]         : faidx index file for reference
 
-        Example         : 
+        Example         :
 
         Description     : Summarises the coverage of the mapped lanes specified in the lanes.fofn file
 
         Returntype      : none
-        
+
         Author          : Jacqueline McQuillan E<lt>jm15@sanger.ac.uk<gt>
 
 =cut

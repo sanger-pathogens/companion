@@ -29,11 +29,11 @@ for nameRes in `grep '>' $ref | perl -nle 's/\|/_/g;/>(\S+)/; print $1'` ; do
    formatdb -p F -i Reference/$nameRes;
 
 if [ -z "$Other" ] ; then
-echo  " bsub -o blast.$nameRes.o -e blast.$nameRes.e -R \"select[type==X86_64 && mem > 6000] rusage[mem=6000]\" -M6000000  blastall -p blastn -F F -W 15 -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast"
-   bsub -o blast.$nameRes.o -e blast.$nameRes.e -R "select[type==X86_64 && mem > 6000] rusage[mem=6000]" -M6000  blastall -p blastn -W 25 -F T -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
+echo  " blastall -p blastn -F F -W 15 -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast"
+   blastall -p blastn -W 25 -F T -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
  else
 
-echo  " bsub -o blast.$nameRes.o -e blast.$nameRes.e -R \"select[type==X86_64 && mem > 6000] rusage[mem=6000]\" -M6000000  blastall -p blastn  $Other -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast"
-   bsub -o blast.$nameRes.o -e blast.$nameRes.e -R "select[type==X86_64 && mem > 6000] rusage[mem=6000]" -M6000  blastall -p blastn  $Other -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
+echo  " blastall -p blastn  $Other -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast"
+   blastall -p blastn  $Other -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
 fi
 done
