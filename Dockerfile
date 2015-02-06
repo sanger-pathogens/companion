@@ -18,10 +18,6 @@ RUN echo "deb http://http.debian.net/debian testing main" > /etc/apt/sources.lis
 #
 RUN apt-get update -q -q
 
-# better for bioperl SearchIO?
-# RUN cpanm Math::CDF Math::Round && \
-# rm -rf /root/.cpanm/work/
-
 #
 # Install dependencies from Debian
 #
@@ -32,7 +28,7 @@ RUN apt-get install build-essential aragorn hmmer lua5.1 ncbi-blast+ snap \
                     lua-md5-dev lua-filesystem-dev lua-lpeg-dev libcairo2-dev \
                     zlib1g-dev libbz2-dev libexpat1-dev libncurses5-dev \
                     libsqlite3-dev libbam-dev libpango1.0-dev libtre-dev \
-                    python unzip bioperl libstorable-perl mummer \
+                    python unzip libstorable-perl cpanminus mummer \
                     --yes --force-yes
 
 #
@@ -57,6 +53,12 @@ RUN cd /opt && \
     make -j3 amalgamation=yes install && \
     cd / && \
     rm -rf /opt/genometools-master*
+
+#
+# Add Bio::SearchIO (needed for OrthoMCL)
+#
+RUN cpanm Bio::SearchIO && \
+    rm -rf /root/.cpanm/work/
 
 #
 # Install OrthoMCL
