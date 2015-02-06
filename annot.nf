@@ -87,30 +87,19 @@ process predict_tRNA {
 // NCRNA PREDICTION
 // ================
 
-process cmpress_ncrna_models {
-    input:
-    file ncrna_models
-
-    output:
-    file ncrna_models into pressed_model
-
-    """
-    cmpress -F ${ncrna_models}
-    """
-}
-
 ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
-    file 'models.cm' from pressed_model.first()
+    file ncrna_models
 
     output:
     file 'cm_out' into cmtblouts
     stdout into statuslog
 
     """
-    cmsearch --tblout cm_out --cut_ga models.cm chunk > /dev/null
+    cmpress -F ${ncrna_models}
+    cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
     echo "ncRNA finished"
     """
 }
