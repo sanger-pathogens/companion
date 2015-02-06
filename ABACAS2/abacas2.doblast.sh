@@ -15,10 +15,10 @@ ln -s $ref REF.$tmp
 
 mkdir Reference
 cd Reference
-/nfs/users/nfs_t/tdo/Bin/SeperateSequences.pl  ../REF.$tmp
+SeperateSequences.pl  ../REF.$tmp
 cd ..
 mkdir comp
- 
+
 count=0
 for nameRes in `grep '>' $ref | perl -nle 's/\|/_/g;/>(\S+)/; print $1'` ; do
    let count++;
