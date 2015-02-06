@@ -28,14 +28,14 @@ ABA_CHECK_OVERLAP=1; export ABA_CHECK_OVERLAP # this will not try to overlap con
 ABA_splitContigs=1; export ABA_splitContigs # this parameter will split contigs. This is good to split the orign, and to find rearrangement. A split contigs has the suffix _i (i the part)
 ABA_WORD_SIZE  # sets the word size. This is critical for speed issues in nucmer. default is 20
 "
-	
+
 exit;
 fi
 
-if [ -z "$ABA_MIN_LENGTH" ] ; then 
+if [ -z "$ABA_MIN_LENGTH" ] ; then
 	ABA_MIN_LENGTH=200;
 fi
-if [ -z "$ABA_MIN_IDENTITY" ] ; then 
+if [ -z "$ABA_MIN_IDENTITY" ] ; then
 	ABA_MIN_IDENTITY=95;
 fi
 if [ -z "$ABA_CHECK_OVERLAP" ] ; then
@@ -64,11 +64,11 @@ tmp=$$
 
 abacas2.runComparison.sh $reference $contig
 
-for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ; do 
+for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ; do
 	abacas2.doTilingGraph.pl $x.coords  $contig Res
 done
 
-abacas2.bin.sh $contig Res.abacasBin.fna && grep -v '>'  Res.abacasBin.fna | awk 'BEGIN {print ">Bin.union"} {print}' > Res.abacasBin.oneSeq.fna_ && cat Res*fna > Genome.abacas.fasta && bam.correctLineLength.sh Genome.abacas.fasta  &> /dev/null && mv  Res.abacasBin.fna_ Res.abacasBin.fna 
+abacas2.bin.sh $contig Res.abacasBin.fna && grep -v '>'  Res.abacasBin.fna | awk 'BEGIN {print ">Bin.union"} {print}' > Res.abacasBin.oneSeq.fna_ && cat Res*fna > Genome.abacas.fasta && bam.correctLineLength.sh Genome.abacas.fasta  &> /dev/null && mv  Res.abacasBin.fna_ Res.abacasBin.fna
 
 #~tdo/Bin/abacas2.doblast.sh $reference Res
 ref=$reference
@@ -85,10 +85,10 @@ ln -s $ref REF.$tmp
 
 mkdir Reference
 cd Reference
-/nfs/users/nfs_t/tdo/Bin/SeperateSequences.pl  ../REF.$tmp
+SeperateSequences.pl  ../REF.$tmp
 cd ..
 mkdir comp
- 
+
 count=0
 for nameRes in `grep '>' $ref | perl -nle 's/\|/_/g;/>(\S+)/; print $1'` ; do
 	let count++;
@@ -97,14 +97,14 @@ for nameRes in `grep '>' $ref | perl -nle 's/\|/_/g;/>(\S+)/; print $1'` ; do
 		exit
 	fi
 	formatdb -p F -i Reference/$nameRes;
-	
+
 	megablast -F T -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
-	
+
 #if [ -z "$Other" ] ; then
 #echo  " bsub -o blast.$nameRes.o -e blast.$nameRes.e -R \"select[type==X86_64 && mem > 6000] rusage[mem=6000]\" -M6000000  blastall -p blastn -F F -W 15 -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast"
 #megablast -F T -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
  #else
-	
+
  #blastall -p blastn  $Other -m 8 -e 1e-20 -d Reference/$nameRes -i $pre.$nameRes.fna -o comp/comp.$nameRes.blast
 
 done
