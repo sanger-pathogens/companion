@@ -123,8 +123,6 @@ process merge_ncrnas {
 
 // PROTEIN-DNA ALIGNMENT
 // =====================
-
-// better way to do conditional processes? -> see Gitter chat 2015-01-29
 if (params.run_exonerate) {
     process make_ref_peps {
         input:
@@ -163,7 +161,7 @@ if (params.run_exonerate) {
         file 'exnout' from exn_results.collectFile()
 
         output:
-        file 'augustus.hints' into exn_hints
+        set true, file('augustus.hints') into exn_hints
         stdout into statuslog
 
         """
@@ -174,6 +172,8 @@ if (params.run_exonerate) {
           echo "hints created"
         """
     }
+} else {
+    exn_hints = Channel.just([false,file("/dev/null")])
 }
 
 // RATT
@@ -236,11 +236,11 @@ process ratt_to_gff3 {
 
 process run_augustus_pseudo {
     input:
-    //file 'augustus.hints' from exn_hints
+    set run_exonerate, file('augustus.hints') from exn_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
 
     def hintsfile = ""
-    if (params.run_exonerate) {
+    if (run_exonerate) {
         hintsfile = "--hintsfile=augustus.hints"
     }
 
