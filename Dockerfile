@@ -21,7 +21,7 @@ RUN apt-get update -q -q
 #
 # Install dependencies from Debian
 #
-RUN apt-get install build-essential aragorn hmmer lua5.1 ncbi-blast+ snap \
+RUN apt-get install build-essential aragorn hmmer lua5.1 blast2 snap \
                     liblua5.1-0 libcairo2 zlib1g libbz2-1.0 libexpat1 libpth20 \
                     libncurses5 libsqlite3-0 libpango-1.0-0 \
                     libpangocairo-1.0-0 libtre5 python-ctypes liblua5.1-0-dev \
