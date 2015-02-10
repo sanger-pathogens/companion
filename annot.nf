@@ -5,8 +5,6 @@ statuslog = Channel.create()
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
-go_obo = file(params.go_obo)
-ncrna_models = file(params.ncrna_models)
 
 process contiguate_pseudochromosomes {
     input:
@@ -91,15 +89,14 @@ ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
-    file ncrna_models
 
     output:
     file 'cm_out' into cmtblouts
     stdout into statuslog
 
     """
-    cmpress -F ${ncrna_models}
-    cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
+    cmpress -F ${NCRNA_MODELS}
+    cmsearch --tblout cm_out --cut_ga ${NCRNA_MODELS} chunk > /dev/null
     echo "ncRNA finished"
     """
 }
@@ -182,7 +179,6 @@ if (params.run_exonerate) {
 process ratt_make_ref_embl {
     input:
     file ref_annot
-    file go_obo
     file ref_seq
 
     output:
@@ -193,7 +189,7 @@ process ratt_make_ref_embl {
     # split away
     gt inlineseq_split -seqfile /dev/null -gff3file ref_without_seq.gff3 ${ref_annot}
     gt inlineseq_add -seqfile ${ref_seq} -matchdescstart ref_without_seq.gff3 > ref_with_seq.gff3
-    gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo
+    gff3_to_embl.lua ref_with_seq.gff3 ${GO_OBO} Foo
     """
 }
 
@@ -249,7 +245,6 @@ process run_augustus_pseudo {
     stdout into statuslog
 
     """
-    export AUGUSTUS_CONFIG_PATH=${params.AUGUSTUS_CONFIG_PATH}
     augustus \
         --species=${params.AUGUSTUS_SPECIES} \
         --stopCodonExcludedFromCDS=false \
@@ -280,7 +275,6 @@ process run_augustus_contigs {
     stdout into statuslog
 
     """
-    export AUGUSTUS_CONFIG_PATH=${params.AUGUSTUS_CONFIG_PATH}
     augustus --species=${params.AUGUSTUS_SPECIES} \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both --genemodel=partial \
@@ -322,7 +316,7 @@ process run_snap {
     stdout into statuslog
 
     """
-    snap -gff -quiet  ${params.SNAP_MODEL} \
+    snap -gff -quiet  ${SNAP_MODEL} \
         pseudo.pseudochr.fasta > snap.tmp
     snap_gff_to_gff3.lua snap.tmp > snap.gff3
     """
@@ -426,7 +420,7 @@ process split_splice_models_at_gaps {
     splice_genes_at_gaps.lua tmp3 | \
       gt gff3 -sort -retainids -tidy | \
       gt select \
-          -rule_files ${params.FILTER_SHORT_PARTIALS_RULE} \
+          -rule_files ${FILTER_SHORT_PARTIALS_RULE} \
       > tmp4
 
     # get rid of genes still having stop codons
@@ -607,8 +601,8 @@ process annotate_orthologs {
 }
 
 
-
-// ========  REPORTING ========
+// REPORTING
+// =========
 
 process report {
     input:
