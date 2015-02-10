@@ -79,6 +79,12 @@ RUN cd /opt/mcl-* && \
 ADD http://geneontology.org/ontology/go.obo /opt/go.obo
 
 #
+# copy data dir
+#
+RUN mkdir -p /opt/data
+ADD ./data /opt/data
+
+#
 # install RATT (keep up to date from build directory)
 #
 ADD ./RATT /opt/RATT
@@ -96,9 +102,6 @@ RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
                    libcairo2-dev zlib1g-dev libbz2-dev libexpat1-dev \
                    libncurses5-dev libsqlite3-dev libbam-dev libpango1.0-dev \
                    libtre-dev --yes --force-yes
-
-# TODO: add ref species models etc.
-# ADD fgram_base /opt/augustus/config/species/
 
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT

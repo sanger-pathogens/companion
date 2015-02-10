@@ -5,6 +5,8 @@ statuslog = Channel.create()
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
+go_obo = file(params.GO_OBO)
+ncrna_models = file(params.NCRNA_MODELS)
 
 process contiguate_pseudochromosomes {
     input:
@@ -89,14 +91,15 @@ ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
+    val ncrna_models
 
     output:
     file 'cm_out' into cmtblouts
     stdout into statuslog
 
     """
-    cmpress -F ${NCRNA_MODELS}
-    cmsearch --tblout cm_out --cut_ga ${NCRNA_MODELS} chunk > /dev/null
+    cmpress -F ${ncrna_models}
+    cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
     echo "ncRNA finished"
     """
 }
@@ -180,6 +183,7 @@ process ratt_make_ref_embl {
     input:
     file ref_annot
     file ref_seq
+    val go_obo
 
     output:
     file '*.embl' into ref_embl
@@ -189,7 +193,7 @@ process ratt_make_ref_embl {
     # split away
     gt inlineseq_split -seqfile /dev/null -gff3file ref_without_seq.gff3 ${ref_annot}
     gt inlineseq_add -seqfile ${ref_seq} -matchdescstart ref_without_seq.gff3 > ref_with_seq.gff3
-    gff3_to_embl.lua ref_with_seq.gff3 ${GO_OBO} Foo
+    gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo
     """
 }
 
