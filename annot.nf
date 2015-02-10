@@ -29,7 +29,7 @@ process contiguate_pseudochromosomes {
     """
 }
 
-// make multiple copies of the sequences (better way to do this?!! XXX)
+// fork important output streams
 pseudochr_seq_tRNA = Channel.create()
 pseudochr_seq_ncRNA = Channel.create()
 pseudochr_seq_ratt = Channel.create()
