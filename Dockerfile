@@ -29,6 +29,7 @@ RUN apt-get install build-essential aragorn hmmer lua5.1 blast2 snap \
                     zlib1g-dev libbz2-dev libexpat1-dev libncurses5-dev \
                     libsqlite3-dev libbam-dev libpango1.0-dev libtre-dev \
                     python unzip libstorable-perl cpanminus mummer \
+                    infernal exonerate \
                     --yes --force-yes
 
 #
