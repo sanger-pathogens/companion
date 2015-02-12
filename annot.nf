@@ -125,6 +125,8 @@ process merge_ncrnas {
 // =====================
 if (params.run_exonerate) {
     process make_ref_peps {
+        cache 'deep'
+
         input:
         file ref_annot
         file ref_seq
@@ -141,6 +143,8 @@ if (params.run_exonerate) {
     exn_prot_chunk = ref_pep.splitFasta( by: 20)
     exn_genome_chunk = pseudochr_seq_exonerate.splitFasta( by: 3)
     process run_exonerate {
+        cache 'deep'
+
         input:
         set file('genome.fasta'), file('prot.fasta') from exn_genome_chunk.spread(exn_prot_chunk)
 
@@ -157,11 +161,13 @@ if (params.run_exonerate) {
         """
     }
     process make_hints {
+        cache 'deep'
+
         input:
         file 'exnout' from exn_results.collectFile()
 
         output:
-        set true, file('augustus.hints') into exn_hints
+        set val("--hintsfile=augustus.hints"), file('augustus.hints') into exn_hints
         stdout into statuslog
 
         """
@@ -173,7 +179,7 @@ if (params.run_exonerate) {
         """
     }
 } else {
-    exn_hints = Channel.just([false,file("/dev/null")])
+    exn_hints = Channel.just(["",file("/dev/null")])
 }
 
 // RATT
@@ -235,14 +241,11 @@ process ratt_to_gff3 {
 // ================
 
 process run_augustus_pseudo {
-    input:
-    set run_exonerate, file('augustus.hints') from exn_hints
-    file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
+    cache 'deep'
 
-    def hintsfile = ""
-    if (run_exonerate) {
-        hintsfile = "--hintsfile=augustus.hints"
-    }
+    input:
+    set val(hintsline), file('augustus.hints') from exn_hints
+    file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
@@ -254,7 +257,7 @@ process run_augustus_pseudo {
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both \
         --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
-        ${hintsfile} \
+        ${hintsline} \
         --noInFrameStop=true \
         --extrinsicCfgFile=${params.AUGUSTUS_EXTRINSIC_CFG} \
         pseudo.pseudochr.fasta > augustus.full.tmp
@@ -267,6 +270,8 @@ process run_augustus_pseudo {
 }
 
 process run_augustus_contigs {
+    cache 'deep'
+
     input:
     file 'pseudo.contigs.fasta' from contigs_seq
     file 'pseudo.scaffolds.agp' from scaffolds_agp_augustus
@@ -367,14 +372,15 @@ process merge_structural {
 
     input:
     file 'ncrna.gff3' from ncrnafile
-    file 'trna.gff3' from trnas
+ //   file 'trna.gff3' from trnas
     file 'integrated.gff3' from integrated_gff3
 
     output:
     file 'structural.full.gff3' into genemodels_gff3
 
+    // removed trna.gff3
     """
-    gt gff3 -sort -tidy ncrna.gff3 trna.gff3 integrated.gff3 \
+    gt gff3 -sort -tidy ncrna.gff3 integrated.gff3 \
         > structural.full.gff3
     """
 }
@@ -450,7 +456,8 @@ process add_polypeptides {
 // TMHMM
 // =====
 
-process run_tmhmm {
+// disabled for now for license reasons
+/* process run_tmhmm {
     input:
     file 'input.gff3' from genemodels_with_polypeptides_gff3
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_tmhmm
@@ -466,15 +473,15 @@ process run_tmhmm {
     tmhmm_to_gff3.lua tmhmm.out input.gff3 | \
         gt gff3 -sort -retainids -tidy > output.gff3
     """
-}
+} */
 
 // ORTHOMCL AND FUNCTIONAL TRANSFER
 // ================================
 
 genemodels_for_omcl_proteins = Channel.create()
 genemodels_for_omcl_annot = Channel.create()
-genemodels_with_tmhmm_gff3.into(genemodels_for_omcl_proteins,
-                                genemodels_for_omcl_annot)
+genemodels_with_polypeptides_gff3.into(genemodels_for_omcl_proteins,
+                                       genemodels_for_omcl_annot)
 
 process get_proteins_for_orthomcl {
     input:
@@ -483,7 +490,7 @@ process get_proteins_for_orthomcl {
 
     output:
     file 'input.gff3' into genemodels_orthomcl_gff3
-    file 'proteins.fas' into proteins_orthomcl
+    file 'proteins.fas' into proteins_target
 
     """
     gt extractfeat -type CDS -translate -join -retainids \
@@ -497,6 +504,10 @@ process get_proteins_for_orthomcl {
         | truncate_header.lua >> proteins.fas
     """
 }
+proteins_orthomcl = Channel.create()
+proteins_pfam = Channel.create()
+
+proteins_target.into(proteins_orthomcl, proteins_pfam)
 
 pepfiles = Channel.from(params.OMCL_PEPFILES)
 process make_ref_input_for_orthomcl {
@@ -569,11 +580,11 @@ process run_orthomcl {
     file 'orthomcl_out' into orthomcl_cluster_out
 
     """
-    orthomcl.pl --mode 3 \
+    orthomcl.pl --inflation 1.5 --mode 3 \
       --blast_file blastout \
       --gg_file ggfile
-
-    cp `find orthomcl* -mindepth 1 -name all_orthomcl.out` orthomcl_out
+      ls -Al
+    cp `find . -mindepth 1 -name all_orthomcl.out` orthomcl_out
     """
 }
 
@@ -604,6 +615,20 @@ process annotate_orthologs {
     """
 }
 
+process run_pfam {
+    cache 'deep'
+
+    input:
+    file 'proteins.fas' from proteins_pfam
+
+    output:
+    file 'pfamout' into pfam_output
+
+    """
+    hmmscan --tblout pfamout --cut_ga --noali --cpu 2 ${PFAM} proteins.fas
+    """
+}
+
 
 // REPORTING
 // =========
@@ -613,16 +638,15 @@ process report {
     file 'models.gff3' from gff3_with_ortho_transferred
 
     output:
-    stdout into result
+    file 'models.gff3' into result
 
     """
     ls -HAl models.gff3
     gt stat models.gff3
-    #cat models.gff3
     """
 }
 
-result.subscribe {
+result.collectFile().subscribe {
     println it
 }
 
