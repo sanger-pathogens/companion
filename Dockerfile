@@ -22,14 +22,7 @@ RUN apt-get update -q -q
 # Install dependencies from Debian
 #
 RUN apt-get install build-essential hmmer lua5.1 blast2 snap \
-                    liblua5.1-0 libcairo2 zlib1g libbz2-1.0 libexpat1 libpth20 \
-                    libncurses5 libsqlite3-0 libpango-1.0-0 \
-                    libpangocairo-1.0-0 libtre5 python-ctypes liblua5.1-0-dev \
-                    lua-md5-dev lua-filesystem-dev lua-lpeg-dev libcairo2-dev \
-                    zlib1g-dev libbz2-dev libexpat1-dev libncurses5-dev \
-                    libsqlite3-dev libbam-dev libpango1.0-dev libtre-dev \
-                    python unzip libstorable-perl cpanminus mummer \
-                    infernal exonerate \
+                    unzip cpanminus mummer infernal exonerate \
                     --yes --force-yes
 
 #
@@ -49,8 +42,8 @@ ADD https://github.com/genometools/genometools/archive/master.zip /opt/genometoo
 RUN cd /opt && \
     unzip genometools-master.zip && \
     cd /opt/genometools-master && \
-    make -j3 && \
-    make -j3 install && \
+    make -j3 cairo=no curses=no && \
+    make -j3 cairo=no curses=no install && \
     cd / && \
     rm -rf /opt/genometools-master*
 
@@ -68,7 +61,7 @@ RUN cd /opt && \
 #
 # Add Perl deps (needed for OrthoMCL)
 #
-RUN cpanm --force Carp Bio::SearchIO List::Util Getopt::Long && \
+RUN cpanm --force Carp Storable Bio::SearchIO List::Util Getopt::Long && \
     rm -rf /root/.cpanm/work/
 
 #
@@ -125,10 +118,6 @@ ADD ./ABACAS2 /opt/ABACAS2
 # clean up dev stuff (not strictly necessary)
 #
 RUN apt-get purge build-essential --yes --force-yes
-RUN apt-get remove liblua5.1-0-dev lua-md5-dev lua-filesystem-dev lua-lpeg-dev \
-                   libcairo2-dev zlib1g-dev libbz2-dev libexpat1-dev \
-                   libncurses5-dev libsqlite3-dev libbam-dev libpango1.0-dev \
-                   libtre-dev --yes --force-yes
 
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
