@@ -583,7 +583,6 @@ process run_orthomcl {
     orthomcl.pl --inflation 1.5 --mode 3 \
       --blast_file blastout \
       --gg_file ggfile
-      ls -Al
     cp `find . -mindepth 1 -name all_orthomcl.out` orthomcl_out
     """
 }
