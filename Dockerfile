@@ -39,7 +39,8 @@ ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz /opt
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
-    mv augustus* augustus
+    mv augustus* augustus && \
+    rm -rf augustus/docs
 
 #
 # Install GenomeTools (most recent git master)
