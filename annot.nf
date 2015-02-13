@@ -609,43 +609,92 @@ process annotate_orthologs {
 
     # transfer GOs from orthologs GAF
     transfer_annotations_from_gaf.lua with_func.gff3 \
-        ${params.OMCL_GAFFILE} ${params.OMCL_DB} \
-        ${params.OMCL_TAXON_ID} > orthomcl.gaf
+        ${params.OMCL_GAFFILE} ${params.DB_ID} \
+        ${params.TAXON_ID} > orthomcl.gaf
     """
 }
 
+// PFAM DOMAIN ANNOTATION
+// ======================
+
+proteins_pfam_chunk = proteins_pfam.splitFasta( by: 10)
 process run_pfam {
     cache 'deep'
 
     input:
-    file 'proteins.fas' from proteins_pfam
+    file 'proteins.fas' from proteins_pfam_chunk
 
     output:
     file 'pfamout' into pfam_output
 
     """
-    hmmscan --tblout pfamout --cut_ga --noali --cpu 2 ${PFAM} proteins.fas
+    hmmscan --domtblout pfamout --cut_ga --noali --cpu 2 ${PFAM} proteins.fas
     """
 }
 
+process pfam_to_gff3 {
+    cache 'deep'
+
+    input:
+    file 'pfam.out' from pfam_output.collectFile()
+
+    output:
+    file 'pfam.gff3' into pfam_gff3
+
+    """
+    pfam_to_gff3.lua ${PFAM2GO} < pfam.out | gt gff3 -sort -tidy -retainids > pfam.gff3
+    """
+}
+
+process annotate_pfam {
+    echo true
+    cache 'deep'
+
+    input:
+    file 'pfam.gff3' from pfam_gff3
+    file 'with_ortho.gff3' from gff3_with_ortho_transferred
+    file 'with_ortho.gaf' from gaf_with_ortho_transferred
+    val go_obo
+
+    output:
+    file 'with_pfam.gff3' into gff3_with_pfam
+    file 'with_pfam.gaf' into gaf_with_pfam
+
+    """
+    iproscan_gff3_merge.lua with_ortho.gff3 pfam.gff3 | \
+      gt gff3 -tidy -sort -retainids > with_pfam.gff3
+    iproscan_gaf_merge.lua with_pfam.gff3 pfam.gff3 \
+      ${params.DB_ID} ${params.TAXON_ID} ${go_obo} > my.with_pfam.gaf
+    cat with_ortho.gaf my.with_pfam.gaf > with_pfam.gaf
+    """
+}
+
+process make_distribution {
+
+}
 
 // REPORTING
 // =========
 
 process report {
     input:
-    file 'models.gff3' from gff3_with_ortho_transferred
+    file 'with_pfam.gff3' from gff3_with_pfam
+    file 'with_pfam.gaf' from gaf_with_pfam
 
     output:
-    file 'models.gff3' into result
+    file 'with_pfam.gff3' into result_gff3
+    file 'with_pfam.gaf' into result_gaf
 
     """
-    ls -HAl models.gff3
-    gt stat models.gff3
+    ls -HAl with_pfam.gff3
     """
 }
 
-result.collectFile().subscribe {
+result_gff3.collectFile().subscribe {
+    println it
+}
+
+result_gaf.collectFile().subscribe {
     println it
 }
 
