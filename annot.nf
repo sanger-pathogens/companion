@@ -647,7 +647,6 @@ process pfam_to_gff3 {
 }
 
 process annotate_pfam {
-    echo true
     cache 'deep'
 
     input:
@@ -669,9 +668,6 @@ process annotate_pfam {
     """
 }
 
-process make_distribution {
-
-}
 
 // REPORTING
 // =========
