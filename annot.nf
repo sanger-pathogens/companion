@@ -549,21 +549,44 @@ full_shortnames = shortname.mix(shortname_ref).collectFile()
 full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
 full_mapfile = mapfile.mix(mapfile_ref).collectFile()
 
+full_mapped_fasta_for_index = Channel.create()
+full_mapped_fasta_for_query = Channel.create()
+full_mapped_fasta.into(full_mapped_fasta_for_index, full_mapped_fasta_for_query)
 
-proteins_orthomcl_blast_chunk = full_mapped_fasta.splitFasta( by: 10)
+process blast_for_orthomcl_formatdb {
+    cache 'deep'
+
+    input:
+    file 'mapped.fasta' from full_mapped_fasta_for_index
+
+    output:
+    file 'mapped.fasta' into full_mapped_fasta_indexed
+    file 'mapped.fasta.phr' into full_mapped_fasta_indexed_phr
+    file 'mapped.fasta.psq' into full_mapped_fasta_indexed_psq
+    file 'mapped.fasta.pin' into full_mapped_fasta_indexed_pin
+
+    """
+    formatdb -i mapped.fasta
+    """
+}
+
+proteins_orthomcl_blast_chunk = full_mapped_fasta_for_query.splitFasta( by: 10)
 process blast_for_orthomcl {
     cache 'deep'
 
     input:
-    file 'mapped.fasta' from proteins_orthomcl_blast_chunk
+    file 'mapped_chunk.fasta' from proteins_orthomcl_blast_chunk
+    file 'mapped.fasta' from full_mapped_fasta_indexed.first()
+    file 'mapped.fasta.phr' from full_mapped_fasta_indexed_phr.first()
+    file 'mapped.fasta.psq' from full_mapped_fasta_indexed_psq.first()
+    file 'mapped.fasta.pin' from full_mapped_fasta_indexed_pin.first()
 
     output:
     file 'blastout' into orthomcl_blastout
 
     """
-    formatdb -i mapped.fasta
     blastall -p blastp -F 'm S' -e 1e-5 -d mapped.fasta \
-      -m 8 -i mapped.fasta > blastout
+      -m 8 -i mapped_chunk.fasta > blastout
     """
 }
 
