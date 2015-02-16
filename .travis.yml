@@ -1,4 +1,3 @@
-language: c
 install:
   - sudo test/travis.setup-apt.sh
   - sudo apt-get update

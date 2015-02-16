@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ev
 wget https://github.com/genometools/genometools/archive/master.zip
 unzip master.zip
 cd genometools-master

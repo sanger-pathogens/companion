@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ev
 wget http://www.orthomcl.org/common/downloads/software/unsupported/v1.4/ORTHOMCL_V1.4_mcl-02-063.tar
 tar -xvf ORTHOMCL_V1.4_mcl-02-063.tar
 tar -xzvf mcl-02-063.tar.gz
