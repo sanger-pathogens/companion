@@ -45,4 +45,5 @@ mount --bind /run/resolvconf/resolv.conf /etc/resolv.conf
 docker -d &
 sleep 5
 # Run nextflow
+export ROOTDIR=`pwd`
 ./nextflow -c loc_docker.config -c params_default.config run annot.nf -with-docker satta/annot-nf
