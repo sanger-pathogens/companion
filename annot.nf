@@ -18,6 +18,7 @@ process contiguate_pseudochromosomes {
     file 'pseudo.pseudochr.agp' into pseudochr_agp
     file 'pseudo.scafs.fasta' into scaffolds_seq
     file 'pseudo.scafs.agp' into scaffolds_agp
+    file 'pseudo.contigs.fasta' into contigs_seq
 
     """
     abacas2.nonparallel.sh \
@@ -50,18 +51,15 @@ pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
 
 scaffolds_seq_augustus = Channel.create()
 scaffolds_seq_make_gaps = Channel.create()
-scaffolds_seq.separate(scaffolds_seq_augustus,
-                       scaffolds_seq_make_gaps) { a -> [a, a]}
+scaffolds_seq.into(scaffolds_seq_augustus, scaffolds_seq_make_gaps)
 
 scaffolds_agp_augustus = Channel.create()
 scaffolds_agp_make_gaps = Channel.create()
-scaffolds_agp.separate(scaffolds_agp_augustus,
-                       scaffolds_agp_make_gaps) { a -> [a, a]}
+scaffolds_agp.into(scaffolds_agp_augustus, scaffolds_agp_make_gaps)
 
 pseudochr_agp_augustus = Channel.create()
 pseudochr_agp_make_gaps = Channel.create()
-pseudochr_agp.separate(pseudochr_agp_augustus,
-                       pseudochr_agp_make_gaps) { a -> [a, a]}
+pseudochr_agp.into(pseudochr_agp_augustus, pseudochr_agp_make_gaps)
 
 // TRNA PREDICTION
 // ===============
