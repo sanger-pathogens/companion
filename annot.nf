@@ -73,8 +73,8 @@ process predict_tRNA {
     stdout into statuslog
 
     """
-    aragorn -t pseudo.pseudochr.fasta \
-        | grep -E -C2 '(nucleotides|Sequence)' > 1
+    aragorn -t pseudo.pseudochr.fasta > out
+    grep -E -C2 '(nucleotides|Sequence)' out > 1
     aragorn_to_gff3.lua < 1 > 2
     gt gff3 -sort -tidy -retainids 2 > aragorn.gff3
     echo "tRNA finished"

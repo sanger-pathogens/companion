@@ -5,4 +5,4 @@ tar -xvf aragorn*.tgz
 rm aragorn*.tgz
 mv aragorn* aragorn
 cd aragorn
-gcc -O2 -o aragorn aragorn*.c
+gcc -Os -o aragorn aragorn*.c
