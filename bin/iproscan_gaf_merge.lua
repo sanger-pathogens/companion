@@ -131,23 +131,25 @@ function annotate_vis:visit_feature(fn)
       full_gos = {}
       prod = gff3_extract_structure(fn:get_attribute("product"))
       for k,v in pairs(gos) do
-        aspect = self.obos[k].aspect
-        print(table.concat({tostring(db),
-                                  fn:get_attribute("ID"):split("%.")[1],
-                                  fn:get_attribute("ID"):split("%.")[1],
-                                  "",
-                                  k,
-                                  "GO_REF:0000002", -- transferred from Interpro
-                                  "IEA",
-                                  table.concat(v, "|"),
-                                  aspect,
-                                  tostring(prod[1].term),
-                                  "",
-                                  "gene",
-                                  "taxon:" .. tostring(taxonid),
-                                  os.date("%Y%m%d"),
-                                  tostring(db)
-                                 }, "\t"))
+        if self.obos[k] then
+          aspect = self.obos[k].aspect
+          print(table.concat({tostring(db),
+                              fn:get_attribute("ID"):split("%.")[1],
+                              fn:get_attribute("ID"):split("%.")[1],
+                              "",
+                              k,
+                              "GO_REF:0000002", -- transferred from Interpro
+                              "IEA",
+                              table.concat(v, "|"),
+                              aspect,
+                              tostring(prod[1].term),
+                              "",
+                              "gene",
+                              "taxon:" .. tostring(taxonid),
+                              os.date("%Y%m%d"),
+                              tostring(db)
+                             }, "\t"))
+        end
       end
     end
   end
