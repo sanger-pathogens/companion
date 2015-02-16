@@ -1,20 +1,23 @@
+language: c
 install:
   - sudo sh -c "echo deb http://http.debian.net/debian testing main > /etc/apt/sources.list.d/testing.list"
-  - sudo sh -c 'echo "Package: *\\nPin: release a=unstable\\nPin-Priority: -1" >> /etc/apt/preferences'
+  - sudo sh -c 'echo "Package: \*" >> /etc/apt/preferences'
+  - sudo sh -c 'echo "Pin: release a=unstable" >> /etc/apt/preferences'
+  - sudo sh -c 'echo "Pin-Priority: -1" >> /etc/apt/preferences'
   - sudo apt-get update
   - sudo apt-get install --yes --force-yes build-essential wget hmmer lua5.1 blast2 unzip cpanminus mummer infernal exonerate
   - sudo apt-get -t unstable install snap aragorn genometools
   - wget http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz
-  - tar -xzvf augustus* && rm -rf *.tar.gz && mv augustus* augustus && rm -rf augustus/docs
+  - tar -xzvf augustus\* && rm -rf \*.tar.gz && mv augustus\* augustus && rm -rf augustus/docs
   - sudo cpanm --force Carp Storable Bio::SearchIO List::Util Getopt::Long
   - curl -fsSL get.nextflow.io | bash
   - wget http://www.orthomcl.org/common/downloads/software/unsupported/v1.4/ORTHOMCL_V1.4_mcl-02-063.tar
   - tar -xvf ORTHOMCL_V1.4_mcl-02-063.tar && tar -xzvf mcl-02-063.tar.gz && rm -f ORTHOMCL_V1.4_mcl-02-063.tar mcl-02-063.tar.gz
-  - cd mcl-* && ./configure && make -j3 && sudo make install && cd ..
-  - sed -i 's/our .PATH_TO_ORTHOMCL.*=.*/our $PATH_TO_ORTHOMCL = ".\/";/' ./ORTHOMCLV1.4/orthomcl_module.pm
-  - sed -i 's/our .BLASTALL.*=.*/our $BLASTALL = "\/usr\/bin\/blastall";/' ./ORTHOMCLV1.4/orthomcl_module.pm
-  - sed -i 's/our .FORMATDB.*=.*/our $FORMATDB = "\/usr\/bin\/formatdb";/' ./ORTHOMCLV1.4/orthomcl_module.pm
-  - sed -i 's/our .MCL.*=.*/our $MCL = "\/usr\/local\/bin\/mcl";/' ./ORTHOMCLV1.4/orthomcl_module.pm
+  - cd mcl-\* && ./configure && make -j3 && sudo make install && cd ..
+  - sed -i 's/our .PATH_TO_ORTHOMCL.\*=.\*/our $PATH_TO_ORTHOMCL = ".\/";/' ./ORTHOMCLV1.4/orthomcl_module.pm
+  - sed -i 's/our .BLASTALL.\*=.\*/our $BLASTALL = "\/usr\/bin\/blastall";/' ./ORTHOMCLV1.4/orthomcl_module.pm
+  - sed -i 's/our .FORMATDB.\*=.\*/our $FORMATDB = "\/usr\/bin\/formatdb";/' ./ORTHOMCLV1.4/orthomcl_module.pm
+  - sed -i 's/our .MCL.\*=.\*/our $MCL = "\/usr\/local\/bin\/mcl";/' ./ORTHOMCLV1.4/orthomcl_module.pm
   - wget http://geneontology.org/ontology/go.obo
   - wget http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
   - gunzip Pfam-A.hmm.gz && hmmpress Pfam-A.hmm && rm -f Pfam-A.hmm
