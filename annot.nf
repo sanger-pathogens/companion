@@ -18,7 +18,6 @@ process contiguate_pseudochromosomes {
     file 'pseudo.pseudochr.agp' into pseudochr_agp
     file 'pseudo.scafs.fasta' into scaffolds_seq
     file 'pseudo.scafs.agp' into scaffolds_agp
-    file 'pseudo.contigs.fasta' into contigs_seq
 
     """
     abacas2.nonparallel.sh \
