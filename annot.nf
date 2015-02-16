@@ -369,15 +369,14 @@ process merge_structural {
 
     input:
     file 'ncrna.gff3' from ncrnafile
- //   file 'trna.gff3' from trnas
+    file 'trna.gff3' from trnas
     file 'integrated.gff3' from integrated_gff3
 
     output:
     file 'structural.full.gff3' into genemodels_gff3
 
-    // removed trna.gff3
     """
-    gt gff3 -sort -tidy ncrna.gff3 integrated.gff3 \
+    gt gff3 -sort -tidy ncrna.gff3 integrated.gff3 trna.gff3 \
         > structural.full.gff3
     """
 }
