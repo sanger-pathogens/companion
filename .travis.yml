@@ -1,7 +1,7 @@
 install:
   - sudo sh -c "echo deb http://http.debian.net/debian testing main > /etc/apt/sources.list.d/testing.list"
   - sudo apt-get update
-  - sudo apt-get install build-essential wget genometools aragorn hmmer lua5.1 blast2 snap unzip cpanminus mummer infernal exonerate
+  - sudo apt-get install --yes --force-yes build-essential wget genometools aragorn hmmer lua5.1 blast2 snap unzip cpanminus mummer infernal exonerate
   - wget http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz
   - tar -xzvf augustus* && rm -rf *.tar.gz && mv augustus* augustus && rm -rf augustus/docs
   - sudo cpanm --force Carp Storable Bio::SearchIO List::Util Getopt::Long
