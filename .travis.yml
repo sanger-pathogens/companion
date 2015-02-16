@@ -16,3 +16,4 @@ env:
     - ROOTDIR="$TRAVIS_BUILD_DIR"
 script:
   - ./nextflow -c loc_travis.config -c params_default.config run annot.nf
+  - echo "finished"
