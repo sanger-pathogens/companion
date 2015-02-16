@@ -382,6 +382,9 @@ process merge_structural {
     """
 }
 
+// ADD GAPS AND ADJUST GENES NOT TO SPAN GAPS
+// ==========================================
+
 process add_gap_features {
     input:
     file 'merged_in.gff3' from genemodels_gff3
