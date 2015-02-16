@@ -549,19 +549,20 @@ full_shortnames = shortname.mix(shortname_ref).collectFile()
 full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
 full_mapfile = mapfile.mix(mapfile_ref).collectFile()
 
+
+proteins_orthomcl_blast_chunk = full_mapped_fasta.splitFasta( by: 10)
 process blast_for_orthomcl {
-    cpus 8
     cache 'deep'
 
     input:
-    file 'mapped.fasta' from full_mapped_fasta
+    file 'mapped.fasta' from proteins_orthomcl_blast_chunk
 
     output:
     file 'blastout' into orthomcl_blastout
 
     """
     formatdb -i mapped.fasta
-    blastall -p blastp -F 'm S' -a 10 -e 1e-5 -d mapped.fasta \
+    blastall -p blastp -F 'm S' -e 1e-5 -d mapped.fasta \
       -m 8 -i mapped.fasta > blastout
     """
 }
@@ -570,7 +571,7 @@ process run_orthomcl {
     cache 'deep'
 
     input:
-    file 'blastout' from orthomcl_blastout
+    file 'blastout' from orthomcl_blastout.collectFile()
     file 'ggfile' from full_gg
 
     output:
