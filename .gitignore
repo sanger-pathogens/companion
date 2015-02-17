@@ -2,3 +2,4 @@
 .nextflow.history
 work
 trace.csv*
+*.i1*
