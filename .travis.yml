@@ -12,6 +12,9 @@ install:
   - wget http://geneontology.org/ontology/go.obo
   - wget http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
   - gunzip Pfam-A.hmm.gz && hmmpress Pfam-A.hmm && rm -f Pfam-A.hmm
+cache:
+  directories:
+    - work
 env:
   global:
     - ROOTDIR="$TRAVIS_BUILD_DIR"
