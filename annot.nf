@@ -8,25 +8,46 @@ ref_seq = file(params.ref_seq)
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
 
-process contiguate_pseudochromosomes {
-    input:
-    file genome_file
-    file ref_seq
+// PSEUDOCHROMOSOME CONTIGUATION
+// =============================
 
-    output:
-    file 'pseudo.pseudochr.fasta' into pseudochr_seq
-    file 'pseudo.pseudochr.agp' into pseudochr_agp
-    file 'pseudo.scafs.fasta' into scaffolds_seq
-    file 'pseudo.scafs.agp' into scaffolds_agp
-    file 'pseudo.contigs.fasta' into contigs_seq
+if (params.do_contiguation) {
+    process contiguate_pseudochromosomes {
+        input:
+        file genome_file
+        file ref_seq
 
-    """
-    abacas2.nonparallel.sh \
-      ${ref_seq} ${genome_file}
-    abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
-      "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
-      "${params.ABACAS_SEQ_PREFIX}"
-    """
+        output:
+        file 'pseudo.pseudochr.fasta' into pseudochr_seq
+        file 'pseudo.pseudochr.agp' into pseudochr_agp
+        file 'pseudo.scafs.fasta' into scaffolds_seq
+        file 'pseudo.scafs.agp' into scaffolds_agp
+        file 'pseudo.contigs.fasta' into contigs_seq
+
+        """
+        abacas2.nonparallel.sh \
+          ${ref_seq} ${genome_file}
+        abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
+          "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
+          "${params.ABACAS_SEQ_PREFIX}"
+        """
+    }
+} else {
+    process prepare_noncontiguated_input {
+        input:
+        file genome_file
+
+        output:
+        file 'pseudo.pseudochr.fasta' into pseudochr_seq
+        file 'pseudo.pseudochr.agp' into pseudochr_agp
+        file 'pseudo.scafs.fasta' into scaffolds_seq
+        file 'pseudo.scafs.agp' into scaffolds_agp
+        file 'pseudo.contigs.fasta' into contigs_seq
+
+        """
+        no_abacas_prepare.lua ${genome_file} pseudo
+        """
+    }
 }
 
 // fork important output streams
@@ -38,6 +59,7 @@ pseudochr_seq_augustus = Channel.create()
 pseudochr_seq_snap = Channel.create()
 pseudochr_seq_augustus_ctg = Channel.create()
 pseudochr_seq_make_gaps = Channel.create()
+pseudochr_seq_make_dist = Channel.create()
 pseudochr_seq_dist = Channel.create()
 pseudochr_seq_tmhmm = Channel.create()
 pseudochr_seq_orthomcl = Channel.create()
@@ -45,21 +67,28 @@ pseudochr_seq_splitsplice = Channel.create()
 pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
                    pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
                    pseudochr_seq_snap, pseudochr_seq_dist,
-                   pseudochr_seq_make_gaps, pseudochr_seq_splitsplice,
+                   pseudochr_seq_make_gaps, pseudochr_seq_make_dist,
+                   pseudochr_seq_splitsplice,
                    pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
                    pseudochr_seq_exonerate)
 
 scaffolds_seq_augustus = Channel.create()
 scaffolds_seq_make_gaps = Channel.create()
-scaffolds_seq.into(scaffolds_seq_augustus, scaffolds_seq_make_gaps)
+scaffolds_seq_make_dist = Channel.create()
+scaffolds_seq.into(scaffolds_seq_augustus, scaffolds_seq_make_gaps,
+                   scaffolds_seq_make_dist)
 
 scaffolds_agp_augustus = Channel.create()
 scaffolds_agp_make_gaps = Channel.create()
-scaffolds_agp.into(scaffolds_agp_augustus, scaffolds_agp_make_gaps)
+scaffolds_agp_make_dist = Channel.create()
+scaffolds_agp.into(scaffolds_agp_augustus, scaffolds_agp_make_gaps,
+                   scaffolds_agp_make_dist)
 
 pseudochr_agp_augustus = Channel.create()
 pseudochr_agp_make_gaps = Channel.create()
-pseudochr_agp.into(pseudochr_agp_augustus, pseudochr_agp_make_gaps)
+pseudochr_agp_make_dist = Channel.create()
+pseudochr_agp.into(pseudochr_agp_augustus, pseudochr_agp_make_gaps,
+                   pseudochr_agp_make_dist)
 
 // TRNA PREDICTION
 // ===============
@@ -95,7 +124,8 @@ process predict_ncRNA {
     stdout into statuslog
 
     """
-    cmpress -F ${ncrna_models}
+    cp ${ncrna_models} .
+    cmpress -F *.cm
     cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
     echo "ncRNA finished"
     """
@@ -176,7 +206,7 @@ if (params.run_exonerate) {
         """
     }
 } else {
-    exn_hints = Channel.just(["",file("/dev/null")])
+    exn_hints = Channel.just(["",""])
 }
 
 // RATT
@@ -691,25 +721,63 @@ process annotate_pfam {
     """
 }
 
+// MAKE DISTRIBUTION
+// =================
+
+process make_distribution_gff {
+    input:
+    file 'pseudo.in.gff3' from gff3_with_pfam
+    file 'pseudo.pseudochr.agp' from pseudochr_agp_make_dist
+    file 'pseudo.scafs.agp' from scaffolds_agp_make_dist
+
+    output:
+    set file('pseudo.out.gff3'),
+        file('scaffold.out.gff3') into result_gff3
+
+    """
+    cp pseudo.in.gff3 pseudo.out.gff3
+    cp pseudo.in.gff3 scaffold.out.gff3
+    """
+}
+
+process make_distribution_gaf {
+    input:
+    file 'in.gaf' from gaf_with_pfam
+
+    output:
+    file 'out.gaf' into result_gaf
+
+    """
+    echo '!gaf-version: 1.0' > out.gaf
+    sort -k2,2 in.gaf >> out.gaf
+    """
+}
+
+process make_distribution_seqs {
+    input:
+    file 'pseudochr.in' from pseudochr_seq_make_dist
+    file 'scafs.in' from scaffolds_seq_make_dist
+
+    output:
+    set file('pseudochr.fasta.gz'),
+        file('scafs.fasta.gz') into result_seq
+
+    """
+    cp pseudochr.in ./pseudochr.fasta
+    gzip pseudochr.fasta
+    cp scafs.in ./scafs.fasta
+    gzip scafs.fasta
+    """
+}
 
 // REPORTING
 // =========
 
-process report {
-    input:
-    file 'with_pfam.gff3' from gff3_with_pfam
-    file 'with_pfam.gaf' from gaf_with_pfam
-
-    output:
-    file 'with_pfam.gff3' into result_gff3
-    file 'with_pfam.gaf' into result_gaf
-
-    """
-    ls -HAl with_pfam.gff3
-    """
+result_gff3.subscribe {
+    println it
 }
 
-result_gff3.collectFile().subscribe {
+result_seq.subscribe {
     println it
 }
 
