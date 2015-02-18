@@ -290,6 +290,7 @@ process run_augustus_pseudo {
         pseudo.pseudochr.fasta > augustus.full.tmp
     augustus_to_gff3.lua < augustus.full.tmp \
         | gt gff3 -sort -tidy -retainids \
+        | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
         > augustus.full.tmp.2
     augustus_mark_partial.lua augustus.full.tmp.2 > augustus.gff3
     echo "AUGUSTUS finished"
@@ -319,6 +320,7 @@ process run_augustus_contigs {
         pseudo.contigs.fasta > augustus.ctg.tmp
     augustus_to_gff3.lua < augustus.ctg.tmp \
         | gt gff3 -sort -tidy -retainids \
+        | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
         > augustus.ctg.tmp.2
     augustus_mark_partial.lua augustus.ctg.tmp.2 > augustus.ctg.gff3
 
@@ -354,7 +356,8 @@ process run_snap {
     """
     snap -gff -quiet  ${SNAP_MODEL} \
         pseudo.pseudochr.fasta > snap.tmp
-    snap_gff_to_gff3.lua snap.tmp > snap.gff3
+    snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
+    gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
     """
 }
 
@@ -374,8 +377,11 @@ process integrate_genemodels {
     unset GT_RETAINIDS
     gt gff3 -fixregionboundaries -retainids no -sort -tidy \
         augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 ratt.full.gff3 \
-        > merged.gff3
+        > merged.pre.gff3
     export GT_RETAINIDS=yes
+
+    # avoid huge gene clusters
+    gt select -maxgenelength ${params.MAX_GENE_LENGTH} merged.pre.gff3 > merged.gff3
 
     # choose best gene model for overlapping region
     integrate_gene_calls.lua merged.gff3 | \
@@ -535,7 +541,6 @@ process get_proteins_for_orthomcl {
 }
 proteins_orthomcl = Channel.create()
 proteins_pfam = Channel.create()
-
 proteins_target.into(proteins_orthomcl, proteins_pfam)
 
 pepfiles = Channel.from(params.OMCL_PEPFILES)
@@ -733,10 +738,12 @@ process make_distribution_gff {
     output:
     set file('pseudo.out.gff3'),
         file('scaffold.out.gff3') into result_gff3
+    set file('pseudo.pseudochr.agp'),
+        file('pseudo.scafs.agp') into result_agp
 
     """
-    cp pseudo.in.gff3 pseudo.out.gff3
-    cp pseudo.in.gff3 scaffold.out.gff3
+    cat pseudo.in.gff3 > pseudo.out.gff3
+    cat pseudo.in.gff3 > scaffold.out.gff3
     """
 }
 
@@ -778,6 +785,10 @@ result_gff3.subscribe {
 }
 
 result_seq.subscribe {
+    println it
+}
+
+result_agp.subscribe {
     println it
 }
 
