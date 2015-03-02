@@ -194,9 +194,11 @@ if (params.run_exonerate) {
         file 'exnout' from exn_results.collectFile()
 
         output:
-        set val("--hintsfile=augustus.hints"), file('augustus.hints') into exn_hints
+        set val(outline), file('augustus.hints') into exn_hints
         stdout into statuslog
 
+        script:
+        outline = "--hintsfile=augustus.hints"
         """
         exonerate2hints.pl \
           --source=P --maxintronlen=${params.AUGUSTUS_HINTS_MAXINTRONLEN} \
