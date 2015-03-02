@@ -198,7 +198,7 @@ if (params.run_exonerate) {
         stdout into statuslog
 
         """
-        ${params.AUGUSTUS_SCRIPTDIR}/exonerate2hints.pl \
+        exonerate2hints.pl \
           --source=P --maxintronlen=${params.AUGUSTUS_HINTS_MAXINTRONLEN} \
           --in=${exnout} \
           --out=augustus.hints
@@ -397,6 +397,18 @@ process integrate_genemodels {
     """
 }
 
+process remove_exons {
+    input:
+    file 'integrated.gff3' from integrated_gff3
+
+    output:
+    file 'integrated_clean.gff3' into integrated_gff3_clean
+
+    """
+    remove_exons.lua integrated.gff3 > integrated_clean.gff3
+    """
+}
+
 // MERGE ALL GENES TO FINAL SET AND CLEANUP
 // ========================================
 
@@ -406,7 +418,7 @@ process merge_structural {
     input:
     file 'ncrna.gff3' from ncrnafile
     file 'trna.gff3' from trnas
-    file 'integrated.gff3' from integrated_gff3
+    file 'integrated.gff3' from integrated_gff3_clean
 
     output:
     file 'structural.full.gff3' into genemodels_gff3
@@ -432,6 +444,7 @@ process add_gap_features {
     file 'merged_out.gff3' into genemodels_with_gaps_gff3
 
     """
+    set -ev
     make_contig_features_from_agp.lua pseudo.scaffolds.agp "within scaffold" | \
       gt gff3 -sort -tidy -retainids > contigs.gff3
 
@@ -607,7 +620,7 @@ process blast_for_orthomcl_formatdb {
     """
 }
 
-proteins_orthomcl_blast_chunk = full_mapped_fasta_for_query.splitFasta( by: 10)
+proteins_orthomcl_blast_chunk = full_mapped_fasta_for_query.splitFasta( by: 50)
 process blast_for_orthomcl {
     cache 'deep'
 
@@ -675,7 +688,7 @@ process annotate_orthologs {
 // PFAM DOMAIN ANNOTATION
 // ======================
 
-proteins_pfam_chunk = proteins_pfam.splitFasta( by: 10)
+proteins_pfam_chunk = proteins_pfam.splitFasta( by: 30)
 process run_pfam {
     cache 'deep'
 
