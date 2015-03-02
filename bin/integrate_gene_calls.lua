@@ -69,10 +69,22 @@ function stream:process_current_cluster()
         bestset = s
       end
       for _,v in ipairs(s) do
+        local nof_cds = 0
+        for c in v:children() do
+          if c:get_type() == "CDS" then
+            nof_cds = nof_cds + 1
+          end
+        end
         -- apply reward for being annotated by RATT
+        -- unless RATT would produce a multi-exon gene, then only use that
+        -- if there's no other gene
         local fac = 1
         if v:get_source() == "RATT" then
-          fac = 3
+          if nof_cds == 1 then
+            fac = 3
+          else
+            fac = .1
+          end
         end
         --if self.idx:has_seqid(v:get_seqid()) then
           --fac = 1
