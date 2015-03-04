@@ -660,11 +660,15 @@ process run_orthomcl {
     """
 }
 
+orthomcl_cluster_out_annot = Channel.create()
+result_ortho = Channel.create()
+orthomcl_cluster_out.into(orthomcl_cluster_out_annot, result_ortho)
+
 process annotate_orthologs {
     cache 'deep'
 
     input:
-    file 'orthomcl_out' from orthomcl_cluster_out
+    file 'orthomcl_out' from orthomcl_cluster_out_annot
     file 'mapfile' from full_mapfile
     file 'input.gff3' from genemodels_for_omcl_annot
 
@@ -825,9 +829,14 @@ result_agp.subscribe {
 result_gaf.collectFile().subscribe {
     println it
     if (params.dist_dir) {
-      for (file in it) {
-        file.copyTo(params.dist_dir)
-      }
+      it.copyTo(params.dist_dir)
+    }
+}
+
+result_ortho.collectFile().subscribe {
+    println it
+    if (params.dist_dir) {
+      it.copyTo(params.dist_dir)
     }
 }
 
