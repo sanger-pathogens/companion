@@ -797,18 +797,38 @@ process make_distribution_seqs {
 
 result_gff3.subscribe {
     println it
+    if (params.dist_dir) {
+      for (file in it) {
+        file.copyTo(params.dist_dir)
+      }
+    }
 }
 
 result_seq.subscribe {
     println it
+    if (params.dist_dir) {
+      for (file in it) {
+        file.copyTo(params.dist_dir)
+      }
+    }
 }
 
 result_agp.subscribe {
     println it
+    if (params.dist_dir) {
+      for (file in it) {
+        file.copyTo(params.dist_dir)
+      }
+    }
 }
 
 result_gaf.collectFile().subscribe {
     println it
+    if (params.dist_dir) {
+      for (file in it) {
+        file.copyTo(params.dist_dir)
+      }
+    }
 }
 
 statuslog.subscribe {
