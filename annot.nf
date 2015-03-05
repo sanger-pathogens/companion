@@ -16,6 +16,10 @@ if (params.do_contiguation) {
         input:
         file genome_file
         file ref_seq
+        val params.ABACAS_CHR_PATTERN
+        val params.ABACAS_CHR_PREFIX
+        val params.ABACAS_BIN_CHR
+        val params.ABACAS_SEQ_PREFIX
 
         output:
         file 'pseudo.pseudochr.fasta' into pseudochr_seq
@@ -493,6 +497,7 @@ process split_splice_models_at_gaps {
 process add_polypeptides {
     input:
     file 'input.gff3' from genemodels_with_gaps_split_gff3
+    val params.CHR_PATTERN
 
     output:
     file 'output.gff3' into genemodels_with_polypeptides_gff3
@@ -563,7 +568,7 @@ process make_ref_input_for_orthomcl {
     tag { shortname }
 
     input:
-    set shortname, pepfile from pepfiles
+    set val(shortname), file(pepfile) from pepfiles
 
     output:
     file 'out.gg' into gg_file
@@ -582,6 +587,7 @@ process make_ref_input_for_orthomcl {
 process make_target_input_for_orthomcl {
     input:
     file 'pepfile.fas' from proteins_orthomcl
+    val params.GENOME_PREFIX
 
     output:
     file 'out.gg' into gg_file_ref
