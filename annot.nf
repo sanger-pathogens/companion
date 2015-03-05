@@ -7,6 +7,8 @@ ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
+omcl_gfffile = file(params.OMCL_GFFFILE)
+omcl_gaffile = file(params.OMCL_GAFFILE)
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -30,7 +32,7 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          ${ref_seq} ${genome_file}
+          ${ref_seq} ${genome_file} 500 85 0 3000
         abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
           "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
           "${params.ABACAS_SEQ_PREFIX}"
@@ -677,6 +679,8 @@ process annotate_orthologs {
     file 'orthomcl_out' from orthomcl_cluster_out_annot
     file 'mapfile' from full_mapfile
     file 'input.gff3' from genemodels_for_omcl_annot
+    file 'gff_ref.gff3' from omcl_gfffile
+    file 'gaf_ref.gaf' from omcl_gaffile
 
     output:
     file 'with_func.gff3' into gff3_with_ortho_transferred
@@ -688,11 +692,11 @@ process annotate_orthologs {
 
     # transfer functional annotation from orthologs
     transfer_annotations_from_gff.lua with_clusters.gff3 \
-        ${params.OMCL_GFFFILE} > with_func.gff3
+        gff_ref.gff3 > with_func.gff3
 
     # transfer GOs from orthologs GAF
     transfer_annotations_from_gaf.lua with_func.gff3 \
-        ${params.OMCL_GAFFILE} ${params.DB_ID} \
+        gaf_ref.gaf ${params.DB_ID} \
         ${params.TAXON_ID} > orthomcl.gaf
     """
 }
