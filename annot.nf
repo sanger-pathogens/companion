@@ -5,6 +5,7 @@ statuslog = Channel.create()
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
+ref_chr = file(params.ref_chr)
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
 omcl_gfffile = file(params.OMCL_GFFFILE)
@@ -17,7 +18,7 @@ if (params.do_contiguation) {
     process contiguate_pseudochromosomes {
         input:
         file genome_file
-        file ref_seq
+        file ref_chr
         val params.ABACAS_CHR_PATTERN
         val params.ABACAS_CHR_PREFIX
         val params.ABACAS_BIN_CHR
@@ -32,7 +33,7 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          ${ref_seq} ${genome_file} 500 85 0 3000
+          ${ref_chr} ${genome_file} 500 85 0 3000
         abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
           "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
           "${params.ABACAS_SEQ_PREFIX}"
