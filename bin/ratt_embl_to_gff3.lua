@@ -41,8 +41,11 @@ for i = 1,#arg do
   for l in io.lines(arg[i]) do
     if l:sub(1,2) == "ID" then
       seqid = l:match("[^.]+.(.*).final")
-    elseif l:match("locus_tag=") then
+    elseif l:match("locus_tag=") or l:match("systematic_id=") then
       local ltag = l:match('locus_tag="([^"]+)"')
+      if not ltag then
+        ltag = l:match('systematic_id="([^"]+)"')
+      end
       if ltag and cur_gene and not cur_gene:get_attribute("ratt_ortholog") then
         cur_gene:set_attribute("ratt_ortholog", ltag)
       end
