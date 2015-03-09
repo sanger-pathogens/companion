@@ -585,7 +585,7 @@ process make_ref_input_for_orthomcl {
 
     script:
     """
-    truncate_header.lua < ${mypepfile} > pepfile.trunc
+    truncate_header.lua < ${pepfile} > pepfile.trunc
     map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
     make_gg_line.lua ${shortname} mapped.fasta > out.gg
     echo "${shortname}" > shortname
