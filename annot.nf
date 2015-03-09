@@ -11,6 +11,8 @@ ncrna_models = file(params.NCRNA_MODELS)
 omcl_gfffile = file(params.OMCL_GFFFILE)
 omcl_gaffile = file(params.OMCL_GAFFILE)
 
+
+
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
 
@@ -566,7 +568,9 @@ proteins_orthomcl = Channel.create()
 proteins_pfam = Channel.create()
 proteins_target.into(proteins_orthomcl, proteins_pfam)
 
-pepfiles = Channel.from(params.OMCL_PEPFILES)
+pepfiles = Channel
+              .from(params.OMCL_PEPFILES)
+              .map { val -> [val[0], file(val[1])]}
 process make_ref_input_for_orthomcl {
     tag { shortname }
 
@@ -579,8 +583,10 @@ process make_ref_input_for_orthomcl {
     file 'shortname' into shortname
     file 'mapped.fasta' into mapped_fasta
 
+    script:
     """
-    truncate_header.lua < ${pepfile} > pepfile.trunc
+    echo ${pepfile}
+    truncate_header.lua < ${mypepfile} > pepfile.trunc
     map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
     make_gg_line.lua ${shortname} mapped.fasta > out.gg
     echo "${shortname}" > shortname
