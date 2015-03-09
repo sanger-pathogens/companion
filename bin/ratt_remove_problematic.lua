@@ -38,10 +38,13 @@ problematic_genes = {}
 for i = 2,#arg do
   for l in io.lines(arg[i]) do
     geneid,_,_,_,_,_,_,_,errorStill,StartStillBad,StopStillBad,
-      frameshiftsStill,JoinExons,PossiblePseudo = unpack(split(l, "\t"))
+      frameshiftsStill,JoinExons,PossiblePseudo,CorrectionLog = unpack(split(l, "\t"))
     if geneid ~= 'Gene_ID' and PossiblePseudo then
       if tonumber(errorStill) + tonumber(StartStillBad) + tonumber(StopStillBad)
         + tonumber(frameshiftsStill) + tonumber(JoinExons) + tonumber(PossiblePseudo) > 0 then
+        problematic_genes[geneid] = true
+      end
+      if CorrectionLog:match("MANUAL") then
         problematic_genes[geneid] = true
       end
     end
