@@ -1,7 +1,7 @@
 #
 #  From this base-image / starting-point
 #
-FROM debian:wheezy
+FROM debian:jessie
 
 #
 #  Authorship
@@ -11,19 +11,19 @@ MAINTAINER ss34@sanger.ac.uk
 #
 # Pull in packages from testing
 #
-RUN echo "deb http://http.debian.net/debian testing main" > /etc/apt/sources.list
+# RUN echo "deb http://http.debian.net/debian testing main" > \
+#      /etc/apt/sources.list && \
+#    apt-get update -q -q
 
 #
-# Update apt
-#
-RUN apt-get update -q -q
-
-#
-# Install dependencies from Debian
+# Install dependencies
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ snap \
                     unzip cpanminus mummer infernal exonerate \
-                    --yes --force-yes
+                    --yes --force-yes && \
+                    cpanm --force Carp Storable Bio::SearchIO List::Util \
+                    Getopt::Long && \
+                    rm -rf /root/.cpanm/work/
 
 #
 # Install AUGUSTUS (binaries)
@@ -61,8 +61,7 @@ RUN cd /opt && \
 #
 # Add Perl deps (needed for OrthoMCL)
 #
-RUN cpanm --force Carp Storable Bio::SearchIO List::Util Getopt::Long && \
-    rm -rf /root/.cpanm/work/
+RUN
 
 #
 # Install and configure OrthoMCL
@@ -71,8 +70,8 @@ ADD http://www.orthomcl.org/common/downloads/software/unsupported/v1.4/ORTHOMCL_
 RUN cd /opt && \
     tar -xvf omcl.tar && \
     tar -xzvf mcl-02-063.tar.gz && \
-    rm -f omcl.tar mcl-02-063.tar.gz
-RUN cd /opt/mcl-* && \
+    rm -f omcl.tar mcl-02-063.tar.gz && \
+    cd /opt/mcl-* && \
     ./configure && \
     make -j3 && \
     make install && \
@@ -113,11 +112,6 @@ ADD ./RATT /opt/RATT
 # install ABACAS (keep up to date from build directory)
 #
 ADD ./ABACAS2 /opt/ABACAS2
-
-#
-# clean up dev stuff (not strictly necessary)
-#
-RUN apt-get purge build-essential --yes --force-yes
 
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
