@@ -21,7 +21,7 @@ RUN apt-get update -q -q
 #
 # Install dependencies from Debian
 #
-RUN apt-get install build-essential hmmer lua5.1 blast2 snap \
+RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ snap \
                     unzip cpanminus mummer infernal exonerate \
                     --yes --force-yes
 
