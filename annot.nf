@@ -632,7 +632,7 @@ process blast_for_orthomcl_formatdb {
     file 'mapped.fasta.pin' into full_mapped_fasta_indexed_pin
 
     """
-    formatdb -i mapped.fasta
+    makeblastdb -dbtype prot -in mapped.fasta
     """
 }
 
@@ -651,8 +651,7 @@ process blast_for_orthomcl {
     file 'blastout' into orthomcl_blastout
 
     """
-    blastall -p blastp -F 'm S' -e 1e-5 -d mapped.fasta \
-      -m 8 -i mapped_chunk.fasta > blastout
+    blastp -evalue 1e-5 -db mapped.fasta -outfmt 6 -query mapped_chunk.fasta > blastout
     """
 }
 
