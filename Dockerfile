@@ -1,7 +1,7 @@
 #
 #  From this base-image / starting-point
 #
-FROM debian:jessie
+FROM debian:testing
 
 #
 #  Authorship
