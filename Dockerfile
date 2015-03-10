@@ -59,11 +59,6 @@ RUN cd /opt && \
     gcc -O2 -o aragorn aragorn*.c
 
 #
-# Add Perl deps (needed for OrthoMCL)
-#
-RUN
-
-#
 # Install and configure OrthoMCL
 #
 ADD http://www.orthomcl.org/common/downloads/software/unsupported/v1.4/ORTHOMCL_V1.4_mcl-02-063.tar /opt/omcl.tar
