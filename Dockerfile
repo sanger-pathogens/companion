@@ -11,9 +11,7 @@ MAINTAINER ss34@sanger.ac.uk
 #
 # Pull in packages from testing
 #
-# RUN echo "deb http://http.debian.net/debian testing main" > \
-#      /etc/apt/sources.list && \
-#    apt-get update -q -q
+RUN apt-get update -q -q
 
 #
 # Install dependencies
