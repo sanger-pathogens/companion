@@ -18,7 +18,7 @@ RUN apt-get update -q -q
 # we need blast2 for ABACAS2 as it does not use BLAST+ yet
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
-                    unzip cpanminus mummer infernal exonerate \
+                    unzip cpanminus mummer infernal exonerate mafft fasttree \
                     --yes --force-yes && \
                     cpanm --force Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
@@ -75,6 +75,14 @@ RUN sed -i 's/our .PATH_TO_ORTHOMCL.*=.*/our $PATH_TO_ORTHOMCL = ".\/";/' /opt/O
     sed -i 's/our .BLASTALL.*=.*/our $BLASTALL = "\/usr\/bin\/blastall";/' /opt/ORTHOMCLV1.4/orthomcl_module.pm && \
     sed -i 's/our .FORMATDB.*=.*/our $FORMATDB = "\/usr\/bin\/formatdb";/' /opt/ORTHOMCLV1.4/orthomcl_module.pm && \
     sed -i 's/our .MCL.*=.*/our $MCL = "\/usr\/local\/bin\/mcl";/' /opt/ORTHOMCLV1.4/orthomcl_module.pm
+
+#
+# Install Gblocks
+#
+ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux_0.91b.tar.Z /opt/gblocks.tar.Z
+RUN cd /opt && \
+    tar -xzvf gblocks.tar.Z && \
+    cp Gblocks_0.91b/Gblocks /bin
 
 #
 # get GO OBO file
