@@ -19,6 +19,7 @@ RUN apt-get update -q -q
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
+                    circos \
                     --yes --force-yes && \
                     cpanm --force Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
