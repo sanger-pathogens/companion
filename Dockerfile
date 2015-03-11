@@ -15,8 +15,9 @@ RUN apt-get update -q -q
 
 #
 # Install dependencies
+# we need blast2 for ABACAS2 as it does not use BLAST+ yet
 #
-RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ snap \
+RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate \
                     --yes --force-yes && \
                     cpanm --force Carp Storable Bio::SearchIO List::Util \
