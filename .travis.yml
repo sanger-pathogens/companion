@@ -1,7 +1,7 @@
 install:
   - sudo test/travis.setup-apt.sh
   - sudo apt-get update
-  - sudo apt-get install --yes --force-yes build-essential wget hmmer lua5.1 blast2 unzip cpanminus mummer exonerate
+  - sudo apt-get install --yes --force-yes build-essential wget hmmer lua5.1 ncbi-blast+ unzip cpanminus mummer exonerate
   - sudo apt-get -t testing  --yes --force-yes install snap infernal
   - sudo test/travis.setup-augustus.sh
   - sudo test/travis.setup-gt.sh
