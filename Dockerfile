@@ -83,7 +83,8 @@ RUN sed -i 's/our .PATH_TO_ORTHOMCL.*=.*/our $PATH_TO_ORTHOMCL = ".\/";/' /opt/O
 ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux_0.91b.tar.Z /opt/gblocks.tar.Z
 RUN cd /opt && \
     tar -xzvf gblocks.tar.Z && \
-    cp Gblocks_0.91b/Gblocks /bin
+    cp Gblocks_0.91b/Gblocks /bin && \
+    chmod a+x /bin/Gblocks
 
 #
 # get GO OBO file
