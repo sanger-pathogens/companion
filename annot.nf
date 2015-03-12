@@ -833,7 +833,6 @@ if (params.do_contiguation) {
         input:
         set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from circos_inseq
         file 'refseq.fasta' from ref_seq
-        val params.dist_dir
 
         output:
         file 'blastout.txt' into circos_blastout
