@@ -65,24 +65,25 @@ pseudochr_seq_augustus = Channel.create()
 pseudochr_seq_snap = Channel.create()
 pseudochr_seq_augustus_ctg = Channel.create()
 pseudochr_seq_make_gaps = Channel.create()
-pseudochr_seq_make_dist = Channel.create()
-pseudochr_seq_dist = Channel.create()
+pseudochr_seq_make_dist_1 = Channel.create()
+pseudochr_seq_make_dist_2 = Channel.create()
 pseudochr_seq_tmhmm = Channel.create()
 pseudochr_seq_orthomcl = Channel.create()
 pseudochr_seq_splitsplice = Channel.create()
 pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
                    pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
-                   pseudochr_seq_snap, pseudochr_seq_dist,
-                   pseudochr_seq_make_gaps, pseudochr_seq_make_dist,
+                   pseudochr_seq_snap, pseudochr_seq_make_gaps,
+                   pseudochr_seq_make_dist_1, pseudochr_seq_make_dist_2,
                    pseudochr_seq_splitsplice,
                    pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
                    pseudochr_seq_exonerate)
 
 scaffolds_seq_augustus = Channel.create()
 scaffolds_seq_make_gaps = Channel.create()
-scaffolds_seq_make_dist = Channel.create()
+scaffolds_seq_make_dist_1 = Channel.create()
+scaffolds_seq_make_dist_2 = Channel.create()
 scaffolds_seq.into(scaffolds_seq_augustus, scaffolds_seq_make_gaps,
-                   scaffolds_seq_make_dist)
+                   scaffolds_seq_make_dist_1, scaffolds_seq_make_dist_2)
 
 scaffolds_agp_augustus = Channel.create()
 scaffolds_agp_make_gaps = Channel.create()
@@ -748,6 +749,8 @@ process make_distribution_gff {
     file 'pseudo.in.gff3' from gff3_with_pfam
     file 'pseudo.pseudochr.agp' from pseudochr_agp_make_dist
     file 'pseudo.scafs.agp' from scaffolds_agp_make_dist
+    file 'pseudochr.fasta' from pseudochr_seq_make_dist_1
+    file 'scafs.fasta' from scaffolds_seq_make_dist_1
 
     output:
     set file('pseudo.out.gff3'),
@@ -756,8 +759,10 @@ process make_distribution_gff {
         file('pseudo.scafs.agp') into result_agp
 
     """
-    cat pseudo.in.gff3 > pseudo.out.gff3
-    cat pseudo.in.gff3 > scaffold.out.gff3
+    split_gff_by_agp.lua pseudo.in.gff3 pseudo.pseudochr.agp \
+      pseudochr.fasta scafs.fasta > 1
+    gt gff3 -sort -retainids -tidy 1 > scaffold.out.gff3
+    cp pseudo.in.gff3 pseudo.out.gff3
     """
 }
 
@@ -776,8 +781,8 @@ process make_distribution_gaf {
 
 process make_distribution_seqs {
     input:
-    file 'pseudochr.in' from pseudochr_seq_make_dist
-    file 'scafs.in' from scaffolds_seq_make_dist
+    file 'pseudochr.in' from pseudochr_seq_make_dist_2
+    file 'scafs.in' from scaffolds_seq_make_dist_2
 
     output:
     set file('pseudochr.fasta.gz'),
@@ -795,13 +800,13 @@ stats_inseq = Channel.create()
 circos_inseq = Channel.create()
 report_inseq = Channel.create()
 out_seq = Channel.create()
-result_seq.into(stats_inseq, circos_inseq, out_seq)
+result_seq.into(stats_inseq, circos_inseq, report_inseq, out_seq)
 
 stats_gff3 = Channel.create()
 circos_gff3 = Channel.create()
 report_gff3 = Channel.create()
 out_gff3 = Channel.create()
-result_gff3.into(stats_gff3, circos_gff3, out_gff3)
+result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3)
 
 // GENOME STATS GENERATION
 // =======================
@@ -836,7 +841,8 @@ if (params.do_contiguation) {
         """
         gunzip -f pseudo.fasta.gz
         makeblastdb -dbtype nucl -in refseq.fasta
-        blastn -db refseq.fasta -query pseudo.fasta -evalue 1e-6 -outfmt 6 -out blastout.txt
+        blastn -db refseq.fasta -query pseudo.fasta -evalue 1e-6 -outfmt 6 \
+          -out blastout.txt
         """
     }
 
@@ -857,34 +863,61 @@ if (params.do_contiguation) {
         file 'gaps.txt' into circos_input_gaps
 
         """
-        prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}"
+        prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . \
+           "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}"
         """
     }
 
     circos_chromosomes = ref_target_mapping.splitCsv(sep: "\t")
-
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
     process circos_run {
         tag { chromosome[0] }
-        echo 'true'
 
         input:
         file 'links.txt' from circos_input_links.first()
         file 'karyotype.txt' from circos_input_karyotype.first()
         file 'genes.txt' from circos_input_genes.first()
         file 'gaps.txt' from circos_input_gaps.first()
-        file 'my.circos.conf' from circos_conffile
+        val circos_conffile
         val chromosome from circos_chromosomes
 
         output:
         set file('image.png'), val(chromosome) into circos_output
 
         """
-        circos  -conf my.circos.conf -param image/file=image.png  \
+        circos  -conf ${circos_conffile} -param image/file=image.png  \
                 -param chromosomes='${chromosome[1]};${chromosome[2]}' \
                 -param chromosomes_reverse=${chromosome[1]}
         """
     }
+
+    circos_output.subscribe {
+        println it[0]
+        if (params.dist_dir) {
+          it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
+        }
+    }
+}
+
+// REPORT CREATION
+// ===============
+
+specfile = file(params.SPECFILE)
+process make_report {
+    input:
+    set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from report_inseq
+    set file('pseudo.gff3'), file('scaf.gff3') from report_gff3
+    val specfile
+
+    output:
+    set file('pseudo.report.html'), file('scaf.report.html') into report_output
+
+    """
+    gt speck -specfile ${specfile} -matchdescstart -seqfile pseudo.fasta.gz \
+      -provideindex -typecheck so -output html pseudo.gff3 > pseudo.report.html
+    gt speck -specfile ${specfile} -matchdescstart -seqfile scaf.fasta.gz \
+      -provideindex -typecheck so -output html scaf.gff3 > scaf.report.html
+    """
 }
 
 // OUTPUT
@@ -938,9 +971,11 @@ stats_output.subscribe {
     }
 }
 
-circos_output.subscribe {
-    println it[0]
+report_output.subscribe {
+    println it
     if (params.dist_dir) {
-      it[0].copyTo(params.dist_dir)
+      for (file in it) {
+        file.copyTo(params.dist_dir)
+      }
     }
 }
