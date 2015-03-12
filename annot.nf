@@ -850,7 +850,6 @@ if (params.do_contiguation) {
         set file('pseudo.gff3'), file('scaf.gff3') from circos_gff3
         file 'refannot.gff3' from ref_annot
         file 'blast.in' from circos_blastout
-        val params.dist_dir
         val params.CHR_PATTERN
         val params.ABACAS_BIN_CHR
 
