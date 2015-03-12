@@ -19,8 +19,8 @@ RUN apt-get update -q -q
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
-                    circos \
-                    --yes --force-yes && \
+                    circos --yes --force-yes && \
+                    ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
                     cpanm --force Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
                     rm -rf /root/.cpanm/work/
@@ -83,8 +83,8 @@ RUN sed -i 's/our .PATH_TO_ORTHOMCL.*=.*/our $PATH_TO_ORTHOMCL = ".\/";/' /opt/O
 ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux_0.91b.tar.Z /opt/gblocks.tar.Z
 RUN cd /opt && \
     tar -xzvf gblocks.tar.Z && \
-    cp Gblocks_0.91b/Gblocks /bin && \
-    chmod a+x /bin/Gblocks
+    cp Gblocks_0.91b/Gblocks /usr/bin/Gblocks && \
+    chmod a+x /usr/bin/Gblocks
 
 #
 # get GO OBO file
