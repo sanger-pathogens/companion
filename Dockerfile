@@ -84,7 +84,7 @@ ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux_0.91b.tar.Z /o
 RUN cd /opt && \
     tar -xzvf gblocks.tar.Z && \
     cp Gblocks_0.91b/Gblocks /usr/bin/Gblocks && \
-    chmod a+x /usr/bin/Gblocks
+    chmod 755 /usr/bin/Gblocks
 
 #
 # get GO OBO file
