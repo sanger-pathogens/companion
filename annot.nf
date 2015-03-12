@@ -1,7 +1,5 @@
 #!/usr/bin/env nextflow
 
-statuslog = Channel.create()
-
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_annot)
 ref_seq = file(params.ref_seq)
@@ -10,8 +8,6 @@ go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
 omcl_gfffile = file(params.OMCL_GFFFILE)
 omcl_gaffile = file(params.OMCL_GAFFILE)
-
-
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -32,6 +28,7 @@ if (params.do_contiguation) {
         file 'pseudo.scafs.fasta' into scaffolds_seq
         file 'pseudo.scafs.agp' into scaffolds_agp
         file 'pseudo.contigs.fasta' into contigs_seq
+        file 'ref_target_mapping.txt' into ref_target_mapping
 
         """
         abacas2.nonparallel.sh \
@@ -108,14 +105,12 @@ process predict_tRNA {
 
     output:
     file 'aragorn.gff3' into trnas
-    stdout into statuslog
 
     """
     aragorn -t pseudo.pseudochr.fasta > out
     grep -E -C2 '(nucleotides|Sequence)' out > 1
     aragorn_to_gff3.lua < 1 > 2
     gt gff3 -sort -tidy -retainids 2 > aragorn.gff3
-    echo "tRNA finished"
     """
 }
 
@@ -130,13 +125,11 @@ process predict_ncRNA {
 
     output:
     file 'cm_out' into cmtblouts
-    stdout into statuslog
 
     """
     cp ${ncrna_models} .
     cmpress -F *.cm
     cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
-    echo "ncRNA finished"
     """
 }
 
@@ -148,12 +141,10 @@ process merge_ncrnas {
 
     output:
     file 'ncrna.gff3' into ncrnafile
-    stdout into statuslog
 
     """
     infernal_to_gff3.lua < ${cmtblout} > 1
     gt gff3 -sort -tidy -retainids 1 > ncrna.gff3
-    echo "ncRNA merged"
     """
 }
 
@@ -186,14 +177,12 @@ if (params.run_exonerate) {
 
         output:
         file 'exn_out' into exn_results
-        stdout into statuslog
 
         """
         exonerate -E false --model p2g --showvulgar no --showalignment no \
           --showquerygff no --showtargetgff yes --percent 80 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
            genome.fasta > exn_out
-        echo "exonerate finished"
         """
     }
     process make_hints {
@@ -204,7 +193,6 @@ if (params.run_exonerate) {
 
         output:
         set val(outline), file('augustus.hints') into exn_hints
-        stdout into statuslog
 
         script:
         outline = "--hintsfile=augustus.hints"
@@ -213,7 +201,6 @@ if (params.run_exonerate) {
           --source=P --maxintronlen=${params.AUGUSTUS_HINTS_MAXINTRONLEN} \
           --in=${exnout} \
           --out=augustus.hints
-          echo "hints created"
         """
     }
 } else {
@@ -231,7 +218,6 @@ process ratt_make_ref_embl {
 
     output:
     file '*.embl' into ref_embl
-    stdout into statuslog
 
     """
     # split away
@@ -249,7 +235,6 @@ process run_ratt {
     output:
     file 'Out*.final.embl' into ratt_result
     file 'Out*.Report.txt' into ratt_reports
-    stdout into statuslog
 
     """
     start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
@@ -263,7 +248,6 @@ process ratt_to_gff3 {
 
     output:
     file 'ratt.gff3' into ratt_gff3
-    stdout into statuslog
 
     """
     ratt_embl_to_gff3.lua in*.embl | \
@@ -287,7 +271,6 @@ process run_augustus_pseudo {
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
-    stdout into statuslog
 
     """
     augustus \
@@ -304,7 +287,6 @@ process run_augustus_pseudo {
         | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
         > augustus.full.tmp.2
     augustus_mark_partial.lua augustus.full.tmp.2 > augustus.gff3
-    echo "AUGUSTUS finished"
     """
 }
 
@@ -320,7 +302,6 @@ process run_augustus_contigs {
 
     output:
     file 'augustus.scaf.pseudo.mapped.gff3' into augustus_ctg_gff3
-    stdout into statuslog
 
     """
     augustus --species=${params.AUGUSTUS_SPECIES} \
@@ -362,7 +343,6 @@ process run_snap {
 
     output:
     file 'snap.gff3' into snap_gff3
-    stdout into statuslog
 
     """
     snap -gff -quiet  ${SNAP_MODEL} \
@@ -811,10 +791,106 @@ process make_distribution_seqs {
     """
 }
 
-// REPORTING
-// =========
+stats_inseq = Channel.create()
+circos_inseq = Channel.create()
+report_inseq = Channel.create()
+out_seq = Channel.create()
+result_seq.into(stats_inseq, circos_inseq, out_seq)
 
-result_gff3.subscribe {
+stats_gff3 = Channel.create()
+circos_gff3 = Channel.create()
+report_gff3 = Channel.create()
+out_gff3 = Channel.create()
+result_gff3.into(stats_gff3, circos_gff3, out_gff3)
+
+// GENOME STATS GENERATION
+// =======================
+
+process make_genome_stats {
+    input:
+    set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from stats_inseq
+    set file('pseudo.gff3'), file('scaf.gff3') from stats_gff3
+
+    output:
+    file 'stats.txt' into stats_output
+
+    """
+    gunzip -f pseudo.fasta.gz
+    genome_stats.lua pseudo.gff3 pseudo.fasta > stats.txt && rm -f pseudo.fasta
+    """
+}
+
+// CIRCOS PLOTS
+// ============
+
+if (params.do_contiguation) {
+    process blast_for_circos {
+        input:
+        set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from circos_inseq
+        file 'refseq.fasta' from ref_seq
+        val params.dist_dir
+
+        output:
+        file 'blastout.txt' into circos_blastout
+
+        """
+        gunzip -f pseudo.fasta.gz
+        makeblastdb -dbtype nucl -in refseq.fasta
+        blastn -db refseq.fasta -query pseudo.fasta -evalue 1e-6 -outfmt 6 -out blastout.txt
+        """
+    }
+
+    process make_circos_inputs {
+        input:
+        set file('pseudo.gff3'), file('scaf.gff3') from circos_gff3
+        file 'refannot.gff3' from ref_annot
+        file 'blast.in' from circos_blastout
+        val params.dist_dir
+        val params.CHR_PATTERN
+        val params.ABACAS_BIN_CHR
+
+        output:
+        file 'links.txt' into circos_input_links
+        file 'karyotype.txt' into circos_input_karyotype
+        file 'chromosomes.txt' into circos_input_chromosomes
+        file 'genes.txt' into circos_input_genes
+        file 'gaps.txt' into circos_input_gaps
+
+        """
+        prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}"
+        """
+    }
+
+    circos_chromosomes = ref_target_mapping.splitCsv(sep: "\t")
+
+    circos_conffile = file(params.CIRCOS_CONFIG_FILE)
+    process circos_run {
+        tag { chromosome[0] }
+        echo 'true'
+
+        input:
+        file 'links.txt' from circos_input_links.first()
+        file 'karyotype.txt' from circos_input_karyotype.first()
+        file 'genes.txt' from circos_input_genes.first()
+        file 'gaps.txt' from circos_input_gaps.first()
+        file 'my.circos.conf' from circos_conffile
+        val chromosome from circos_chromosomes
+
+        output:
+        set file('image.png'), val(chromosome) into circos_output
+
+        """
+        circos  -conf my.circos.conf -param image/file=image.png  \
+                -param chromosomes='${chromosome[1]};${chromosome[2]}' \
+                -param chromosomes_reverse=${chromosome[1]}
+        """
+    }
+}
+
+// OUTPUT
+// ======
+
+out_gff3.subscribe {
     println it
     if (params.dist_dir) {
       for (file in it) {
@@ -823,7 +899,7 @@ result_gff3.subscribe {
     }
 }
 
-result_seq.subscribe {
+out_seq.subscribe {
     println it
     if (params.dist_dir) {
       for (file in it) {
@@ -855,6 +931,16 @@ result_ortho.collectFile().subscribe {
     }
 }
 
-statuslog.subscribe {
-   // println "log:  " + it
+stats_output.subscribe {
+    println it
+    if (params.dist_dir) {
+      it.copyTo(params.dist_dir)
+    }
+}
+
+circos_output.subscribe {
+    println it[0]
+    if (params.dist_dir) {
+      it[0].copyTo(params.dist_dir)
+    }
 }

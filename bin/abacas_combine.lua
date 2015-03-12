@@ -94,6 +94,8 @@ for file in lfs.dir(arg[1]) do
   end
 end
 
+ref_target_chromosome_map = {}
+
 -- ensure correct naming for all sequences
 newscafs = {}
 newkeys = {}
@@ -104,6 +106,7 @@ for k,v in pairs(scafs) do
   newscafs[newid] = v
   newpseudochr_seq[newid] = pseudochr_seq[k]
   table.insert(newkeys, newid)
+  ref_target_chromosome_map[chr] = {k, newid}
 end
 scafs = newscafs
 keys = newkeys
@@ -150,6 +153,7 @@ scaf_agp_out:write("##agp-version\t2.0\n")
 ctg_fasta_out = io.open(outfileprefix .. ".contigs.fasta", "w+")
 ctg_agp_out = io.open(outfileprefix .. ".scafs.agp", "w+")
 ctg_agp_out:write("##agp-version\t2.0\n")
+ref_target_mapping_out = io.open("ref_target_mapping.txt", "w+")
 
 -- do the output
 scaf_i = 1
@@ -200,4 +204,8 @@ for _,seqid in ipairs(newkeys) do
     i = i + 1
     s_last_stop = tonumber(s.stop)
   end
+end
+
+for k,v in pairs(ref_target_chromosome_map) do
+  ref_target_mapping_out:write(k .. "\t" .. v[1] .. "\t" .. v[2] .. "\n")
 end
