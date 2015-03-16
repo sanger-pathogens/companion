@@ -24,7 +24,7 @@ function usage()
   os.exit(1)
 end
 
-if #arg < 3 then
+if #arg < 2 then
   usage()
 end
 
@@ -78,16 +78,18 @@ function visitor_stream:next_tree()
   return node
 end
 
--- parse mapfile and build mappings to original genes
-map_old_new = {}
-map_new_old = {}
-for l in io.lines(arg[3]) do
-  k, v = unpack(split(l, "\t"))
-  if not k or not v then
-    error("could not parse mapfile line: " .. l)
+-- parse mapfile and build mappings to original genes, if given
+if arg[3] then
+  map_old_new = {}
+  map_new_old = {}
+  for l in io.lines(arg[3]) do
+    k, v = unpack(split(l, "\t"))
+    if not k or not v then
+      error("could not parse mapfile line: " .. l)
+    end
+    map_new_old[k] = v
+    map_old_new[v] = k
   end
-  map_new_old[k] = v
-  map_old_new[v] = k
 end
 
 -- build cluster index
@@ -101,12 +103,18 @@ for l in io.lines(arg[2]) do
   local n = 0
   thisclust = {name = name, members = {}}
   for mname, mspecies in members:gmatch("([^(]+)%(([^)]+)%)%s?") do
-    if not map_new_old[mname] then
-      error("missing mapping for member " .. mname .. " from cluster " .. name)
+    if map_new_old then
+      if not map_new_old[mname] then
+        error("missing mapping for member " .. mname .. " from cluster " .. name)
+      end
+      oldname = make_gene_name(map_new_old[mname])
+      table.insert(thisclust.members, oldname)
+      clindex[oldname] = thisclust
+    else
+      genename = make_gene_name(mname)
+      table.insert(thisclust.members, genename)
+      clindex[genename] = thisclust
     end
-    oldname = make_gene_name(map_new_old[mname])
-    table.insert(thisclust.members, oldname)
-    clindex[oldname] = thisclust
     n = n + 1
   end
   if n ~= tonumber(nofgenes) then

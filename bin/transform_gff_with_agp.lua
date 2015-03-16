@@ -86,7 +86,7 @@ end
 -- visitor for feature transformation
 visitor = gt.custom_visitor_new()
 function visitor:visit_feature(fn)
-  seqid = fn:get_seqid():gsub("%.%d+$","")
+  seqid = fn:get_seqid() --:gsub("%.%d+$","")
   -- is this sequence/fragment part of a layout?
   if mappings[seqid] then
     -- yes, transform all children

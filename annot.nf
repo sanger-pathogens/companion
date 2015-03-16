@@ -560,14 +560,15 @@ process make_ref_input_for_orthomcl {
 
     output:
     file 'out.gg' into gg_file
-    file 'out.map' into mapfile
+   // file 'out.map' into mapfile
     file 'shortname' into shortname
     file 'mapped.fasta' into mapped_fasta
 
     script:
     """
     truncate_header.lua < ${pepfile} > pepfile.trunc
-    map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
+    #map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
+    cp pepfile.trunc mapped.fasta
     make_gg_line.lua ${shortname} mapped.fasta > out.gg
     echo "${shortname}" > shortname
     """
@@ -580,21 +581,22 @@ process make_target_input_for_orthomcl {
 
     output:
     file 'out.gg' into gg_file_ref
-    file 'out.map' into mapfile_ref
+  //  file 'out.map' into mapfile_ref
     file 'shortname' into shortname_ref
     file 'mapped.fasta' into mapped_fasta_ref
 
     """
     truncate_header.lua < pepfile.fas > pepfile.trunc
-    map_protein_names.lua ${params.GENOME_PREFIX} pepfile.trunc out.map > mapped.fasta
-    make_gg_line.lua ${params.GENOME_PREFIX} mapped.fasta > out.gg
+    #map_protein_names.lua ${params.GENOME_PREFIX} pepfile.trunc out.map > mapped.fasta
+    cp pepfile.trunc mapped.fasta
+    make_gg_line.lua ${params.GENOME_PREFIX} mapped.fasta  > out.gg
     echo "${params.GENOME_PREFIX}" > shortname
     """
 }
 full_gg = gg_file.mix(gg_file_ref).collectFile()
 full_shortnames = shortname.mix(shortname_ref).collectFile()
 full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
-full_mapfile = mapfile.mix(mapfile_ref).collectFile()
+//full_mapfile = mapfile.concat(mapfile_ref).collectFile()
 
 full_mapped_fasta_for_index = Channel.create()
 full_mapped_fasta_for_query = Channel.create()
@@ -663,7 +665,7 @@ process annotate_orthologs {
 
     input:
     file 'orthomcl_out' from orthomcl_cluster_out_annot
-    file 'mapfile' from full_mapfile
+   //  file 'mapfile' from full_mapfile
     file 'input.gff3' from genemodels_for_omcl_annot
     file 'gff_ref.gff3' from omcl_gfffile
     file 'gaf_ref.gaf' from omcl_gaffile
@@ -674,7 +676,8 @@ process annotate_orthologs {
 
     """
     # annotate GFF with ortholog clusters and members
-    map_clusters_gff.lua input.gff3 orthomcl_out mapfile > with_clusters.gff3
+    #map_clusters_gff.lua input.gff3 orthomcl_out mapfile > with_clusters.gff3
+    map_clusters_gff.lua input.gff3 orthomcl_out > with_clusters.gff3
 
     # transfer functional annotation from orthologs
     transfer_annotations_from_gff.lua with_clusters.gff3 \
