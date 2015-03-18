@@ -221,7 +221,7 @@ process ratt_make_ref_embl {
     file '*.embl' into ref_embl
 
     """
-    # split away
+    # make sure GFF3 contains sequence
     gt inlineseq_split -seqfile /dev/null -gff3file ref_without_seq.gff3 ${ref_annot}
     gt inlineseq_add -seqfile ${ref_seq} -matchdescstart ref_without_seq.gff3 > ref_with_seq.gff3
     gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo
@@ -310,11 +310,11 @@ process run_augustus_contigs {
         --protein=off --codingseq=off --strand=both --genemodel=partial \
         --gff3=on \
         --noInFrameStop=true \
-        pseudo.contigs.fasta > augustus.ctg.tmp
+        pseudo.contigs.fasta > augustus.ctg.tmp && \
     augustus_to_gff3.lua < augustus.ctg.tmp \
         | gt gff3 -sort -tidy -retainids \
         | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
-        > augustus.ctg.tmp.2
+        > augustus.ctg.tmp.2 && \
     augustus_mark_partial.lua augustus.ctg.tmp.2 > augustus.ctg.gff3
 
     transform_gff_with_agp.lua \
@@ -330,11 +330,11 @@ process run_augustus_contigs {
         pseudo.scaffolds.fasta \
         pseudo.pseudochr.fasta | \
         gt gff3 -sort -tidy -retainids > \
-        augustus.scaf.pseudo.mapped.tmp.gff3
-    clean_accessions.lua \
-        augustus.scaf.pseudo.mapped.tmp.gff3 | \
-        gt gff3 -sort -tidy -retainids > \
         augustus.scaf.pseudo.mapped.gff3
+    #clean_accessions.lua \
+    #    augustus.scaf.pseudo.mapped.tmp.gff3 | \
+    #    gt gff3 -sort -tidy -retainids > \
+    #    augustus.scaf.pseudo.mapped.gff3
     """
 }
 

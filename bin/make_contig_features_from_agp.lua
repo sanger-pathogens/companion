@@ -37,7 +37,7 @@ gff3v = gt.gff3_visitor_new()
 for l in io.lines(agp) do
   if string.sub(l, 1, 1) ~= '#' then
     obj, obj_s, obj_e, part_n, type, c6, c7, c8, c9 = unpack(split(l, "%s+"))
-    obj = obj:gsub("%.%d+$","")
+    -- obj = obj:gsub("%.%d+$","") -- no longer required!?
     if type == 'N' then
       fn = gt.feature_node_new(obj, "gap", obj_s, obj_e, ".")
       --fn:add_attribute("gap_type", type)
