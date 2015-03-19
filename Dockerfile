@@ -19,7 +19,7 @@ RUN apt-get update -q -q
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
-                    circos --yes --force-yes && \
+                    circos python --yes --force-yes && \
                     ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
                     cpanm --force Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
@@ -44,6 +44,8 @@ RUN cd /opt && \
     cd /opt/genometools-master && \
     make -j3 cairo=no curses=no && \
     make -j3 cairo=no curses=no install && \
+    cd gtpython && \
+    python setup.py install && \
     cd / && \
     rm -rf /opt/genometools-master*
 
