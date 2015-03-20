@@ -6,3 +6,4 @@ cd gff3toembl-master
 python setup.py install
 cd ..
 rm -rf /opt/gff3toembl-master*
+rm master.zip

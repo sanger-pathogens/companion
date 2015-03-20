@@ -9,3 +9,4 @@ cd gtpython
 python setup.py install
 cd ..
 rm -rf /opt/genometools-master*
+rm master.zip
