@@ -1,5 +1,6 @@
 #!/bin/bash
 set -ev
+rm -f master.zip
 wget https://github.com/genometools/genometools/archive/master.zip
 unzip master.zip
 cd genometools-master
@@ -9,4 +10,4 @@ cd gtpython
 python setup.py install
 cd ..
 rm -rf /opt/genometools-master*
-rm master.zip
+rm -f master.zip

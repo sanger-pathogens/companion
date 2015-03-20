@@ -70,7 +70,6 @@ function stream:process_current_cluster()
     if n:get_type() ~= "gap" then
       for _,g in ipairs(gaps) do
         local mrna = nil
-
         for c in cur_gene:children() do
           if c:get_type() == "mRNA" then
             mrna = c
