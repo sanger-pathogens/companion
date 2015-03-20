@@ -119,6 +119,13 @@ ADD ./RATT /opt/RATT
 #
 ADD ./ABACAS2 /opt/ABACAS2
 
+#
+# install gff3 to EMBL converter
+#
+RUN git clone https://github.com/sanger-pathogens/gff3toembl.git /opt/gff3toembl && \
+    cd /opt/gff3toembl && \
+    python setup.py install
+
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
