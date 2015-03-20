@@ -122,8 +122,10 @@ ADD ./ABACAS2 /opt/ABACAS2
 #
 # install gff3 to EMBL converter
 #
-RUN git clone https://github.com/sanger-pathogens/gff3toembl.git /opt/gff3toembl && \
-    cd /opt/gff3toembl && \
+ADD https://github.com/sanger-pathogens/gff3toembl/archive/master.zip /opt/gff3toembl-master.zip
+RUN cd /opt && \
+    unzip gff3toembl-master.zip && \
+    cd /opt/gff3toembl-master && \
     python setup.py install
 
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
