@@ -924,7 +924,6 @@ if (params.make_embl) {
         input:
         file 'embl_in.gff3' from embl_full_gff
 
-
         output:
         file 'outfile.embl' into embl_out
 
