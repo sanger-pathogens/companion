@@ -802,14 +802,16 @@ process make_distribution_seqs {
 stats_inseq = Channel.create()
 circos_inseq = Channel.create()
 report_inseq = Channel.create()
+embl_inseq = Channel.create()
 out_seq = Channel.create()
-result_seq.into(stats_inseq, circos_inseq, report_inseq, out_seq)
+result_seq.into(stats_inseq, circos_inseq, report_inseq, out_seq, embl_inseq)
 
 stats_gff3 = Channel.create()
 circos_gff3 = Channel.create()
 report_gff3 = Channel.create()
+embl_gff3 = Channel.create()
 out_gff3 = Channel.create()
-result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3)
+result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3)
 
 // GENOME STATS GENERATION
 // =======================
@@ -896,6 +898,55 @@ if (params.do_contiguation && params.do_circos) {
         println it[0]
         if (params.dist_dir) {
           it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
+        }
+    }
+}
+
+// EMBL OUTPUT
+// ===============
+
+if (params.make_embl) {
+    process merge_gff3_for_gff3toembl {
+        input:
+        set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from embl_inseq
+        set file('pseudo.gff3'), file('scaf.gff3') from embl_gff3
+
+        output:
+        file 'full.gff3' into embl_full_gff
+
+        """
+        gt inlineseq_add -seqfile pseudo.fasta.gz -matchdescstart -force \
+          -o full.gff3 pseudo.gff3
+        """
+    }
+
+    process make_embl {
+        input:
+        file 'embl_in.gff3' from embl_full_gff
+
+
+        output:
+        file 'outfile.embl' into embl_out
+
+        """
+        gff3_to_embl --authors '${params.EMBL_AUTHORS}' \
+          --title '${params.EMBL_TITLE}' \
+          --publication '${params.EMBL_PUBLICATION}' \
+          --genome_type '${params.EMBL_GENOME_TYPE}' \
+          --classification '${params.EMBL_CLASSIFICATION}' \
+          --output_filename outfile.embl \
+          '${params.EMBL_ORGANISM}' '${params.TAXON_ID}' \
+            '${params.EMBL_PROJ_ACCESSION}' '${params.EMBL_DESCRIPTION}' \
+            embl_in.gff3
+        """
+    }
+
+    embl_out.subscribe {
+        println it
+        if (params.dist_dir) {
+          for (file in it) {
+            file.copyTo(params.dist_dir)
+          }
         }
     }
 }
