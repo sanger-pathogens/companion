@@ -831,7 +831,7 @@ process make_genome_stats {
 // CIRCOS PLOTS
 // ============
 
-if (params.do_contiguation) {
+if (params.do_contiguation and params.do_circos) {
     process blast_for_circos {
         input:
         set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from circos_inseq
