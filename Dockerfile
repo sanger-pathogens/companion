@@ -82,7 +82,7 @@ RUN sed -i 's/our .PATH_TO_ORTHOMCL.*=.*/our $PATH_TO_ORTHOMCL = ".\/";/' /opt/O
 #
 # Install Gblocks
 #
-ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux_0.91b.tar.Z /opt/gblocks.tar.Z
+ADD http://molevol.cmima.csic.es/castresana/Gblocks/Gblocks_Linux64_0.91b.tar.Z /opt/gblocks.tar.Z
 RUN cd /opt && \
     tar -xzvf gblocks.tar.Z && \
     cp Gblocks_0.91b/Gblocks /usr/bin/Gblocks && \
