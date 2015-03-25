@@ -946,7 +946,9 @@ if (params.make_embl) {
     embl_out.subscribe {
         println it
         if (params.dist_dir) {
-          it.copyTo(params.dist_dir)
+          for (file in it) {
+            file.copyTo(params.dist_dir)
+          }
         }
     }
 }
@@ -983,6 +985,7 @@ if (params.use_reference) {
 
         output:
         file "tree.out" into tree_out
+        file "tree.aln" into tree_aln
 
         """
         mafft tree_selection.fasta > tree.aln && \
@@ -991,6 +994,20 @@ if (params.use_reference) {
     }
 
     tree_out.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+
+    tree_genes.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+
+    tree_aln.subscribe {
         println it
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)

@@ -63,15 +63,17 @@ for clustername,cluster in pairs(clusters) do
   if is_global_core then
     table.insert(global_core_clusters, cluster)
   end
-  -- collect group core clusters (those with all species in group)
-  local is_group_core = true
-  for _,sp in ipairs(refs.groups[refgroup]) do
-    if is_group_core and not cluster.specidx[sp] then
-      is_group_core = false
+  if refgroup and refs.groups[refgroup] then
+    -- collect group core clusters (those with all species in group)
+    local is_group_core = true
+    for _,sp in ipairs(refs.groups[refgroup]) do
+      if is_group_core and not cluster.specidx[sp] then
+        is_group_core = false
+      end
     end
-  end
-  if is_group_core then
-    table.insert(group_core_clusters, cluster)
+    if is_group_core then
+      table.insert(group_core_clusters, cluster)
+    end
   end
 end
 
