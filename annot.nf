@@ -963,7 +963,6 @@ if (params.use_reference) {
         set file('pseudo.in.annotation.gff3'), file('scafs.in.annotation.gff3') from refcomp_gff3_in
         val params.GENOME_PREFIX
         val params.ref_dir
-        val params.ref_group
 
         output:
         file 'tree_selection.fasta' into tree_fasta
@@ -973,7 +972,7 @@ if (params.use_reference) {
 
         """
         stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
-          ${params.ref_dir} ${params.ref_group} ${params.GENOME_PREFIX}
+          ${params.ref_dir} '' ${params.GENOME_PREFIX}
         """
     }
 
