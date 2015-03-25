@@ -946,9 +946,7 @@ if (params.make_embl) {
     embl_out.subscribe {
         println it
         if (params.dist_dir) {
-          for (file in it) {
-            file.copyTo(params.dist_dir)
-          }
+          it.copyTo(params.dist_dir)
         }
     }
 }
