@@ -32,6 +32,18 @@ function gff3_decode(s)
   return s
 end
 
+function gff3_explode(tab)
+  local ret = {}
+  for _,item in ipairs(tab) do
+    local _tmp = {}
+    for k,v in pairs(item) do
+      table.insert(_tmp, k .. "=" .. v)
+    end
+    table.insert(ret, gff3_encode(table.concat(_tmp, ";")))
+  end
+  return table.concat(ret, ",")
+end
+
 function gff3_extract_structure(str)
   ret = {}
   for _,v in ipairs(split(str, ", ?")) do
@@ -244,4 +256,44 @@ end
 
 function clone_cc(incc)
   return deep_copy(incc, nil)
+end
+
+function make_gene_name(str)
+  if string.match(str, "%.%.") then
+    return split(str, "%.%.")[1]
+  elseif string.match(str, ":") then
+    return split(str, ":")[1]
+  else
+    return str
+  end
+end
+
+function get_clusters(filename)
+  local clindex = {}
+  local clusters = {}
+  for l in io.lines(filename) do
+    local name, nofgenes, noftaxa, members = string.match(l,
+                             "^([^(]+)%((%d+) genes,(%d+) taxa%):%s+(.+)")
+    if not name or not members then
+      error("could not parse cluster or members from line '" .. l .. "'")
+    end
+    clusters[name] = {}
+    local n = 0
+    local thisclust = {name = name, members = {}, specidx = {}, species = {}}
+    for mname, mspecies in members:gmatch("([^(]+)%(([^)]+)%)%s?") do
+      table.insert(thisclust.members, {mname, mspecies})
+      thisclust.specidx[mspecies] = true
+      table.insert(thisclust.species, mspecies)
+      clindex[mname] = thisclust
+      clindex[make_gene_name(mname)] = thisclust
+      n = n + 1
+    end
+    thisclust.species = table_unique(thisclust.species)
+    if n ~= tonumber(nofgenes) then
+      error("parsed " .. n .. " members from cluster " .. name
+              .. ", but expected " .. nofgenes)
+    end
+    clusters[name] = thisclust
+  end
+  return clindex, clusters
 end
