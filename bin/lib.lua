@@ -60,6 +60,11 @@ function gff3_extract_structure(str)
   return ret
 end
 
+function file_exists(name)
+   local f=io.open(name,"r")
+   if f~=nil then io.close(f) return true else return false end
+end
+
 function split(str, pat)
    local t = {}
    local fpat = "(.-)" .. pat
@@ -167,6 +172,9 @@ function get_fasta(filename, sep)
   local seqs = {}
   local cur_hdr = nil
   local cur_seqs = {}
+  if not file_exists(filename) then
+    error("file " .. filename .. " can not be loaded")
+  end
   for l in io.lines(filename) do
     hdr = l:match(">(.*)")
     if hdr then
@@ -271,6 +279,9 @@ end
 function get_clusters(filename)
   local clindex = {}
   local clusters = {}
+  if not file_exists(filename) then
+    error("file " .. filename .. " can not be loaded")
+  end
   for l in io.lines(filename) do
     local name, nofgenes, noftaxa, members = string.match(l,
                              "^([^(]+)%((%d+) genes,(%d+) taxa%):%s+(.+)")

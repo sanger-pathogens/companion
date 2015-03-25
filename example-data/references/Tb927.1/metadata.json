@@ -1,0 +1,13 @@
+{
+  "pep":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/proteins.fasta",
+  "nof_genes":480,
+  "gaf":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/go.gaf",
+  "genome":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/genome.fasta",
+  "chromosome_pattern":"Tb927_(%d+)_v%d",
+  "name":"Trypanosoma brucei TREU927 chromosome 1",
+  "nof_chromosomes":1,
+  "nof_regions":1,
+  "nof_coding_genes":471,
+  "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/chromosomes.fasta",
+  "gff":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/annotation.gff3"
+}

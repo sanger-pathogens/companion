@@ -6,6 +6,7 @@ ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
 ref_chr = file(params.ref_dir + "/" + params.ref_species + "/chromosomes.fasta")
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
+extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
@@ -270,6 +271,7 @@ process run_augustus_pseudo {
     input:
     set val(hintsline), file('augustus.hints') from exn_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
+    val extrinsic_cfg
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
@@ -282,7 +284,7 @@ process run_augustus_pseudo {
         --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
         ${hintsline} \
         --noInFrameStop=true \
-        --extrinsicCfgFile=${params.AUGUSTUS_EXTRINSIC_CFG} \
+        --extrinsicCfgFile=${extrinsic_cfg} \
         pseudo.pseudochr.fasta > augustus.full.tmp
     augustus_to_gff3.lua < augustus.full.tmp \
         | gt gff3 -sort -tidy -retainids \
@@ -548,7 +550,8 @@ process get_proteins_for_orthomcl {
 }
 proteins_orthomcl = Channel.create()
 proteins_pfam = Channel.create()
-proteins_target.into(proteins_orthomcl, proteins_pfam)
+refcomp_protein_in = Channel.create()
+proteins_target.into(proteins_orthomcl, proteins_pfam, refcomp_protein_in)
 
 process make_ref_input_for_orthomcl {
     input:
@@ -809,7 +812,9 @@ circos_gff3 = Channel.create()
 report_gff3 = Channel.create()
 embl_gff3 = Channel.create()
 out_gff3 = Channel.create()
-result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3)
+refcomp_gff3_in = Channel.create()
+result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3,
+                 refcomp_gff3_in)
 
 // GENOME STATS GENERATION
 // =======================
@@ -901,7 +906,7 @@ if (params.do_contiguation && params.do_circos) {
 }
 
 // EMBL OUTPUT
-// ===============
+// ===========
 
 if (params.make_embl) {
     process merge_gff3_for_gff3toembl {
@@ -939,6 +944,56 @@ if (params.make_embl) {
     }
 
     embl_out.subscribe {
+        println it
+        if (params.dist_dir) {
+          for (file in it) {
+            file.copyTo(params.dist_dir)
+          }
+        }
+    }
+}
+
+// REFERENCE COMPARISON
+// ====================
+
+if (params.use_reference) {
+    process reference_compare {
+        input:
+        file 'in.protein.fasta' from refcomp_protein_in
+        set file('pseudo.in.annotation.gff3'), file('scafs.in.annotation.gff3') from refcomp_gff3_in
+        val params.GENOME_PREFIX
+        val params.ref_dir
+        val params.ref_group
+
+        output:
+        file 'tree_selection.fasta' into tree_fasta
+        file 'tree_selection.genes' into tree_genes
+        file 'in.protein.fasta' into refcomp_protein_out
+        // ...
+
+        """
+        stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
+          ${params.ref_dir} ${params.ref_group} ${params.GENOME_PREFIX}
+        """
+    }
+
+    // TREE CALCULATION
+    // ================
+
+    process make_tree {
+        input:
+        file 'tree_selection.fasta' from tree_fasta
+
+        output:
+        file "tree.out" into tree_out
+
+        """
+        mafft tree_selection.fasta > tree.aln && \
+        FastTree tree.aln > tree.out
+        """
+    }
+
+    tree_out.subscribe {
         println it
         if (params.dist_dir) {
           for (file in it) {

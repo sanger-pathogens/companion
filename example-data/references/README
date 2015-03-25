@@ -1,0 +1,3 @@
+Add references to 'reference.json' and run update_references.lua when ready.
+This will produce preformatted directories for each input reference listed there
+and a new 'references.json' with the paths to the files created and the metadata gathered.

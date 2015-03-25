@@ -6,9 +6,24 @@
       "gaf" : "../genomes/L_major.gaf.1",
       "name" : "Leishmania major Friedlin chromosome 1",
       "chromosome_pattern" : "LmjF.(%d+)"
-    }
+    },
+    "LbrM.1" : {
+      "gff" : "../genomes/L_braziliensis.gff3.1",
+      "genome" : "../genomes/L_braziliensis.fasta.1",
+      "gaf" : "../genomes/L_braziliensis.gaf.1",
+      "name" : "Leishmania braziliensis chromosome 1",
+      "chromosome_pattern" : "LbrM.([0-9.]+)$"
+    },
+    "Tb927.1" : {
+      "gff" : "../genomes/T_brucei_927.gff3.1",
+      "genome" : "../genomes/T_brucei_927.fasta.1",
+      "gaf" : "../genomes/T_brucei_927.gaf.1",
+      "name" : "Trypanosoma brucei TREU927 chromosome 1",
+      "chromosome_pattern" : "Tb927_(%d+)_v%d"
+    },
   },
   "groups" : {
-    "Leishmania" : ["LmjF.1"]
+    "Leishmania" : ["LmjF.1", "LbrM.1"],
+    "Trypanosoma" : ["Tb927.1"]
   }
 }
