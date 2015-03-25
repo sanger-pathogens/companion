@@ -1,13 +1,14 @@
 #!/usr/bin/env nextflow
 
 genome_file = file(params.inseq)
-ref_annot = file(params.ref_annot)
-ref_seq = file(params.ref_seq)
-ref_chr = file(params.ref_chr)
+ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
+ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
+ref_chr = file(params.ref_dir + "/" + params.ref_species + "/chromosomes.fasta")
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
-omcl_gfffile = file(params.OMCL_GFFFILE)
-omcl_gaffile = file(params.OMCL_GAFFILE)
+omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
+omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
+omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -549,14 +550,10 @@ proteins_orthomcl = Channel.create()
 proteins_pfam = Channel.create()
 proteins_target.into(proteins_orthomcl, proteins_pfam)
 
-pepfiles = Channel
-              .from(params.OMCL_PEPFILES)
-              .map { val -> [val[0], file(val[1])]}
 process make_ref_input_for_orthomcl {
-    tag { shortname }
-
     input:
-    set val(shortname), file(pepfile) from pepfiles
+    val omcl_pepfile
+    val params.ref_species
 
     output:
     file 'out.gg' into gg_file
@@ -566,11 +563,11 @@ process make_ref_input_for_orthomcl {
 
     script:
     """
-    truncate_header.lua < ${pepfile} > pepfile.trunc
-    #map_protein_names.lua ${shortname} pepfile.trunc out.map > mapped.fasta
+    truncate_header.lua < ${omcl_pepfile} > pepfile.trunc
+    #map_protein_names.lua ${params.ref_species} pepfile.trunc out.map > mapped.fasta
     cp pepfile.trunc mapped.fasta
-    make_gg_line.lua ${shortname} mapped.fasta > out.gg
-    echo "${shortname}" > shortname
+    make_gg_line.lua ${params.ref_species} mapped.fasta > out.gg
+    echo "${params.ref_species}" > shortname
     """
 }
 
