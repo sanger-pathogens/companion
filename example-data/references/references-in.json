@@ -1,0 +1,14 @@
+{
+ "species" : {
+    "LmjF.1" : {
+      "gff" : "../genomes/L_major.gff3.1",
+      "genome" : "../genomes/L_major.fasta.1",
+      "gaf" : "../genomes/L_major.gaf.1",
+      "name" : "Leishmania major Friedlin chromosome 1",
+      "chromosome_pattern" : "LmjF.(%d+)"
+    }
+  },
+  "groups" : {
+    "Leishmania" : ["LmjF.1"]
+  }
+}

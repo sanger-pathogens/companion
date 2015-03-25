@@ -1,0 +1,20 @@
+{
+  "groups":{
+    "Leishmania":["LmjF.1"]
+  },
+  "species":{
+    "LmjF.1":{
+      "pep":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/proteins.fasta",
+      "nof_genes":85,
+      "gaf":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/go.gaf",
+      "genome":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/genome.fasta",
+      "chromosome_pattern":"LmjF.(%d+)",
+      "name":"Leishmania major Friedlin chromosome 1",
+      "nof_chromosomes":1,
+      "nof_regions":1,
+      "nof_coding_genes":85,
+      "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/chromosomes.fasta",
+      "gff":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/annotation.gff3"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-#!/nfs/users/nfs_s/ss34/genometools/bin/gt
+#!/usr/bin/env gt
 
 --[[
   Copyright (c) 2015 Sascha Steinbiss <ss34@sanger.ac.uk>
@@ -176,7 +176,9 @@ function rank_fixer_visitor:visit_feature(fn)
           end
         end
       end
-      n:set_attribute("product", gff3_explode(ranked))
+      if string.len(gff3_explode(ranked)) > 0 then
+        n:set_attribute("product", gff3_explode(ranked))
+      end
     end
   end
   return 0
@@ -268,7 +270,7 @@ end
 -- =========================================
 
 -- load local 'references.json' file
-local reffile = io.open("references.json", "rb")
+local reffile = io.open("references-in.json", "rb")
 local refcontent = reffile:read("*all")
 reffile:close()
 refs = json.decode(refcontent)
@@ -312,7 +314,7 @@ for name, values in pairs(refs.species) do
   end
 
   -- fix up annotations
-  out_stream = gt.gff3_out_stream_new(fixup_stream, name .. "/annotation.gff3")
+  out_stream = gt.gff3_out_stream_new_retainids(fixup_stream, name .. "/annotation.gff3")
   local gn = out_stream:next_tree()
   while (gn) do
     gn = out_stream:next_tree()
@@ -320,6 +322,7 @@ for name, values in pairs(refs.species) do
   if file_exists(name .. "/annotation_preclean.gff3") then
     os.remove(name .. "/annotation_preclean.gff3")
   end
+  values.gff = lfs.currentdir() .. "/" .. name .. "/annotation.gff3"
 
   -- prepare genome FASTA
   if file_exists(values.genome) then
@@ -340,18 +343,18 @@ for name, values in pairs(refs.species) do
       end
     end
   end
-  if file_exists(name .. "/proteins_preclean.fasta") then
-    os.remove(name .. "/proteins_preclean.fasta")
-  end
+  values.genome = lfs.currentdir() .. "/" .. name .. "/genome.fasta"
+  values.chromosomes = lfs.currentdir() .. "/" .. name .. "/chromosomes.fasta"
 
   -- prepare GAF
   if file_exists(values.gaf) then
     os.execute("cp " .. values.gaf .. " " .. name .. "/go.gaf")
   end
+  values.gaf = lfs.currentdir() .. "/" .. name .. "/go.gaf"
 
   -- extract proteins
   -- XXX TODO: check for applicability of mapping
-  os.execute("gt extractfeat -type CDS -join -translate -seqfile "
+  os.execute("gt extractfeat -type CDS -join -retainids -translate -seqfile "
     .. name .. "/genome.fasta -matchdescstart "
     .. name .. "/annotation.gff3 > " .. name .. "/proteins_preclean.fasta")
 
@@ -374,11 +377,20 @@ for name, values in pairs(refs.species) do
   if file_exists(name .. "/proteins_preclean.fasta") then
     os.remove(name .. "/proteins_preclean.fasta")
   end
+  values.pep =lfs.currentdir() .. "/" .. name .. "/proteins.fasta"
+
+  values.nof_genes = stat_visitor.stats.nof_genes
+  values.nof_coding_genes = stat_visitor.stats.nof_coding_genes
+  values.nof_regions = stat_visitor.stats.nof_regions
+  values.nof_chromosomes = stat_visitor.stats.nof_chromosomes
 
   -- write out table with metadata (number of genes, etc.)
   metadata_json_out = io.open(name .. "/metadata.json", "w+")
-  metadata_json_out:write(json.encode(stat_visitor.stats,{ indent = true }))
+  metadata_json_out:write(json.encode(values,{ indent = true }))
   metadata_json_out:write("\n")
   assert(table.save(stat_visitor.stats, name .. "/metadata.lua" ) == nil )
-
 end
+
+full_json_out = io.open("references.json", "w+")
+full_json_out:write(json.encode(refs,{ indent = true }))
+full_json_out:write("\n")
