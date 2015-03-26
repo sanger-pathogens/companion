@@ -551,7 +551,9 @@ process get_proteins_for_orthomcl {
 proteins_orthomcl = Channel.create()
 proteins_pfam = Channel.create()
 refcomp_protein_in = Channel.create()
-proteins_target.into(proteins_orthomcl, proteins_pfam, refcomp_protein_in)
+proteins_output = Channel.create()
+proteins_target.into(proteins_orthomcl, proteins_pfam, refcomp_protein_in,
+                     proteins_output)
 
 process make_ref_input_for_orthomcl {
     input:
@@ -814,8 +816,9 @@ embl_gff3 = Channel.create()
 out_gff3 = Channel.create()
 refcomp_gff3_in = Channel.create()
 genelist_gff3_in = Channel.create()
+prot_fasta_annot_gff3 = Channel.create()
 result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3,
-                 refcomp_gff3_in, genelist_gff3_in)
+                 refcomp_gff3_in, genelist_gff3_in, prot_fasta_annot_gff3)
 
 // GENOME STATS GENERATION
 // =======================
@@ -1057,6 +1060,21 @@ genelist_csv_out.subscribe {
     }
 }
 
+// PROTEIN SEQUENCE IMPROVEMENT
+// ============================
+
+process add_products_to_protein_fasta {
+    input:
+    file 'in.fasta' from proteins_output
+    set file('pseudo.gff3'), file('scaf.gff3') from prot_fasta_annot_gff3
+
+    output:
+    file 'proteins.fasta' into result_protein
+
+    """
+    add_products_to_fasta.lua pseudo.gff3 in.fasta > proteins.fasta
+    """
+}
 
 // OUTPUT
 // ======
@@ -1096,6 +1114,13 @@ result_gaf.collectFile().subscribe {
 }
 
 result_ortho.collectFile().subscribe {
+    println it
+    if (params.dist_dir) {
+      it.copyTo(params.dist_dir)
+    }
+}
+
+result_protein.subscribe {
     println it
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
