@@ -89,15 +89,17 @@ function annotate_vis:visit_feature(fn)
           -- product
           mem_name = onode:get_attribute("product")
           if mem_name then
-            mem_name = split(mem_name, "%%3B")[1]
-            mem_name = gff3_decode(mem_name):gsub("term=","")
-            -- remove pseudogene/fragment tags from product, new genes are functional
-            mem_name = mem_name:gsub(" ?%(pseudogene%)","")
-            mem_name = mem_name:gsub(",? ?pseudogene","")
-            mem_name = mem_name:gsub(" ?%(fragment%)","")
-            mem_name = mem_name:gsub(",? ?fragment","")
-            if not string.match(mem_name, "hypothetic") then
-              table.insert(names, {mem_name, orig_orth})
+            prod_a = gff3_extract_structure(mem_name)
+            if prod_a[1] and prod_a[1].term then
+              mem_name = prod_a[1].term
+              -- remove pseudogene/fragment tags from product, new genes are functional
+              mem_name = mem_name:gsub(" ?%(pseudogene%)","")
+              mem_name = mem_name:gsub(",? ?pseudogene","")
+              mem_name = mem_name:gsub(" ?%(fragment%)","")
+              mem_name = mem_name:gsub(",? ?fragment","")
+              if not string.match(mem_name, "hypothetic") then
+                table.insert(names, {mem_name, orig_orth})
+              end
             end
           end
           -- Dbxref

@@ -270,115 +270,6 @@ function remove_attrs_visitor:visit_feature(fn)
   return 0
 end
 
-rank_fixer_visitor = gt.custom_visitor_new()
-function rank_fixer_visitor:visit_feature(fn)
-  for n in fn:get_children() do
-    local p = n:get_attribute("product")
-    if p then
-      local products = gff3_extract_structure(p)
-      local ranked = {}
-      local seen_preferred = false
-      -- gather product names
-      for _,v in ipairs(products) do
-        table.insert(ranked, v)
-      end
-      local s = n:get_attribute("product_synonym")
-      if s then
-        local syns = split(s, ",")
-        for _,v in ipairs(syns) do
-          table.insert(ranked, {term=v, rank=1})
-        end
-        n:remove_attribute("product_synonym")
-      end
-      s = n:get_attribute("synonym")
-      if s then
-        local syns = split(s, ",")
-        for _,v in ipairs(syns) do
-          table.insert(ranked, {term=v, rank=1})
-        end
-        n:remove_attribute("synonym")
-      end
-      -- assign "is_preferred" flag
-      if #ranked > 1 then
-        for _,v in ipairs(ranked) do
-          if not rank and not seen_preferred then
-            v.rank = nil
-            v.is_preferred = "true"
-            seen_preferred = true
-          else
-            v.rank = 1
-            v.is_preferred = nil
-          end
-        end
-      end
-      n:set_attribute("product", gff3_explode(ranked))
-    end
-  end
-  return 0
-end
-
-synonym_mover_visitor = gt.custom_visitor_new()
-function synonym_mover_visitor:visit_feature(fn)
-  if fn:get_type() == "gene" or fn:get_type() == "pseudogene" then
-    for fn2 in fn:get_children() do
-      if fn2:get_type():match("RNA")
-          or fn2:get_type():match("transcript")
-          or fn2:get_type():match("CDS") then
-        local syn = fn2:get_attribute("synonym")
-        if syn then
-          if not fn:get_attribute("synonym") then
-            fn:set_attribute("synonym", syn)
-          end
-          fn2:remove_attribute("synonym")
-        end
-      end
-    end
-  end
-  return 0
-end
-
-uc_getter_visitor = gt.custom_visitor_new()
-ucs = {}
-function uc_getter_visitor:visit_feature(fn)
-  local target = nil
-  if fn:get_type() ~= "polypeptide" then
-    target = fn:get_attribute("ID")
-  else
-    target = fn:get_attribute("Derives_from")
-  end
-  for fn2 in fn:get_children() do
-    local uc = fn2:get_attribute("tritryp_uc")
-    if uc then
-      if not ucs[target] then
-        ucs[target] = {}
-      end
-      for _,v in ipairs(split(uc, ",")) do
-        table.insert(ucs[target], v)
-      end
-      ucs[target] = table_unique(ucs[target])
-    end
-  end
-  return 0
-end
-
-uc_mover_visitor = gt.custom_visitor_new()
-function uc_mover_visitor:visit_feature(fn)
-  local my_ucs = {}
-  for fn2 in fn:get_children() do
-    if fn2:get_attribute("ID") and ucs[fn2:get_attribute("ID")] then
-      my_ucs = table_add(my_ucs, ucs[fn2:get_attribute("ID")])
-    end
-    if fn2:get_attribute("tritryp_uc") then
-      fn2:remove_attribute("tritryp_uc")
-    end
-  end
-  if #my_ucs > 0 then
-    table.sort(my_ucs)
-    fn:add_attribute("tritryp_uc", table.concat(my_ucs, ","))
-  end
-  return 0
-end
-
 polypeptide_child_trimmer_visitor = gt.custom_visitor_new()
 function polypeptide_child_trimmer_visitor:visit_feature(fn)
   if fn:get_type() == "polypeptide" then
@@ -428,9 +319,6 @@ function fixup_stream:next_tree()
     node:accept(ncrna_visitor)
     node:accept(quotes_visitor)
     node:accept(remove_attrs_visitor)
- --   node:accept(rank_fixer_visitor)
-    node:accept(synonym_mover_visitor)
-    node:accept(uc_mover_visitor)
     node:accept(polypeptide_child_trimmer_visitor)
     node:accept(exon_remover_visitor)
   end

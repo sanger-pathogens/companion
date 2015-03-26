@@ -813,8 +813,9 @@ report_gff3 = Channel.create()
 embl_gff3 = Channel.create()
 out_gff3 = Channel.create()
 refcomp_gff3_in = Channel.create()
+genelist_gff3_in = Channel.create()
 result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3,
-                 refcomp_gff3_in)
+                 refcomp_gff3_in, genelist_gff3_in)
 
 // GENOME STATS GENERATION
 // =======================
@@ -946,9 +947,7 @@ if (params.make_embl) {
     embl_out.subscribe {
         println it
         if (params.dist_dir) {
-          for (file in it) {
-            file.copyTo(params.dist_dir)
-          }
+          it.copyTo(params.dist_dir)
         }
     }
 }
@@ -1035,6 +1034,29 @@ process make_report {
       -provideindex -typecheck so -output html scaf.gff3 > scaf.report.html
     """
 }
+
+// SIMPLE GENELIST
+// ===============
+
+process make_genelist {
+    input:
+    set file('pseudo.gff3'), file('scaf.gff3') from genelist_gff3_in
+
+    output:
+    file 'genelist.csv' into genelist_csv_out
+
+    """
+    genes_gff3_to_csv.lua pseudo.gff3 > genelist.csv
+    """
+}
+
+genelist_csv_out.subscribe {
+    println it
+    if (params.dist_dir) {
+      it.copyTo(params.dist_dir)
+    }
+}
+
 
 // OUTPUT
 // ======
