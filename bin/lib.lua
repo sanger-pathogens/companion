@@ -178,6 +178,7 @@ function get_fasta(filename, sep)
   for l in io.lines(filename) do
     hdr = l:match(">(.*)")
     if hdr then
+      hdr = split(hdr,"%s+")[1]
       table.insert(keys, hdr)
       if #cur_seqs > 0 and cur_hdr then
         if not seqs[cur_hdr] then
