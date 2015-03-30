@@ -1,8 +1,8 @@
 install:
   - sudo test/travis.setup-apt.sh
   - sudo apt-get update
-  - sudo apt-get install --yes --force-yes circos build-essential wget mafft fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate
-  - sudo apt-get -t testing  --yes --force-yes install snap infernal
+  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate
+  - sudo apt-get -t testing  --yes --force-yes install snap mafft infernal
   - sudo test/travis.setup-augustus.sh
   - sudo test/travis.setup-gt.sh
   - sudo test/travis.setup-orthomcl.sh
