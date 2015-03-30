@@ -3,6 +3,7 @@ install:
   - sudo apt-get update -q
   - sudo apt-get install mafft 
   - sudo test/travis.setup-apt.sh
+  - sudo apt-get update -q
   - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate
   - sudo apt-get -t testing  --yes --force-yes install snap infernal
   - sudo test/travis.setup-augustus.sh
