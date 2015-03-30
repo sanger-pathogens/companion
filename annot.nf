@@ -1,5 +1,24 @@
 #!/usr/bin/env nextflow
 
+/*
+    Copyright (c) 2014-2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+    Copyright (c) 2014-2015 Genome Research Ltd
+
+    Permission to use, copy, modify, and distribute this software for any
+    purpose with or without fee is hereby granted, provided that the above
+    copyright notice and this permission notice appear in all copies.
+
+    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
+// TODO check for required parameters!
+
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
@@ -541,7 +560,6 @@ process get_proteins_for_orthomcl {
         -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
         | truncate_header.lua > proteins.fas
 
-
     gt extractfeat -type pseudogenic_exon -translate \
         -join -retainids \
         -seqfile pseudo.pseudochr.fasta -matchdescstart < input.gff3 \
@@ -562,15 +580,13 @@ process make_ref_input_for_orthomcl {
 
     output:
     file 'out.gg' into gg_file
-   // file 'out.map' into mapfile
     file 'shortname' into shortname
     file 'mapped.fasta' into mapped_fasta
 
     script:
     """
     truncate_header.lua < ${omcl_pepfile} > pepfile.trunc
-    #map_protein_names.lua ${params.ref_species} pepfile.trunc out.map > mapped.fasta
-    cp pepfile.trunc mapped.fasta
+    ln -s pepfile.trunc mapped.fasta
     make_gg_line.lua ${params.ref_species} mapped.fasta > out.gg
     echo "${params.ref_species}" > shortname
     """
@@ -583,22 +599,20 @@ process make_target_input_for_orthomcl {
 
     output:
     file 'out.gg' into gg_file_ref
-  //  file 'out.map' into mapfile_ref
     file 'shortname' into shortname_ref
     file 'mapped.fasta' into mapped_fasta_ref
 
     """
     truncate_header.lua < pepfile.fas > pepfile.trunc
-    #map_protein_names.lua ${params.GENOME_PREFIX} pepfile.trunc out.map > mapped.fasta
-    cp pepfile.trunc mapped.fasta
+    ln -s pepfile.trunc mapped.fasta
     make_gg_line.lua ${params.GENOME_PREFIX} mapped.fasta  > out.gg
     echo "${params.GENOME_PREFIX}" > shortname
     """
 }
+
 full_gg = gg_file.mix(gg_file_ref).collectFile()
 full_shortnames = shortname.mix(shortname_ref).collectFile()
 full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
-//full_mapfile = mapfile.concat(mapfile_ref).collectFile()
 
 full_mapped_fasta_for_index = Channel.create()
 full_mapped_fasta_for_query = Channel.create()
@@ -636,8 +650,10 @@ process blast_for_orthomcl {
     file 'blastout' into orthomcl_blastout
 
     """
-   # blastp -word_size 6 -evalue 1e-5 -db mapped.fasta -outfmt 6 -query mapped_chunk.fasta > blastout
-    blastall -p blastp -W 4 -e 0.00001 -F T -d mapped.fasta -m 8 -i mapped_chunk.fasta > blastout
+   # blastp -word_size 6 -evalue 1e-5 -db mapped.fasta -outfmt 6 \
+   #  -query mapped_chunk.fasta > blastout
+    blastall -p blastp -W 4 -e 0.00001 -F T -d mapped.fasta -m 8 \
+      -i mapped_chunk.fasta > blastout
     """
 }
 
@@ -679,7 +695,6 @@ process annotate_orthologs {
 
     """
     # annotate GFF with ortholog clusters and members
-    #map_clusters_gff.lua input.gff3 orthomcl_out mapfile > with_clusters.gff3
     map_clusters_gff.lua input.gff3 orthomcl_out > with_clusters.gff3
 
     # transfer functional annotation from orthologs
@@ -721,7 +736,8 @@ process pfam_to_gff3 {
     file 'pfam.gff3' into pfam_gff3
 
     """
-    pfam_to_gff3.lua ${PFAM2GO} < pfam.out | gt gff3 -sort -tidy -retainids > pfam.gff3
+    pfam_to_gff3.lua ${PFAM2GO} < pfam.out \
+      | gt gff3 -sort -tidy -retainids > pfam.gff3
     """
 }
 
@@ -970,7 +986,6 @@ if (params.use_reference) {
         file 'tree_selection.fasta' into tree_fasta
         file 'tree_selection.genes' into tree_genes
         file 'in.protein.fasta' into refcomp_protein_out
-        // ...
 
         """
         stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
@@ -990,7 +1005,7 @@ if (params.use_reference) {
         file "tree.aln" into tree_aln
 
         """
-        mafft tree_selection.fasta > tree.aln && \
+        mafft --auto tree_selection.fasta > tree.aln
         FastTree tree.aln > tree.out
         """
     }
