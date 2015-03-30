@@ -887,6 +887,7 @@ if (params.do_contiguation && params.do_circos) {
         file 'chromosomes.txt' into circos_input_chromosomes
         file 'genes.txt' into circos_input_genes
         file 'gaps.txt' into circos_input_gaps
+        file 'bin.txt' into bin_target_mapping
 
         """
         prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . \
@@ -896,7 +897,7 @@ if (params.do_contiguation && params.do_circos) {
 
     circos_chromosomes = ref_target_mapping.splitCsv(sep: "\t")
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
-    process circos_run {
+    process circos_run_chrs {
         tag { chromosome[0] }
 
         input:
@@ -915,6 +916,30 @@ if (params.do_contiguation && params.do_circos) {
                 -param chromosomes='${chromosome[1]};${chromosome[2]}' \
                 -param chromosomes_reverse=${chromosome[1]}
         """
+    }
+
+    circos_binmap = bin_target_mapping.splitCsv(sep: "\t")
+    process circos_run_bin {
+        tag { "bin" }
+
+        input:
+        file 'links.txt' from circos_input_links.first()
+        file 'karyotype.txt' from circos_input_karyotype.first()
+        file 'genes.txt' from circos_input_genes.first()
+        file 'gaps.txt' from circos_input_gaps.first()
+        val circos_conffile
+        val binmap from circos_binmap
+
+        output:
+        set file('bin.png'), val('bin') into circos_output
+
+        script:
+        if (binmap[1] && binmap[2])
+            """
+            circos  -conf ${circos_conffile} -param image/file=bin.png  \
+                    -param chromosomes='${binmap[1]};${binmap[2]}' \
+                    -param chromosomes_reverse=${binmap[1]}
+            """
     }
 
     circos_output.subscribe {
@@ -1005,7 +1030,7 @@ if (params.use_reference) {
         file "tree.aln" into tree_aln
 
         """
-        mafft --auto tree_selection.fasta > tree.aln
+        mafft --auto --anysymbol --parttree --quiet tree_selection.fasta > tree.aln
         FastTree tree.aln > tree.out
         """
     }
