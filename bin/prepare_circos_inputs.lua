@@ -18,7 +18,9 @@
 ]]
 
 function usage()
-  io.stderr:write(string.format("Usage: %s <ref GFF annotation> <target GFF annotation> <blast output> <outpath> <chr_prefix> <bin_chr>\n" , arg[0]))
+  io.stderr:write(string.format("Usage: %s <ref GFF annotation> " ..
+                                "<target GFF annotation> <blast output> " ..
+                                "<outpath> <chr_prefix> <bin_chr>\n" , arg[0]))
   os.exit(1)
 end
 
@@ -29,14 +31,18 @@ end
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
 
-genes_out = io.open(arg[4] .. "/genes.txt", "a+")
-gaps_out = io.open(arg[4] .. "/gaps.txt", "a+")
-links_out = io.open(arg[4] .. "/links.txt", "a+")
-chr_out = io.open(arg[4] .. "/chromosomes.txt", "a+")
-karyotype_out = io.open(arg[4] .. "/karyotype.txt", "a+")
+genes_out = io.open(arg[4] .. "/genes.txt", "w+")
+gaps_out = io.open(arg[4] .. "/gaps.txt", "w+")
+links_out = io.open(arg[4] .. "/links.txt", "w+")
+chr_out = io.open(arg[4] .. "/chromosomes.txt", "w+")
+karyotype_out = io.open(arg[4] .. "/karyotype.txt", "w+")
+bin_out = io.open(arg[4] .. "/bin.txt", "w+")
 
 chr_prefix = arg[5]
 bin_chr = arg[6]
+
+-- holds reference chromosomes
+ref_chr = {}
 
 visitor = gt.custom_visitor_new()
 function visitor:visit_feature(fn)
@@ -47,9 +53,11 @@ function visitor:visit_feature(fn)
     end
     if fn:get_type() == "gap" then
       color = "yellow"
-      gaps_out:write(fn:get_seqid() .. "  " .. fn:get_range():get_start() .. "  " .. fn:get_range():get_end() .. "  color=" .. color .. "\n")
+      gaps_out:write(fn:get_seqid() .. "  " .. fn:get_range():get_start()
+          .. "  " .. fn:get_range():get_end() .. "  color=" .. color .. "\n")
     else
-      genes_out:write(fn:get_seqid() .. "  " .. fn:get_range():get_start() .. "  " .. fn:get_range():get_end() .. "  color=" .. color .. "\n")
+      genes_out:write(fn:get_seqid() .. "  " .. fn:get_range():get_start()
+          .. "  " .. fn:get_range():get_end() .. "  color=" .. color .. "\n")
     end
   end
   return 0
@@ -61,6 +69,9 @@ function visitor:visit_region(rn)
     if m and rn:get_seqid() ~= bin_chr then
       chr_out:write(m .. "\n")
     end
+  end
+  if self.is_ref then
+    table.insert(ref_chr, rn:get_seqid())
   end
 end
 
@@ -77,12 +88,16 @@ end
 visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
 visitor_stream.vis = visitor
 visitor.print_chr = true
+visitor.is_ref = true
 local gn = visitor_stream:next_tree()
 while (gn) do
   gn = visitor_stream:next_tree()
 end
+
 visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[2])
 visitor_stream.vis = visitor
+visitor.print_chr = false
+visitor.is_ref = false
 local gn = visitor_stream:next_tree()
 while (gn) do
   gn = visitor_stream:next_tree()
@@ -92,3 +107,5 @@ for l in io.lines(arg[3]) do
   targetid, refid, _, _, _, _, tfrom, tto, rfrom, rto, eval = unpack(split(l, "%s+"))
   links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
 end
+
+bin_out:write(bin_chr .. "\t" .. table.concat(ref_chr, ";") .. "\n")
