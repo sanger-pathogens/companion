@@ -51,16 +51,22 @@ function output_v:visit_feature(fn)
     if node:get_type() == "mRNA" then
       local id = node:get_attribute("ID")
       if id and peps[id] then
-        pr_a = gff3_extract_structure(peps[id]:get_attribute("product"))
-        gtype = "coding"
-        gprod = pr_a[1].term
+        pr = peps[id]:get_attribute("product")
+        if pr then
+          pr_a = gff3_extract_structure(peps[id]:get_attribute("product"))
+          gtype = "coding"
+          gprod = pr_a[1].term
+        end
       end
     elseif node:get_type() == "pseudogenic_transcript" then
       local id = node:get_attribute("ID")
       if id and peps[id] then
-        pr_a = gff3_extract_structure(peps[id]:get_attribute("product"))
-        gtype = "pseudogene"
-        gprod = pr_a[1].term
+        pr = peps[id]:get_attribute("product")
+        if pr then
+          pr_a = gff3_extract_structure(peps[id]:get_attribute("product"))
+          gtype = "pseudogene"
+          gprod = pr_a[1].term
+        end
       end
     elseif node:get_type():match("RNA$") then
       gtype = "non_coding"
