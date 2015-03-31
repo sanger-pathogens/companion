@@ -575,7 +575,7 @@ proteins_target.into(proteins_orthomcl, proteins_pfam, refcomp_protein_in,
 
 process make_ref_input_for_orthomcl {
     input:
-    val omcl_pepfile
+    file omcl_pepfile
     val params.ref_species
 
     output:
