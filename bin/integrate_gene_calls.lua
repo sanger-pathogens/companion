@@ -36,6 +36,27 @@ function powerset(s)
    return t
 end
 
+function get_weight(gene)
+  local fac = 1
+  local nof_cds = 0
+  for c in gene:children() do
+    if c:get_type() == "CDS" then
+      nof_cds = nof_cds + 1
+    end
+  end
+  -- apply reward for being annotated by RATT
+  -- unless RATT would produce a multi-exon gene, then only use that
+  -- if there's no other gene
+  if gene:get_source() == "RATT" then
+    if nof_cds == 1 then
+      fac = 3
+    else
+      fac = .1
+    end
+  end
+  return gene:get_range():length() * fac
+end
+
 stream = gt.custom_stream_new_unsorted()
 stream.outqueue = {}
 stream.curr_gene_set = {}
@@ -45,7 +66,25 @@ stream.last_seqid = nil
 function stream:process_current_cluster()
   local bestset = nil
   local max = 0
-  -- enumerate all subsets
+
+  -- make this overlapping set non-redundant
+  local nr_idx = {{}}
+  for i = #self.curr_gene_set,1,-1 do
+    local s = self.curr_gene_set[i]
+    local rng = s:get_range()
+    if nr_idx[rng:get_start()] then
+      if nr_idx[rng:get_start()][rng:get_end()] then
+        table.remove(self.curr_gene_set, i)
+      else
+        nr_idx[rng:get_start()][rng:get_end()] = s
+      end
+    else
+      nr_idx[rng:get_start()] = {}
+      nr_idx[rng:get_start()][rng:get_end()] = s
+    end
+  end
+
+  -- enumerate all non-subsets
   for _,s in ipairs(powerset(self.curr_gene_set)) do
     local overlaps = false
     local rng = nil
@@ -69,35 +108,7 @@ function stream:process_current_cluster()
         bestset = s
       end
       for _,v in ipairs(s) do
-        local nof_cds = 0
-        for c in v:children() do
-          if c:get_type() == "CDS" then
-            nof_cds = nof_cds + 1
-          end
-        end
-        -- apply reward for being annotated by RATT
-        -- unless RATT would produce a multi-exon gene, then only use that
-        -- if there's no other gene
-        local fac = 1
-        if v:get_source() == "RATT" then
-          if nof_cds == 1 then
-            fac = 3
-          else
-            fac = .1
-          end
-        end
-        --if self.idx:has_seqid(v:get_seqid()) then
-          --fac = 1
-         -- ptu = self.idx:get_features_for_range(v:get_seqid(), v:get_range())
-         -- if ptu and #ptu == 1 and ptu[1]:get_strand() ~= "?" then
-         --   if ptu[1]:get_strand() == v:get_strand() then
-         --     fac = 2.0
-         --   else
-         --     fac = -1
-         --   end
-         -- end
-        --end
-        sum = sum + (v:get_range():length() * fac)
+        sum = sum + get_weight(v)
       end
       if sum > max then
         max = sum
