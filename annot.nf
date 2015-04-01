@@ -489,11 +489,9 @@ process split_splice_models_at_gaps {
       gt gff3 -sort -retainids -tidy > tmp3
 
     # splice genes at inter-contig gaps, get rid of short partials
-    splice_genes_at_gaps.lua tmp3 | \
+    splice_genes_at_gaps_new.lua tmp3 | \
       gt gff3 -sort -retainids -tidy | \
-      gt select \
-          -rule_files ${FILTER_SHORT_PARTIALS_RULE} \
-      > tmp4
+      gt select -rule_files ${FILTER_SHORT_PARTIALS_RULE} > tmp4
 
     # get rid of genes still having stop codons
     filter_genes_with_stop_codons.lua \
