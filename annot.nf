@@ -811,10 +811,8 @@ process make_distribution_seqs {
         file('scafs.fasta.gz') into result_seq
 
     """
-    cp pseudochr.in ./pseudochr.fasta
-    gzip pseudochr.fasta
-    cp scafs.in ./scafs.fasta
-    gzip scafs.fasta
+    cp pseudochr.in ./pseudochr.fasta && gzip -9 pseudochr.fasta
+    cp scafs.in ./scafs.fasta && gzip -9 scafs.fasta
     """
 }
 
