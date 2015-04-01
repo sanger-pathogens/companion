@@ -33,18 +33,57 @@ outvis = gt.gff3_visitor_new()
 visitor = gt.custom_visitor_new()
 visitor.last_seqid = nil
 function visitor:visit_feature(fn)
-  local ignore = false
+  local has_stop = false
   for node in fn:children() do
     if node:get_type() == "mRNA" then
       local protseq = node:extract_and_translate_sequence("CDS", true,
                                                           region_mapping)
       if protseq:sub(1, -2):match("[*+#]") then
-        ignore = true
+        has_stop = true
         break
       end
     end
   end
-  if not ignore then
+  -- make this a pseudogene
+  if has_stop then
+    local npseudogene = nil
+    local nptranscript = nil
+    local npexon = nil
+    for node in fn:children() do
+      local rng = node:get_range()
+      if node:get_type() == "gene" then
+        npseudogene = gt.feature_node_new(node:get_seqid(), "pseudogene",
+                                          rng:get_start(), rng:get_end(),
+                                          node:get_strand())
+        for k,v in node:attribute_pairs() do
+          npseudogene:set_attribute(k, v)
+        end
+      elseif node:get_type() == "mRNA" then
+        assert(npseudogene)
+        nptranscript = gt.feature_node_new(node:get_seqid(),
+                                           "pseudogenic_transcript",
+                                           rng:get_start(), rng:get_end(),
+                                           node:get_strand())
+        npseudogene:add_child(nptranscript)
+        for k,v in node:attribute_pairs() do
+          nptranscript:set_attribute(k, v)
+        end
+      elseif node:get_type() == "CDS" then
+        assert(nptranscript)
+        npexon = gt.feature_node_new(node:get_seqid(),
+                                     "pseudogenic_exon",
+                                     rng:get_start(), rng:get_end(),
+                                     node:get_strand())
+        nptranscript:add_child(npexon)
+        for k,v in node:attribute_pairs() do
+          npexon:set_attribute(k, v)
+        end
+      end
+    end
+    if npseudogene then
+      npseudogene:accept(outvis)
+    end
+  else
     fn:accept(outvis)
   end
   return 0
