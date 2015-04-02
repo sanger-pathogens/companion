@@ -23,6 +23,7 @@ genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
 ref_chr = file(params.ref_dir + "/" + params.ref_species + "/chromosomes.fasta")
+ref_dir = file(params.ref_dir)
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
 extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
@@ -849,6 +850,89 @@ process make_genome_stats {
     """
 }
 
+// REFERENCE COMPARISON
+// ====================
+
+if (params.use_reference) {
+    process reference_compare {
+        input:
+        file 'in.protein.fasta' from refcomp_protein_in
+        set file('pseudo.in.annotation.gff3'), file('scafs.in.annotation.gff3') from refcomp_gff3_in
+        val params.GENOME_PREFIX
+        file ref_dir
+        val params.ref_species
+
+        output:
+        file 'tree_selection.fasta' into tree_fasta
+        file 'tree_selection.genes' into tree_genes
+        file 'in.protein.fasta' into refcomp_protein_out
+        file 'core_comp_circos.txt' into core_comp_circos
+        file 'core_comparison.txt' into core_comp
+
+        """
+        ls -Al /Users
+        ls -Al ${ref_dir}
+
+        stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
+          ${ref_dir} ${params.GENOME_PREFIX} ${params.ref_species}
+        """
+    }
+
+    // TREE CALCULATION
+    // ================
+
+    process make_tree {
+        input:
+        file 'tree_selection.fasta' from tree_fasta
+
+        output:
+        file "tree.out" into tree_out
+        file "tree.aln" into tree_aln
+
+        """
+        mafft --auto --anysymbol --parttree --quiet tree_selection.fasta > tree.aln
+        FastTree tree.aln > tree.out
+        """
+    }
+
+    tree_out.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+
+    tree_genes.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+
+    tree_aln.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+
+    core_comp.subscribe {
+        println it
+        if (params.dist_dir) {
+          it.copyTo(params.dist_dir)
+        }
+    }
+} else {
+    process make_empty_circos_clusters {
+        output:
+        file 'core_comp_circos.txt' into core_comp_circos
+
+        """
+        touch core_comp_circos.txt
+        """
+    }
+}
+
 // CIRCOS PLOTS
 // ============
 
@@ -895,6 +979,10 @@ if (params.do_contiguation && params.do_circos) {
     circos_input_links_bin = Channel.create()
     circos_input_links.into(circos_input_links_chr,circos_input_links_bin)
 
+    core_comp_circos_chr = Channel.create()
+    core_comp_circos_bin = Channel.create()
+    core_comp_circos.into(core_comp_circos_chr,core_comp_circos_bin)
+
     circos_input_karyotype_chr = Channel.create()
     circos_input_karyotype_bin = Channel.create()
     circos_input_karyotype.into(circos_input_karyotype_chr,
@@ -919,10 +1007,11 @@ if (params.do_contiguation && params.do_circos) {
         tag { chromosome[0] }
 
         input:
-        file 'links.txt' from circos_input_links_chr
-        file 'karyotype.txt' from circos_input_karyotype_chr
-        file 'genes.txt' from circos_input_genes_chr
-        file 'gaps.txt' from circos_input_gaps_chr
+        file 'links.txt' from circos_input_links_chr.first()
+        file 'karyotype.txt' from circos_input_karyotype_chr.first()
+        file 'genes.txt' from circos_input_genes_chr.first()
+        file 'gaps.txt' from circos_input_gaps_chr.first()
+        file 'core.txt' from core_comp_circos_chr.first()
         val circos_conffile
         val chromosome from circos_chromosomes
 
@@ -943,10 +1032,11 @@ if (params.do_contiguation && params.do_circos) {
         errorStrategy 'ignore'
 
         input:
-        file 'links.txt' from circos_input_links_bin
-        file 'karyotype.txt' from circos_input_karyotype_bin
-        file 'genes.txt' from circos_input_genes_bin
-        file 'gaps.txt' from circos_input_gaps_bin
+        file 'links.txt' from circos_input_links_bin.first()
+        file 'karyotype.txt' from circos_input_karyotype_bin.first()
+        file 'genes.txt' from circos_input_genes_bin.first()
+        file 'gaps.txt' from circos_input_gaps_bin.first()
+        file 'core.txt' from core_comp_circos_bin.first()
         val circos_binconffile
         val binmap from circos_binmap
 
@@ -1008,67 +1098,6 @@ if (params.make_embl) {
     }
 
     embl_out.subscribe {
-        println it
-        if (params.dist_dir) {
-          it.copyTo(params.dist_dir)
-        }
-    }
-}
-
-// REFERENCE COMPARISON
-// ====================
-
-if (params.use_reference) {
-    process reference_compare {
-        input:
-        file 'in.protein.fasta' from refcomp_protein_in
-        set file('pseudo.in.annotation.gff3'), file('scafs.in.annotation.gff3') from refcomp_gff3_in
-        val params.GENOME_PREFIX
-        val params.ref_dir
-
-        output:
-        file 'tree_selection.fasta' into tree_fasta
-        file 'tree_selection.genes' into tree_genes
-        file 'in.protein.fasta' into refcomp_protein_out
-
-        """
-        stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
-          ${params.ref_dir} ${params.GENOME_PREFIX}
-        """
-    }
-
-    // TREE CALCULATION
-    // ================
-
-    process make_tree {
-        input:
-        file 'tree_selection.fasta' from tree_fasta
-
-        output:
-        file "tree.out" into tree_out
-        file "tree.aln" into tree_aln
-
-        """
-        mafft --auto --anysymbol --parttree --quiet tree_selection.fasta > tree.aln
-        FastTree tree.aln > tree.out
-        """
-    }
-
-    tree_out.subscribe {
-        println it
-        if (params.dist_dir) {
-          it.copyTo(params.dist_dir)
-        }
-    }
-
-    tree_genes.subscribe {
-        println it
-        if (params.dist_dir) {
-          it.copyTo(params.dist_dir)
-        }
-    }
-
-    tree_aln.subscribe {
         println it
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
