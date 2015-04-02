@@ -20,7 +20,7 @@
 function usage()
   io.stderr:write("For a GFF3 file produced by annotation pipeline, output EMBL file suitable for Chado loader.\n")
   io.stderr:write("Requires an OBO file with a GO definition to add GO terms (pipeline only has IDs).\n")
-  io.stderr:write(string.format("Usage: %s <GFF annotation> <GO OBO file> <organism name>\n" , arg[0]))
+  io.stderr:write(string.format("Usage: %s <GFF annotation> <GO OBO file> <organism name> <sequence>\n" , arg[0]))
   os.exit(1)
 end
 
@@ -28,39 +28,10 @@ if #arg < 3 then
   usage()
 end
 
-function split(str, pat)
-   local t = {}
-   local fpat = "(.-)" .. pat
-   local last_end = 1
-   local s, e, cap = str:find(fpat, 1)
-   while s do
-      if s ~= 1 or cap ~= "" then
-        table.insert(t,cap)
-      end
-      last_end = e+1
-      s, e, cap = str:find(fpat, last_end)
-   end
-   if last_end <= #str then
-      cap = str:sub(last_end)
-      table.insert(t, cap)
-   end
-   return t
-end
+package.path = gt.script_dir .. "/?.lua;" .. package.path
+require("lib")
 
-function gff3_encode(s)
-  s = string.gsub(s, "[\t\n\r;=%&,]", function (c)
-        return string.format("%%%02X", string.byte(c))
-      end)
-  return s
-end
-
-function gff3_decode(s)
-  s = string.gsub(s, "%%([0-9a-fA-F][1-9a-fA-F])", function (n)
-        return string.char(tonumber("0x" .. n))
-      end)
-  return s
-end
-
+region_mapping = gt.region_mapping_new_seqfile_matchdescstart(arg[4])
 
 function parse_obo(filename)
   local gos = {}
@@ -113,7 +84,7 @@ function format_embl_attrib(node, attrib, qualifier, fct)
   if node and node:get_attribute(attrib) then
     for _,v in ipairs(split(node:get_attribute(attrib), ",")) do
       if fct then
-        s = fct(gff3_decode(v))
+        s = fct(v)
       else
         s = gff3_decode(v)
       end
@@ -182,15 +153,20 @@ function embl_vis:visit_feature(fn)
     end
     embl_vis.last_seqid = fn:get_seqid()
     io.output(fn:get_seqid()..".embl", "w+")
-    io.write("ID   " .. fn:get_seqid() ..
-                         "; SV 1; linear; genomic DNA; STD; UNC; " ..
-                         collect_vis.lengths[fn:get_seqid()] .. " BP.\n")
+    io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
     io.write("XX   \n")
     io.write("DE   " .. arg[3] .. ", " .. fn:get_seqid() .. "\n")
     io.write("XX   \n")
-    io.write("AC   " .. fn:get_seqid() .. ";\n")
+    io.write("AC   XXX.\n")
+    io.write("XX   \n")
+    io.write("PR   Project:00000000;\n")
     io.write("XX   \n")
     io.write("KW   \n")
+    io.write("XX   \n")
+    io.write("RN   [1]\n")
+    io.write("RA   Authors;\n")
+    io.write("RT   Title;\n")
+    io.write("RL   Unpublished.\n")
     io.write("XX   \n")
     io.write("OS   " .. arg[3] .. "\n")
     io.write("XX   \n")
@@ -202,10 +178,10 @@ function embl_vis:visit_feature(fn)
   end
 
   for node in fn:get_children() do
-    if node:get_type() == "mRNA" then
+    if node:get_type() == "mRNA" or node:get_type() == "pseudogenic_transcript" then
       local cnt = 0
       for cds in node:get_children() do
-        if cds:get_type() == "CDS" then
+        if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
           cnt = cnt + 1
         end
       end
@@ -219,9 +195,15 @@ function embl_vis:visit_feature(fn)
       local i = 1
       for cds in node:get_children() do
         if cds:get_type() == "CDS" then
-          io.write(cds:get_range():get_start() ..
-                          ".." ..
-                          cds:get_range():get_end())
+          if i == 1 and fn:get_attribute("Start_range") then
+            io.write("<")
+          end
+          io.write(cds:get_range():get_start())
+          io.write("..")
+          if i == cnt and fn:get_attribute("End_range") then
+            io.write(">")
+          end
+          io.write(cds:get_range():get_end())
           if i ~= cnt then
             io.write(",")
           end
@@ -238,9 +220,19 @@ function embl_vis:visit_feature(fn)
       local pp = self.pps[node:get_attribute("ID")]
       format_embl_attrib(pp, "product", "product",
           function (s)
-            return string.gsub(s, "Name=","")
+            local pr_a = gff3_extract_structure(s)
+            local gprod = pr_a[1].term
+            if gprod then
+              return gprod
+            else
+              return nil
+            end
           end)
-      format_embl_attrib(fn , "ID", "systematic_id", nil)
+      format_embl_attrib(fn , "ID", "locus_tag", nil)
+      if fn:get_type() == "pseudogene" then
+        io.write("FT                   /pseudo\n")
+        io.write("FT                   /pseudogene=\"unknown\"\n")
+      end
       format_embl_attrib(pp, "Dbxref", "db_xref", nil)
       format_embl_attrib(pp, "Dbxref", "EC_number",
           function (s)
@@ -251,6 +243,10 @@ function embl_vis:visit_feature(fn)
               return nil
             end
           end)
+      local protseq = node:extract_and_translate_sequence("CDS", true,
+                                                          region_mapping)
+      io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
+      io.write("FT                   /transl_table=1\n")
       -- not really used in EMBL
       -- format_embl_attrib(pp, "Ontology_term", "Ontology_term")
       -- disabled ortholog output for now (ask maa if its even implemented)
@@ -288,7 +284,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\"\n")
       end
-      format_embl_attrib(fn , "ID", "systematic_id", nil)
+      format_embl_attrib(fn , "ID", "locus_tag", nil)
     elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
       io.write("FT   ncRNA            ")
       if node:get_strand() == "-" then
@@ -300,7 +296,7 @@ function embl_vis:visit_feature(fn)
       end
       io.write("\n")
       io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(fn , "ID", "systematic_id", nil)
+      format_embl_attrib(fn , "ID", "locus_tag", nil)
     elseif string.match(node:get_type(), "rRNA") then
       io.write("FT   rRNA            ")
       if node:get_strand() == "-" then
@@ -312,7 +308,7 @@ function embl_vis:visit_feature(fn)
       end
       io.write("\n")
       io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(fn , "ID", "systematic_id", nil)
+      format_embl_attrib(fn , "ID", "locus_tag", nil)
     end
   end
   return 0
