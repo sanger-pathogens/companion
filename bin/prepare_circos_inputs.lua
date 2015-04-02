@@ -41,6 +41,8 @@ bin_out = io.open(arg[4] .. "/bin.txt", "w+")
 chr_prefix = arg[5]
 bin_chr = arg[6]
 
+has_bin = false
+
 -- holds reference chromosomes
 ref_chr = {}
 
@@ -63,7 +65,18 @@ function visitor:visit_feature(fn)
   return 0
 end
 function visitor:visit_region(rn)
-  karyotype_out:write("chr - " .. rn:get_seqid() .. " " .. rn:get_seqid() .. " " .. rn:get_range():get_start() .. " " .. rn:get_range():get_end() .. " grey\n")
+  karyotype_out:write("chr - " .. rn:get_seqid() .. " " .. rn:get_seqid()
+                        .. " " .. rn:get_range():get_start() .. " "
+                        .. rn:get_range():get_end() .. " ")
+  if rn:get_seqid() == bin_chr then
+    karyotype_out:write("black")
+  else
+    karyotype_out:write("grey")
+  end
+  karyotype_out:write("\n")
+  if rn:get_seqid() == bin_chr then
+    has_bin = true
+  end
   if self.print_chr then
     m = rn:get_seqid():match(chr_prefix)
     if m and rn:get_seqid() ~= bin_chr then
@@ -108,4 +121,6 @@ for l in io.lines(arg[3]) do
   links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
 end
 
-bin_out:write(bin_chr .. "\t" .. table.concat(ref_chr, ";") .. "\n")
+if has_bin then
+  bin_out:write(bin_chr .. "\t" .. table.concat(ref_chr, ";") .. "\n")
+end
