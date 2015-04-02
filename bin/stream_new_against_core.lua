@@ -23,11 +23,12 @@ local json = require ("dkjson")
 
 function usage()
   io.stderr:write(string.format("Usage: %s <in.gff3> <in.protein.fasta> "
-                                .. "<refdir> <speciesprefix>\n" , arg[0]))
+                                .. "<refdir> <speciesprefix> "
+                                .. "<reference prefix>\n" , arg[0]))
   os.exit(1)
 end
 
-if #arg < 4 then
+if #arg < 5 then
   usage()
 end
 
@@ -36,12 +37,21 @@ inprots = arg[2]
 refdir = arg[3]
 --refgroup = arg[4]
 speciesprefix = arg[4]
+refprefix = arg[5]
 
 -- load reference info
 local reffile = io.open(refdir .. "/references.json", "rb")
+if not reffile then
+  error("invalid reference directory '" .. refdir .. "' -- missing references.json file")
+end
 local refcontent = reffile:read("*all")
 reffile:close()
 refs = json.decode(refcontent)
+
+-- check for reference prefix
+if not refs.species[refprefix] then
+  error("invalid reference prefix '" .. refprefix .. "' not found in reference directory " .. refdir)
+end
 
 -- parse clusters
 clindex, clusters = get_clusters(refdir .. "/_all/all_orthomcl.out")
@@ -80,6 +90,7 @@ for clustername,cluster in pairs(clusters) do
 end
 
 cv = gt.custom_visitor_new()
+singletons = {}
 function cv:visit_feature(fn)
   for n in fn:get_children() do
     if n:get_type() == 'polypeptide' then
@@ -95,6 +106,10 @@ function cv:visit_feature(fn)
           end
         end
       end
+      -- collect singletons
+      if not n:get_attribute("ortholog_cluster") then
+        singletons[dfrom] = true
+      end
       if #groups > 0 then
         groups = table_unique(groups)
         -- only handle genes with all orthologs in the same cluster
@@ -109,6 +124,20 @@ function cv:visit_feature(fn)
     end
   end
   return 0
+end
+
+-- visitor to output CC roots with members in its 'nididx' field to a text file
+-- vor circos visualization
+circos_visitor = gt.custom_visitor_new()
+circos_visitor.color = 'green'
+function circos_visitor:visit_feature(fn)
+  for n in fn:get_children() do
+    local nid = n:get_attribute("ID")
+    if nid and self.nididx[nid] then
+      self.io:write(fn:get_seqid() .. "  " .. fn:get_range():get_start()
+                .. "  " .. fn:get_range():get_end() .. "  color=" .. self.color .. "\n")
+    end
+  end
 end
 
 -- perform core comparison
@@ -155,22 +184,44 @@ end
 
 -- searching for global core clusters with missing members in new species
 missing = {}
+local global_outfile = io.open("core_comparison.txt", "w+")
 for _,cluster in ipairs(global_core_clusters) do
   if not cluster.specidx[speciesprefix] then
     for _, v in ipairs(cluster.members) do
-      print("global\t" .. cluster.name .. "\t" .. v[1] .. "\t" .. v[2])
+      global_outfile:write("global\t" .. cluster.name .. "\t" .. v[1] ..
+                           "\t" .. v[2] .. "\n")
+      if refprefix == v[2] then
+        missing[v[1]] = true
+      end
     end
   end
 end
 
 -- searching for group core clusters with missing members in new species
 for refgroup,members in pairs(refs.groups) do
-  print("missing ".. refgroup .. " core clusters (" .. #group_core_clusters[refgroup] .. " total)")
   for _,cluster in ipairs(group_core_clusters[refgroup]) do
     if not cluster.specidx[speciesprefix] then
       for _, v in ipairs(cluster.members) do
-        print(refgroup .. "\t" .. cluster.name .. "\t" .. v[1] .. "\t" .. v[2])
+        global_outfile:write(refgroup .. "\t" .. cluster.name .. "\t" .. v[1] ..
+                             "\t" .. v[2] .. "\n")
       end
     end
   end
+end
+
+-- circos output
+local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(refs.species[refprefix].gff), circos_visitor)
+circos_visitor.nididx = missing
+circos_visitor.io = io.open("core_comp_circos.txt", "w+")
+local gn = stream:next_tree()
+while (gn) do
+  gn = stream:next_tree()
+end
+local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(ingff), circos_visitor)
+circos_visitor.nididx = singletons
+circos_visitor.color = 'black'
+circos_visitor.io = io.open("core_comp_circos.txt", "w+")
+local gn = stream:next_tree()
+while (gn) do
+  gn = stream:next_tree()
 end
