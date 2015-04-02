@@ -891,16 +891,38 @@ if (params.do_contiguation && params.do_circos) {
         """
     }
 
+    circos_input_links_chr = Channel.create()
+    circos_input_links_bin = Channel.create()
+    circos_input_links.into(circos_input_links_chr,circos_input_links_bin)
+
+    circos_input_karyotype_chr = Channel.create()
+    circos_input_karyotype_bin = Channel.create()
+    circos_input_karyotype.into(circos_input_karyotype_chr,
+                                circos_input_karyotype_bin)
+
+    circos_input_chromosomes_chr = Channel.create()
+    circos_input_chromosomes_bin = Channel.create()
+    circos_input_chromosomes.into(circos_input_chromosomes_chr,
+                                  circos_input_chromosomes_bin)
+
+    circos_input_genes_chr = Channel.create()
+    circos_input_genes_bin = Channel.create()
+    circos_input_genes.into(circos_input_genes_chr,circos_input_genes_bin)
+
+    circos_input_gaps_chr = Channel.create()
+    circos_input_gaps_bin = Channel.create()
+    circos_input_gaps.into(circos_input_gaps_chr,circos_input_gaps_bin)
+
     circos_chromosomes = ref_target_mapping.splitCsv(sep: "\t")
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
     process circos_run_chrs {
         tag { chromosome[0] }
 
         input:
-        file 'links.txt' from circos_input_links.first()
-        file 'karyotype.txt' from circos_input_karyotype.first()
-        file 'genes.txt' from circos_input_genes.first()
-        file 'gaps.txt' from circos_input_gaps.first()
+        file 'links.txt' from circos_input_links_chr
+        file 'karyotype.txt' from circos_input_karyotype_chr
+        file 'genes.txt' from circos_input_genes_chr
+        file 'gaps.txt' from circos_input_gaps_chr
         val circos_conffile
         val chromosome from circos_chromosomes
 
@@ -915,27 +937,28 @@ if (params.do_contiguation && params.do_circos) {
     }
 
     circos_binmap = bin_target_mapping.splitCsv(sep: "\t")
+    circos_binconffile = file(params.CIRCOS_BIN_CONFIG_FILE)
     process circos_run_bin {
-        tag { "bin" }
+        // this process can fail
+        errorStrategy 'ignore'
 
         input:
-        file 'links.txt' from circos_input_links.first()
-        file 'karyotype.txt' from circos_input_karyotype.first()
-        file 'genes.txt' from circos_input_genes.first()
-        file 'gaps.txt' from circos_input_gaps.first()
-        val circos_conffile
+        file 'links.txt' from circos_input_links_bin
+        file 'karyotype.txt' from circos_input_karyotype_bin
+        file 'genes.txt' from circos_input_genes_bin
+        file 'gaps.txt' from circos_input_gaps_bin
+        val circos_binconffile
         val binmap from circos_binmap
 
         output:
         set file('bin.png'), val('bin') into circos_output
 
-        script:
-        if (binmap[1] && binmap[2])
-            """
-            circos  -conf ${circos_conffile} -param image/file=bin.png  \
-                    -param chromosomes='${binmap[1]};${binmap[2]}' \
-                    -param chromosomes_reverse=${binmap[1]}
-            """
+        """
+        circos  -conf ${circos_binconffile} -param image/file=bin.png  \
+                -param chromosomes='${binmap[0]};${binmap[1]}' \
+                -param chromosomes_reverse=${binmap[0]} \
+                -param chromosomes_scale='${binmap[0]}:0.4r'
+        """
     }
 
     circos_output.subscribe {
@@ -1010,7 +1033,7 @@ if (params.use_reference) {
 
         """
         stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
-          ${params.ref_dir} '' ${params.GENOME_PREFIX}
+          ${params.ref_dir} ${params.GENOME_PREFIX}
         """
     }
 

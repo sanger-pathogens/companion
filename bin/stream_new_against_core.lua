@@ -23,20 +23,19 @@ local json = require ("dkjson")
 
 function usage()
   io.stderr:write(string.format("Usage: %s <in.gff3> <in.protein.fasta> "
-                                .. "<refdir> <reference_group> "
-                                .. "<speciesprefix>\n" , arg[0]))
+                                .. "<refdir> <speciesprefix>\n" , arg[0]))
   os.exit(1)
 end
 
-if #arg < 5 then
+if #arg < 4 then
   usage()
 end
 
 ingff = arg[1]
 inprots = arg[2]
 refdir = arg[3]
-refgroup = arg[4]
-speciesprefix = arg[5]
+--refgroup = arg[4]
+speciesprefix = arg[4]
 
 -- load reference info
 local reffile = io.open(refdir .. "/references.json", "rb")
@@ -63,7 +62,10 @@ for clustername,cluster in pairs(clusters) do
   if is_global_core then
     table.insert(global_core_clusters, cluster)
   end
-  if refgroup and refs.groups[refgroup] then
+  for refgroup,_ in pairs(refs.groups) do
+    if not group_core_clusters[refgroup] then
+      group_core_clusters[refgroup] = {}
+    end
     -- collect group core clusters (those with all species in group)
     local is_group_core = true
     for _,sp in ipairs(refs.groups[refgroup]) do
@@ -72,15 +74,13 @@ for clustername,cluster in pairs(clusters) do
       end
     end
     if is_group_core then
-      table.insert(group_core_clusters, cluster)
+      table.insert(group_core_clusters[refgroup], cluster)
     end
   end
 end
 
 cv = gt.custom_visitor_new()
 function cv:visit_feature(fn)
-  mrna_context = false
-  transcript_id = ""
   for n in fn:get_children() do
     if n:get_type() == 'polypeptide' then
       local orths = n:get_attribute("orthologous_to")
@@ -129,7 +129,6 @@ end
 _, nseq = get_fasta_nosep(inprots)
 prots[speciesprefix] = nseq
 specseqs[speciesprefix] = ""
-math.randomseed(os.time())
 i = 0
 treegenes = io.open("tree_selection.genes", "w+")
 for _,cl in ipairs(global_core_clusters) do
@@ -156,15 +155,19 @@ end
 
 -- searching for global core clusters with missing members in new species
 missing = {}
-for clustername, cluster in pairs(global_core_clusters) do
+print("missing global core clusters (" .. #global_core_clusters .. " total)")
+for _,cluster in ipairs(global_core_clusters) do
   if not cluster.specidx[speciesprefix] then
     print(cluster.name)
   end
 end
 
 -- searching for group core clusters with missing members in new species
-for clustername, cluster in pairs(group_core_clusters) do
-  if not cluster.specidx[speciesprefix] then
-    print(cluster.name)
+for refgroup,members in pairs(refs.groups) do
+  print("missing ".. refgroup .. " core clusters (" .. #group_core_clusters[refgroup] .. " total)")
+  for _,cluster in ipairs(group_core_clusters[refgroup]) do
+    if not cluster.specidx[speciesprefix] then
+      print(cluster.name)
+    end
   end
 end
