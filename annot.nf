@@ -245,7 +245,7 @@ process ratt_make_ref_embl {
     # make sure GFF3 contains sequence
     gt inlineseq_split -seqfile /dev/null -gff3file ref_without_seq.gff3 ${ref_annot}
     gt inlineseq_add -seqfile ${ref_seq} -matchdescstart ref_without_seq.gff3 > ref_with_seq.gff3
-    gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo
+    gff3_to_embl.lua ref_with_seq.gff3 ${go_obo} Foo ${ref_seq}
     """
 }
 
