@@ -143,7 +143,7 @@ for _,cl in ipairs(global_core_clusters) do
   end
   treegenes:write("\n")
   i = i + 1
-  if i > 50 then
+  if i == 50 then
     break
   end
 end
@@ -155,10 +155,11 @@ end
 
 -- searching for global core clusters with missing members in new species
 missing = {}
-print("missing global core clusters (" .. #global_core_clusters .. " total)")
 for _,cluster in ipairs(global_core_clusters) do
   if not cluster.specidx[speciesprefix] then
-    print(cluster.name)
+    for _, v in ipairs(cluster.members) do
+      print("global\t" .. cluster.name .. "\t" .. v[1] .. "\t" .. v[2])
+    end
   end
 end
 
@@ -167,7 +168,9 @@ for refgroup,members in pairs(refs.groups) do
   print("missing ".. refgroup .. " core clusters (" .. #group_core_clusters[refgroup] .. " total)")
   for _,cluster in ipairs(group_core_clusters[refgroup]) do
     if not cluster.specidx[speciesprefix] then
-      print(cluster.name)
+      for _, v in ipairs(cluster.members) do
+        print(refgroup .. "\t" .. cluster.name .. "\t" .. v[1] .. "\t" .. v[2])
+      end
     end
   end
 end
