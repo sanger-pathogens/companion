@@ -45,7 +45,6 @@ function annotate_vis:visit_feature(fn)
       for _,orth in ipairs(split(orths, ",")) do
         nof_orths = nof_orths + 1
         orth = orth:gsub("GeneDB:","")
-        orth = orth:gsub("%.%d+$","")
         if self.store[orth] then
           for _,item in ipairs(self.store[orth]) do
             if is_experimental(item.evidence) then
@@ -69,8 +68,8 @@ function annotate_vis:visit_feature(fn)
                                   fn:get_attribute("ID"):split("%.")[1],
                                   orthlist[1].qual,
                                   go,
-                                  "GO_REF:0000001",
-                                  "IEA",
+                                  "GO_REF:0000101",
+                                  "ISO",
                                   table.concat(orthids, "|"),
                                   orthlist[1].aspect,
                                   tostring(prod[1].term),
@@ -101,9 +100,10 @@ for l in io.lines(arg[2]) do
                              taxon=taxon, data=data, assignedby=assignedby})
 end
 
-visitor_stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(arg[1]), annotate_vis)
+visitor_stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(arg[1]),
+                                    annotate_vis)
 annotate_vis.store = store
-out_stream =  visitor_stream -- gt.gff3_out_stream_new_retainids(visitor_stream)
+out_stream = visitor_stream
 local gn = out_stream:next_tree()
 while (gn) do
   gn = out_stream:next_tree()
