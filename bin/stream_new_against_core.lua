@@ -210,7 +210,7 @@ for refgroup,members in pairs(refs.groups) do
 end
 
 -- circos output
-local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(refdir .. "/" ... refprefix .. "/annotation.gff3"), circos_visitor)
+local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(refdir .. "/" .. refprefix .. "/annotation.gff3"), circos_visitor)
 circos_visitor.nididx = missing
 circos_visitor.io = io.open("core_comp_circos.txt", "w+")
 local gn = stream:next_tree()
