@@ -1,0 +1,28 @@
+#target name         accession query name           accession mdl mdl from   mdl to seq from   seq to strand trunc pass   gc  bias  score   E-value inc description of target
+#------------------- --------- -------------------- --------- --- -------- -------- -------- -------- ------ ----- ---- ---- ----- ------ --------- --- ---------------------
+Laet.15              -         5S_rRNA              RF00001    cm        1      119   329926   330044      +    no    1 0.50   0.1   95.8   5.1e-20 !   -
+Laet.09              -         5S_rRNA              RF00001    cm        1      119   268259   268141      -    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.09              -         5S_rRNA              RF00001    cm        1      119   400508   400626      +    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.09              -         5S_rRNA              RF00001    cm        1      119   413226   413108      -    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.11              -         5S_rRNA              RF00001    cm        1      119   166516   166398      -    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.11              -         5S_rRNA              RF00001    cm        1      119   390005   390123      +    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.21              -         5S_rRNA              RF00001    cm        1      119   158841   158723      -    no    1 0.50   0.1   93.0   2.8e-19 !   -
+Laet.23              -         5S_rRNA              RF00001    cm        1      119   246720   246602      -    no    1 0.52   0.1   92.5   3.7e-19 !   -
+Laet.05              -         5S_rRNA              RF00001    cm        1      119   404573   404691      +    no    1 0.52   0.1   90.2   1.5e-18 !   -
+Laet.21              -         5S_rRNA              RF00001    cm        1      119   444914   445032      +    no    1 0.51   0.1   88.3   4.4e-18 !   -
+Laet.30              -         5S_rRNA              RF00001    cm        1      119   243716   243636      -    no    1 0.51   0.3   17.9       5.5 !   -
+Laet.31              -         U2                   RF00004    cm        1      192   221603   221457      -    no    1 0.40   1.0   85.6   7.3e-24 !   -
+Laet.24              -         U6                   RF00026    cm        1      106   629923   629826      -    no    1 0.49   0.1   56.5   8.8e-13 !   -
+Laet.19              -         snoTBR5              RF00292    cm        1       96   666864   666952      +    no    1 0.58   0.2  106.3   3.6e-27 !   -
+Laet.19              -         snoTBR17             RF00294    cm        1      288   667052   667337      +    no    1 0.71  36.0   83.3   2.2e-22 !   -
+Laet.19              -         snoTBR7              RF00295    cm        1       75   666693   666765      +    no    1 0.48   0.1   49.8   3.2e-07 !   -
+#
+# Program:         cmsearch
+# Version:         1.1rc3 (June 2013)
+# Pipeline mode:   SEARCH
+# Query file:      ./cms/kinetoplastid_rnas.cm
+# Target file:     /lustre/scratch108/parasites/ss34/annot/Laet/ncrna/L_aethiopica.fasta
+# Option settings: /software/pathogen/external/apps/usr/bin/cmsearch --tblout /lustre/scratch108/parasites/ss34/annot/Laet/ncrna/out --cut_ga ./cms/kinetoplastid_rnas.cm /lustre/scratch108/parasites/ss34/annot/Laet/ncrna/L_aethiopica.fasta 
+# Current dir:     /nfs/users/nfs_s/ss34/annot/Laet/1_rnasearch
+# Date:            Wed Sep  3 09:53:04 2014
+# [ok]

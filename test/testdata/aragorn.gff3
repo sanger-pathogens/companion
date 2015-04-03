@@ -1,0 +1,286 @@
+##gff-version   3
+##sequence-region   Laet.02 235952 236043
+##sequence-region   Laet.03 255416 255489
+##sequence-region   Laet.05 404441 404512
+##sequence-region   Laet.06 72682 142779
+##sequence-region   Laet.07 483171 483242
+##sequence-region   Laet.09 268334 413645
+##sequence-region   Laet.10 531411 531721
+##sequence-region   Laet.11 166569 389946
+##sequence-region   Laet.15 329667 329851
+##sequence-region   Laet.16 435102 435176
+##sequence-region   Laet.17 287429 287793
+##sequence-region   Laet.21 158901 445528
+##sequence-region   Laet.23 246216 480644
+##sequence-region   Laet.24 205930 690043
+##sequence-region   Laet.27 415239 415331
+##sequence-region   Laet.29 834282 834502
+##sequence-region   Laet.30 781100 781171
+##sequence-region   Laet.31 221815 1403826
+##sequence-region   Laet.33 102733 1186160
+##sequence-region   Laet.34 492353 1557802
+##sequence-region   Laet.36 492034 2492346
+Laet.02	Aragorn_1.2.36	gene	235952	236043	.	+	.	ID=Laet.02.tRNA.1
+Laet.02	Aragorn_1.2.36	tRNA	235952	236043	.	+	.	ID=Laet.02.tRNA.1.trna;Parent=Laet.02.tRNA.1;aa=Val;anticodon=gac;gc_content=69.6
+###
+Laet.03	Aragorn_1.2.36	gene	255416	255489	.	+	.	ID=Laet.03.tRNA.1
+Laet.03	Aragorn_1.2.36	tRNA	255416	255489	.	+	.	ID=Laet.03.tRNA.1.trna;Parent=Laet.03.tRNA.1;aa=Lys;anticodon=ctt;gc_content=62.2
+###
+Laet.05	Aragorn_1.2.36	gene	404441	404512	.	+	.	ID=Laet.05.tRNA.1
+Laet.05	Aragorn_1.2.36	tRNA	404441	404512	.	+	.	ID=Laet.05.tRNA.1.trna;Parent=Laet.05.tRNA.1;aa=Arg;anticodon=acg;gc_content=54.2
+###
+Laet.06	Aragorn_1.2.36	gene	72682	72766	.	-	.	ID=Laet.06.tRNA.1
+Laet.06	Aragorn_1.2.36	tRNA	72682	72766	.	-	.	ID=Laet.06.tRNA.1.trna;Parent=Laet.06.tRNA.1;aa=seC;anticodon=tca;gc_content=62.4
+###
+Laet.06	Aragorn_1.2.36	gene	113562	113652	.	-	.	ID=Laet.06.tRNA.2
+Laet.06	Aragorn_1.2.36	tRNA	113562	113652	.	-	.	ID=Laet.06.tRNA.2.trna;Parent=Laet.06.tRNA.2;aa=Asp;anticodon=gtc;gc_content=68.1
+###
+Laet.06	Aragorn_1.2.36	gene	142689	142779	.	+	.	ID=Laet.06.tRNA.3
+Laet.06	Aragorn_1.2.36	tRNA	142689	142779	.	+	.	ID=Laet.06.tRNA.3.trna;Parent=Laet.06.tRNA.3;aa=Pro;anticodon=ggg;gc_content=74.7
+###
+Laet.07	Aragorn_1.2.36	gene	483171	483242	.	-	.	ID=Laet.07.tRNA.1
+Laet.07	Aragorn_1.2.36	tRNA	483171	483242	.	-	.	ID=Laet.07.tRNA.1.trna;Parent=Laet.07.tRNA.1;aa=Arg;anticodon=acg;gc_content=54.2
+###
+Laet.09	Aragorn_1.2.36	gene	268334	268405	.	+	.	ID=Laet.09.tRNA.1
+Laet.09	Aragorn_1.2.36	tRNA	268334	268405	.	+	.	ID=Laet.09.tRNA.1.trna;Parent=Laet.09.tRNA.1;aa=Met;anticodon=cat;gc_content=55.6
+###
+Laet.09	Aragorn_1.2.36	gene	268466	268549	.	+	.	ID=Laet.09.tRNA.2
+Laet.09	Aragorn_1.2.36	tRNA	268466	268549	.	+	.	ID=Laet.09.tRNA.2.trna;Parent=Laet.09.tRNA.2;aa=Leu;anticodon=cag;gc_content=57.1
+###
+Laet.09	Aragorn_1.2.36	gene	400373	400446	.	+	.	ID=Laet.09.tRNA.3
+Laet.09	Aragorn_1.2.36	tRNA	400373	400446	.	+	.	ID=Laet.09.tRNA.3.trna;Parent=Laet.09.tRNA.3;aa=Val;anticodon=cac;gc_content=60.8
+###
+Laet.09	Aragorn_1.2.36	gene	400700	400771	.	+	.	ID=Laet.09.tRNA.4
+Laet.09	Aragorn_1.2.36	tRNA	400700	400771	.	+	.	ID=Laet.09.tRNA.4.trna;Parent=Laet.09.tRNA.4;aa=His;anticodon=gtg;gc_content=54.2
+###
+Laet.09	Aragorn_1.2.36	gene	400952	401024	.	-	.	ID=Laet.09.tRNA.5
+Laet.09	Aragorn_1.2.36	tRNA	400952	401024	.	-	.	ID=Laet.09.tRNA.5.trna;Parent=Laet.09.tRNA.5;aa=Phe;anticodon=gaa;gc_content=61.6
+###
+Laet.09	Aragorn_1.2.36	gene	412978	413049	.	-	.	ID=Laet.09.tRNA.6
+Laet.09	Aragorn_1.2.36	tRNA	412978	413049	.	-	.	ID=Laet.09.tRNA.6.trna;Parent=Laet.09.tRNA.6;aa=Glu;anticodon=ttc;gc_content=52.8
+###
+Laet.09	Aragorn_1.2.36	gene	413288	413361	.	-	.	ID=Laet.09.tRNA.7
+Laet.09	Aragorn_1.2.36	tRNA	413288	413361	.	-	.	ID=Laet.09.tRNA.7.trna;Parent=Laet.09.tRNA.7;aa=Val;anticodon=cac;gc_content=60.8
+###
+Laet.09	Aragorn_1.2.36	gene	413436	413508	.	+	.	ID=Laet.09.tRNA.8
+Laet.09	Aragorn_1.2.36	tRNA	413436	413508	.	+	.	ID=Laet.09.tRNA.8.trna;Parent=Laet.09.tRNA.8;aa=Arg;anticodon=ccg;gc_content=61.6
+###
+Laet.09	Aragorn_1.2.36	gene	413574	413645	.	+	.	ID=Laet.09.tRNA.9
+Laet.09	Aragorn_1.2.36	tRNA	413574	413645	.	+	.	ID=Laet.09.tRNA.9.trna;Parent=Laet.09.tRNA.9;aa=His;anticodon=gtg;gc_content=54.2
+###
+Laet.10	Aragorn_1.2.36	gene	531411	531484	.	+	.	ID=Laet.10.tRNA.1
+Laet.10	Aragorn_1.2.36	tRNA	531411	531484	.	+	.	ID=Laet.10.tRNA.1.trna;Parent=Laet.10.tRNA.1;aa=Lys;anticodon=ctt;gc_content=62.2
+###
+Laet.10	Aragorn_1.2.36	gene	531524	531594	.	-	.	ID=Laet.10.tRNA.2
+Laet.10	Aragorn_1.2.36	tRNA	531524	531594	.	-	.	ID=Laet.10.tRNA.2.trna;Parent=Laet.10.tRNA.2;aa=Gly;anticodon=gcc;gc_content=64.8
+###
+Laet.10	Aragorn_1.2.36	gene	531648	531721	.	-	.	ID=Laet.10.tRNA.3
+Laet.10	Aragorn_1.2.36	tRNA	531648	531721	.	-	.	ID=Laet.10.tRNA.3.trna;Parent=Laet.10.tRNA.3;aa=Asn;anticodon=gtt;gc_content=60.8
+###
+Laet.11	Aragorn_1.2.36	gene	166569	166651	.	-	.	ID=Laet.11.tRNA.1
+Laet.11	Aragorn_1.2.36	tRNA	166569	166651	.	-	.	ID=Laet.11.tRNA.1.trna;Parent=Laet.11.tRNA.1;aa=Leu;anticodon=aag;gc_content=51.8
+###
+Laet.11	Aragorn_1.2.36	gene	166725	166797	.	+	.	ID=Laet.11.tRNA.2
+Laet.11	Aragorn_1.2.36	tRNA	166725	166797	.	+	.	ID=Laet.11.tRNA.2.trna;Parent=Laet.11.tRNA.2;aa=Ala;anticodon=cgc;gc_content=58.9
+###
+Laet.11	Aragorn_1.2.36	gene	172256	172326	.	-	.	ID=Laet.11.tRNA.3
+Laet.11	Aragorn_1.2.36	tRNA	172256	172326	.	-	.	ID=Laet.11.tRNA.3.trna;Parent=Laet.11.tRNA.3;aa=Gly;anticodon=ccc;gc_content=64.8
+###
+Laet.11	Aragorn_1.2.36	gene	172387	172459	.	-	.	ID=Laet.11.tRNA.4
+Laet.11	Aragorn_1.2.36	tRNA	172387	172459	.	-	.	ID=Laet.11.tRNA.4.trna;Parent=Laet.11.tRNA.4;aa=Ala;anticodon=cgc;gc_content=58.9
+###
+Laet.11	Aragorn_1.2.36	gene	389725	389797	.	-	.	ID=Laet.11.tRNA.5
+Laet.11	Aragorn_1.2.36	tRNA	389725	389797	.	-	.	ID=Laet.11.tRNA.5.trna;Parent=Laet.11.tRNA.5;aa=Met;anticodon=cat;gc_content=63.0
+###
+Laet.11	Aragorn_1.2.36	gene	389872	389946	.	+	.	ID=Laet.11.tRNA.6
+Laet.11	Aragorn_1.2.36	tRNA	389872	389946	.	+	.	ID=Laet.11.tRNA.6.trna;Parent=Laet.11.tRNA.6;aa=Arg;anticodon=acg;gc_content=54.7
+###
+Laet.15	Aragorn_1.2.36	gene	329667	329739	.	+	.	ID=Laet.15.tRNA.1
+Laet.15	Aragorn_1.2.36	tRNA	329667	329739	.	+	.	ID=Laet.15.tRNA.1.trna;Parent=Laet.15.tRNA.1;aa=Asp;anticodon=gtc;gc_content=58.9
+###
+Laet.15	Aragorn_1.2.36	gene	329778	329851	.	-	.	ID=Laet.15.tRNA.2
+Laet.15	Aragorn_1.2.36	tRNA	329778	329851	.	-	.	ID=Laet.15.tRNA.2.trna;Parent=Laet.15.tRNA.2;aa=Glu;anticodon=ctc;gc_content=56.8
+###
+Laet.16	Aragorn_1.2.36	gene	435102	435176	.	-	.	ID=Laet.16.tRNA.1
+Laet.16	Aragorn_1.2.36	tRNA	435102	435176	.	-	.	ID=Laet.16.tRNA.1.trna;Parent=Laet.16.tRNA.1;aa=Gln;anticodon=ctg;gc_content=53.3
+###
+Laet.17	Aragorn_1.2.36	gene	287429	287501	.	-	.	ID=Laet.17.tRNA.1
+Laet.17	Aragorn_1.2.36	tRNA	287429	287501	.	-	.	ID=Laet.17.tRNA.1.trna;Parent=Laet.17.tRNA.1;aa=Asp;anticodon=gtc;gc_content=58.9
+###
+Laet.17	Aragorn_1.2.36	gene	287578	287659	.	+	.	ID=Laet.17.tRNA.2
+Laet.17	Aragorn_1.2.36	tRNA	287578	287659	.	+	.	ID=Laet.17.tRNA.2.trna;Parent=Laet.17.tRNA.2;aa=Ser;anticodon=gct;gc_content=58.5
+###
+Laet.17	Aragorn_1.2.36	gene	287718	287793	.	+	.	ID=Laet.17.tRNA.3
+Laet.17	Aragorn_1.2.36	tRNA	287718	287793	.	+	.	ID=Laet.17.tRNA.3.trna;Parent=Laet.17.tRNA.3;aa=Ala;anticodon=agc;gc_content=52.6
+###
+Laet.21	Aragorn_1.2.36	gene	158901	158981	.	-	.	ID=Laet.21.tRNA.1
+Laet.21	Aragorn_1.2.36	tRNA	158901	158981	.	-	.	ID=Laet.21.tRNA.1.trna;Parent=Laet.21.tRNA.1;aa=Ser;anticodon=gct;gc_content=59.3
+###
+Laet.21	Aragorn_1.2.36	gene	445117	445188	.	+	.	ID=Laet.21.tRNA.2
+Laet.21	Aragorn_1.2.36	tRNA	445117	445188	.	+	.	ID=Laet.21.tRNA.2.trna;Parent=Laet.21.tRNA.2;aa=Pro;anticodon=agg;gc_content=61.1
+###
+Laet.21	Aragorn_1.2.36	gene	445318	445392	.	+	.	ID=Laet.21.tRNA.3
+Laet.21	Aragorn_1.2.36	tRNA	445318	445392	.	+	.	ID=Laet.21.tRNA.3.trna;Parent=Laet.21.tRNA.3;aa=Val;anticodon=aac;gc_content=58.7
+###
+Laet.21	Aragorn_1.2.36	gene	445455	445528	.	+	.	ID=Laet.21.tRNA.4
+Laet.21	Aragorn_1.2.36	tRNA	445455	445528	.	+	.	ID=Laet.21.tRNA.4.trna;Parent=Laet.21.tRNA.4;aa=Lys;anticodon=ctt;gc_content=62.2
+###
+Laet.23	Aragorn_1.2.36	gene	246216	246289	.	+	.	ID=Laet.23.tRNA.1
+Laet.23	Aragorn_1.2.36	tRNA	246216	246289	.	+	.	ID=Laet.23.tRNA.1.trna;Parent=Laet.23.tRNA.1;aa=Ile;anticodon=tat;gc_content=63.5
+###
+Laet.23	Aragorn_1.2.36	gene	246335	246407	.	-	.	ID=Laet.23.tRNA.2
+Laet.23	Aragorn_1.2.36	tRNA	246335	246407	.	-	.	ID=Laet.23.tRNA.2.trna;Parent=Laet.23.tRNA.2;aa=Val;anticodon=tac;gc_content=58.9
+###
+Laet.23	Aragorn_1.2.36	gene	246474	246545	.	-	.	ID=Laet.23.tRNA.3
+Laet.23	Aragorn_1.2.36	tRNA	246474	246545	.	-	.	ID=Laet.23.tRNA.3.trna;Parent=Laet.23.tRNA.3;aa=Gln;anticodon=ttg;gc_content=47.2
+###
+Laet.23	Aragorn_1.2.36	gene	246787	246860	.	-	.	ID=Laet.23.tRNA.4
+Laet.23	Aragorn_1.2.36	tRNA	246787	246860	.	-	.	ID=Laet.23.tRNA.4.trna;Parent=Laet.23.tRNA.4;aa=Arg;anticodon=acg;gc_content=52.7
+###
+Laet.23	Aragorn_1.2.36	gene	247082	247164	.	-	.	ID=Laet.23.tRNA.5
+Laet.23	Aragorn_1.2.36	tRNA	247082	247164	.	-	.	ID=Laet.23.tRNA.5.trna;Parent=Laet.23.tRNA.5;aa=Leu;anticodon=cag;gc_content=56.6
+###
+Laet.23	Aragorn_1.2.36	gene	247225	247298	.	-	.	ID=Laet.23.tRNA.6
+Laet.23	Aragorn_1.2.36	tRNA	247225	247298	.	-	.	ID=Laet.23.tRNA.6.trna;Parent=Laet.23.tRNA.6;aa=Thr;anticodon=tgt;gc_content=58.1
+###
+Laet.23	Aragorn_1.2.36	gene	247369	247442	.	+	.	ID=Laet.23.tRNA.7
+Laet.23	Aragorn_1.2.36	tRNA	247369	247442	.	+	.	ID=Laet.23.tRNA.7.trna;Parent=Laet.23.tRNA.7;aa=Arg;anticodon=tcg;gc_content=60.8
+###
+Laet.23	Aragorn_1.2.36	gene	247741	247813	.	+	.	ID=Laet.23.tRNA.8
+Laet.23	Aragorn_1.2.36	tRNA	247741	247813	.	+	.	ID=Laet.23.tRNA.8.trna;Parent=Laet.23.tRNA.8;aa=Lys;anticodon=ttt;gc_content=60.3
+###
+Laet.23	Aragorn_1.2.36	gene	247852	247924	.	-	.	ID=Laet.23.tRNA.9
+Laet.23	Aragorn_1.2.36	tRNA	247852	247924	.	-	.	ID=Laet.23.tRNA.9.trna;Parent=Laet.23.tRNA.9;aa=Gly;anticodon=tcc;gc_content=60.3
+###
+Laet.23	Aragorn_1.2.36	gene	248000	248072	.	+	.	ID=Laet.23.tRNA.10
+Laet.23	Aragorn_1.2.36	tRNA	248000	248072	.	+	.	ID=Laet.23.tRNA.10.trna;Parent=Laet.23.tRNA.10;aa=Trp;anticodon=cca;gc_content=54.8
+###
+Laet.23	Aragorn_1.2.36	gene	480563	480644	.	-	.	ID=Laet.23.tRNA.11
+Laet.23	Aragorn_1.2.36	tRNA	480563	480644	.	-	.	ID=Laet.23.tRNA.11.trna;Parent=Laet.23.tRNA.11;aa=Gly;anticodon=acc;gc_content=56.1
+###
+Laet.24	Aragorn_1.2.36	gene	205930	206001	.	+	.	ID=Laet.24.tRNA.1
+Laet.24	Aragorn_1.2.36	tRNA	205930	206001	.	+	.	ID=Laet.24.tRNA.1.trna;Parent=Laet.24.tRNA.1;aa=Pro;anticodon=cgg;gc_content=62.5
+###
+Laet.24	Aragorn_1.2.36	gene	630023	630097	.	+	.	ID=Laet.24.tRNA.2
+Laet.24	Aragorn_1.2.36	tRNA	630023	630097	.	+	.	ID=Laet.24.tRNA.2.trna;Parent=Laet.24.tRNA.2;aa=Gln;anticodon=ctg;gc_content=53.3
+###
+Laet.24	Aragorn_1.2.36	gene	630309	630392	.	-	.	ID=Laet.24.tRNA.3
+Laet.24	Aragorn_1.2.36	tRNA	630309	630392	.	-	.	ID=Laet.24.tRNA.3.trna;Parent=Laet.24.tRNA.3;aa=Leu;anticodon=taa;gc_content=56.0
+###
+Laet.24	Aragorn_1.2.36	gene	630476	630550	.	+	.	ID=Laet.24.tRNA.4
+Laet.24	Aragorn_1.2.36	tRNA	630476	630550	.	+	.	ID=Laet.24.tRNA.4.trna;Parent=Laet.24.tRNA.4;aa=Ile;anticodon=aat;gc_content=56.0
+###
+Laet.24	Aragorn_1.2.36	gene	632573	632647	.	+	.	ID=Laet.24.tRNA.5
+Laet.24	Aragorn_1.2.36	tRNA	632573	632647	.	+	.	ID=Laet.24.tRNA.5.trna;Parent=Laet.24.tRNA.5;aa=Ile;anticodon=aat;gc_content=56.0
+###
+Laet.24	Aragorn_1.2.36	gene	689972	690043	.	-	.	ID=Laet.24.tRNA.6
+Laet.24	Aragorn_1.2.36	tRNA	689972	690043	.	-	.	ID=Laet.24.tRNA.6.trna;Parent=Laet.24.tRNA.6;aa=Asp;anticodon=gtc;gc_content=58.3
+###
+Laet.27	Aragorn_1.2.36	gene	415239	415331	.	-	.	ID=Laet.27.tRNA.1
+Laet.27	Aragorn_1.2.36	tRNA	415239	415331	.	-	.	ID=Laet.27.tRNA.1.trna;Parent=Laet.27.tRNA.1;aa=Arg;anticodon=gcg;gc_content=55.9
+###
+Laet.29	Aragorn_1.2.36	gene	834282	834364	.	-	.	ID=Laet.29.tRNA.1
+Laet.29	Aragorn_1.2.36	tRNA	834282	834364	.	-	.	ID=Laet.29.tRNA.1.trna;Parent=Laet.29.tRNA.1;aa=Leu;anticodon=caa;gc_content=60.2
+###
+Laet.29	Aragorn_1.2.36	gene	834422	834502	.	-	.	ID=Laet.29.tRNA.2
+Laet.29	Aragorn_1.2.36	tRNA	834422	834502	.	-	.	ID=Laet.29.tRNA.2.trna;Parent=Laet.29.tRNA.2;aa=Ser;anticodon=cga;gc_content=56.8
+###
+Laet.30	Aragorn_1.2.36	gene	781100	781171	.	-	.	ID=Laet.30.tRNA.1
+Laet.30	Aragorn_1.2.36	tRNA	781100	781171	.	-	.	ID=Laet.30.tRNA.1.trna;Parent=Laet.30.tRNA.1;aa=Thr;anticodon=cgt;gc_content=61.1
+###
+Laet.31	Aragorn_1.2.36	gene	221815	221887	.	+	.	ID=Laet.31.tRNA.1
+Laet.31	Aragorn_1.2.36	tRNA	221815	221887	.	+	.	ID=Laet.31.tRNA.1.trna;Parent=Laet.31.tRNA.1;aa=Ala;anticodon=agc;gc_content=53.4
+###
+Laet.31	Aragorn_1.2.36	gene	549191	549262	.	+	.	ID=Laet.31.tRNA.2
+Laet.31	Aragorn_1.2.36	tRNA	549191	549262	.	+	.	ID=Laet.31.tRNA.2.trna;Parent=Laet.31.tRNA.2;aa=Gly;anticodon=gcc;gc_content=65.3
+###
+Laet.31	Aragorn_1.2.36	gene	549309	549382	.	-	.	ID=Laet.31.tRNA.3
+Laet.31	Aragorn_1.2.36	tRNA	549309	549382	.	-	.	ID=Laet.31.tRNA.3.trna;Parent=Laet.31.tRNA.3;aa=Glu;anticodon=ctc;gc_content=56.8
+###
+Laet.31	Aragorn_1.2.36	gene	1403617	1403689	.	+	.	ID=Laet.31.tRNA.4
+Laet.31	Aragorn_1.2.36	tRNA	1403617	1403689	.	+	.	ID=Laet.31.tRNA.4.trna;Parent=Laet.31.tRNA.4;aa=Phe;anticodon=gaa;gc_content=61.6
+###
+Laet.31	Aragorn_1.2.36	gene	1403745	1403826	.	-	.	ID=Laet.31.tRNA.5
+Laet.31	Aragorn_1.2.36	tRNA	1403745	1403826	.	-	.	ID=Laet.31.tRNA.5.trna;Parent=Laet.31.tRNA.5;aa=Ser;anticodon=aga;gc_content=56.1
+###
+Laet.33	Aragorn_1.2.36	gene	102733	102806	.	-	.	ID=Laet.33.tRNA.1
+Laet.33	Aragorn_1.2.36	tRNA	102733	102806	.	-	.	ID=Laet.33.tRNA.1.trna;Parent=Laet.33.tRNA.1;aa=Arg;anticodon=cct;gc_content=55.4
+###
+Laet.33	Aragorn_1.2.36	gene	102866	102939	.	-	.	ID=Laet.33.tRNA.2
+Laet.33	Aragorn_1.2.36	tRNA	102866	102939	.	-	.	ID=Laet.33.tRNA.2.trna;Parent=Laet.33.tRNA.2;aa=Arg;anticodon=tct;gc_content=52.7
+###
+Laet.33	Aragorn_1.2.36	gene	103014	103087	.	+	.	ID=Laet.33.tRNA.3
+Laet.33	Aragorn_1.2.36	tRNA	103014	103087	.	+	.	ID=Laet.33.tRNA.3.trna;Parent=Laet.33.tRNA.3;aa=Ala;anticodon=tgc;gc_content=55.4
+###
+Laet.33	Aragorn_1.2.36	gene	1186085	1186160	.	+	.	ID=Laet.33.tRNA.4
+Laet.33	Aragorn_1.2.36	tRNA	1186085	1186160	.	+	.	ID=Laet.33.tRNA.4.trna;Parent=Laet.33.tRNA.4;aa=Gly;anticodon=gcc;gc_content=64.5
+###
+Laet.34	Aragorn_1.2.36	gene	492353	492427	.	-	.	ID=Laet.34.tRNA.1
+Laet.34	Aragorn_1.2.36	tRNA	492353	492427	.	-	.	ID=Laet.34.tRNA.1.trna;Parent=Laet.34.tRNA.1;aa=Val;anticodon=aac;gc_content=58.7
+###
+Laet.34	Aragorn_1.2.36	gene	492667	492741	.	+	.	ID=Laet.34.tRNA.2
+Laet.34	Aragorn_1.2.36	tRNA	492667	492741	.	+	.	ID=Laet.34.tRNA.2.trna;Parent=Laet.34.tRNA.2;aa=Ile;anticodon=aat;gc_content=56.0
+###
+Laet.34	Aragorn_1.2.36	gene	492802	492874	.	+	.	ID=Laet.34.tRNA.3
+Laet.34	Aragorn_1.2.36	tRNA	492802	492874	.	+	.	ID=Laet.34.tRNA.3.trna;Parent=Laet.34.tRNA.3;aa=Met;anticodon=cat;gc_content=63.0
+###
+Laet.34	Aragorn_1.2.36	gene	492910	492989	.	-	.	ID=Laet.34.tRNA.4
+Laet.34	Aragorn_1.2.36	tRNA	492910	492989	.	-	.	ID=Laet.34.tRNA.4.trna;Parent=Laet.34.tRNA.4;aa=Leu;anticodon=tag;gc_content=62.5
+###
+Laet.34	Aragorn_1.2.36	gene	493064	493144	.	+	.	ID=Laet.34.tRNA.5
+Laet.34	Aragorn_1.2.36	tRNA	493064	493144	.	+	.	ID=Laet.34.tRNA.5.trna;Parent=Laet.34.tRNA.5;aa=Ser;anticodon=tga;gc_content=51.9
+###
+Laet.34	Aragorn_1.2.36	gene	1557163	1557236	.	-	.	ID=Laet.34.tRNA.6
+Laet.34	Aragorn_1.2.36	tRNA	1557163	1557236	.	-	.	ID=Laet.34.tRNA.6.trna;Parent=Laet.34.tRNA.6;aa=Asn;anticodon=gtt;gc_content=60.8
+###
+Laet.34	Aragorn_1.2.36	gene	1557297	1557368	.	-	.	ID=Laet.34.tRNA.7
+Laet.34	Aragorn_1.2.36	tRNA	1557297	1557368	.	-	.	ID=Laet.34.tRNA.7.trna;Parent=Laet.34.tRNA.7;aa=Pro;anticodon=cgg;gc_content=62.5
+###
+Laet.34	Aragorn_1.2.36	gene	1557452	1557523	.	+	.	ID=Laet.34.tRNA.8
+Laet.34	Aragorn_1.2.36	tRNA	1557452	1557523	.	+	.	ID=Laet.34.tRNA.8.trna;Parent=Laet.34.tRNA.8;aa=Thr;anticodon=cgt;gc_content=61.1
+###
+Laet.34	Aragorn_1.2.36	gene	1557587	1557671	.	+	.	ID=Laet.34.tRNA.9
+Laet.34	Aragorn_1.2.36	tRNA	1557587	1557671	.	+	.	ID=Laet.34.tRNA.9.trna;Parent=Laet.34.tRNA.9;aa=Leu;anticodon=tag;gc_content=52.9
+###
+Laet.34	Aragorn_1.2.36	gene	1557729	1557802	.	+	.	ID=Laet.34.tRNA.10
+Laet.34	Aragorn_1.2.36	tRNA	1557729	1557802	.	+	.	ID=Laet.34.tRNA.10.trna;Parent=Laet.34.tRNA.10;aa=Asn;anticodon=gtt;gc_content=60.8
+###
+Laet.36	Aragorn_1.2.36	gene	492034	492118	.	-	.	ID=Laet.36.tRNA.1
+Laet.36	Aragorn_1.2.36	tRNA	492034	492118	.	-	.	ID=Laet.36.tRNA.1.trna;Parent=Laet.36.tRNA.1;aa=Leu;anticodon=tag;gc_content=54.1
+###
+Laet.36	Aragorn_1.2.36	gene	492195	492267	.	-	.	ID=Laet.36.tRNA.2
+Laet.36	Aragorn_1.2.36	tRNA	492195	492267	.	-	.	ID=Laet.36.tRNA.2.trna;Parent=Laet.36.tRNA.2;aa=Thr;anticodon=agt;gc_content=63.0
+###
+Laet.36	Aragorn_1.2.36	gene	493071	493143	.	+	.	ID=Laet.36.tRNA.3
+Laet.36	Aragorn_1.2.36	tRNA	493071	493143	.	+	.	ID=Laet.36.tRNA.3.trna;Parent=Laet.36.tRNA.3;aa=Thr;anticodon=agt;gc_content=63.0
+###
+Laet.36	Aragorn_1.2.36	gene	493220	493304	.	+	.	ID=Laet.36.tRNA.4
+Laet.36	Aragorn_1.2.36	tRNA	493220	493304	.	+	.	ID=Laet.36.tRNA.4.trna;Parent=Laet.36.tRNA.4;aa=Leu;anticodon=tag;gc_content=54.1
+###
+Laet.36	Aragorn_1.2.36	gene	1054624	1054694	.	+	.	ID=Laet.36.tRNA.5
+Laet.36	Aragorn_1.2.36	tRNA	1054624	1054694	.	+	.	ID=Laet.36.tRNA.5.trna;Parent=Laet.36.tRNA.5;aa=Gly;anticodon=gcc;gc_content=64.8
+###
+Laet.36	Aragorn_1.2.36	gene	1055893	1055964	.	-	.	ID=Laet.36.tRNA.6
+Laet.36	Aragorn_1.2.36	tRNA	1055893	1055964	.	-	.	ID=Laet.36.tRNA.6.trna;Parent=Laet.36.tRNA.6;aa=Thr;anticodon=agt;gc_content=62.5
+###
+Laet.36	Aragorn_1.2.36	gene	1056027	1056097	.	-	.	ID=Laet.36.tRNA.7
+Laet.36	Aragorn_1.2.36	tRNA	1056027	1056097	.	-	.	ID=Laet.36.tRNA.7.trna;Parent=Laet.36.tRNA.7;aa=Gly;anticodon=gcc;gc_content=64.8
+###
+Laet.36	Aragorn_1.2.36	gene	1056171	1056242	.	+	.	ID=Laet.36.tRNA.8
+Laet.36	Aragorn_1.2.36	tRNA	1056171	1056242	.	+	.	ID=Laet.36.tRNA.8.trna;Parent=Laet.36.tRNA.8;aa=Pro;anticodon=agg;gc_content=61.1
+###
+Laet.36	Aragorn_1.2.36	gene	1633840	1633914	.	-	.	ID=Laet.36.tRNA.9
+Laet.36	Aragorn_1.2.36	tRNA	1633840	1633914	.	-	.	ID=Laet.36.tRNA.9.trna;Parent=Laet.36.tRNA.9;aa=Gln;anticodon=ctg;gc_content=52.0
+###
+Laet.36	Aragorn_1.2.36	gene	2491126	2491197	.	+	.	ID=Laet.36.tRNA.10
+Laet.36	Aragorn_1.2.36	tRNA	2491126	2491197	.	+	.	ID=Laet.36.tRNA.10.trna;Parent=Laet.36.tRNA.10;aa=Cys;anticodon=gca;gc_content=58.3
+###
+Laet.36	Aragorn_1.2.36	gene	2491982	2492064	.	-	.	ID=Laet.36.tRNA.11
+Laet.36	Aragorn_1.2.36	tRNA	2491982	2492064	.	-	.	ID=Laet.36.tRNA.11.trna;Parent=Laet.36.tRNA.11;aa=Leu;anticodon=aag;gc_content=51.8
+###
+Laet.36	Aragorn_1.2.36	gene	2492128	2492199	.	-	.	ID=Laet.36.tRNA.12
+Laet.36	Aragorn_1.2.36	tRNA	2492128	2492199	.	-	.	ID=Laet.36.tRNA.12.trna;Parent=Laet.36.tRNA.12;aa=Met;anticodon=cat;gc_content=55.6
+###
+Laet.36	Aragorn_1.2.36	gene	2492274	2492346	.	+	.	ID=Laet.36.tRNA.13
+Laet.36	Aragorn_1.2.36	tRNA	2492274	2492346	.	+	.	ID=Laet.36.tRNA.13.trna;Parent=Laet.36.tRNA.13;aa=Pro;anticodon=tgg;gc_content=52.1
+###
