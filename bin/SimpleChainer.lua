@@ -31,7 +31,7 @@ function SimpleChainer.new(arr, weight_func)
 		table.insert(mc, nval)
 	end
 	sc.mc = mc
-	return sc 
+	return sc
 end
 
 function SimpleChainer:chain()
@@ -59,7 +59,7 @@ function SimpleChainer:chain()
 	local nextbest = bestmatch
     local bestchain = {}
 	while nextbest do
-		table.insert(bestchain, 1, nextbest.v)
+		table.insert(bestchain, 1, nextbest.item)
 	    nextbest = prec[nextbest]
 	end
 	return bestchain

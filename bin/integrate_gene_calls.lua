@@ -18,7 +18,10 @@
 ]]
 
 function usage()
-  io.stderr:write(string.format("Usage: %s <GFF overlapping annotation>\n" , arg[0]))
+  io.stderr:write("Selects the 'best' gene models from a pooled set of " ..
+                  "GFF3 annotations.\n")
+  io.stderr:write(string.format("Usage: %s <GFF with overlapping annotation>\n",
+                                arg[0]))
   os.exit(1)
 end
 
@@ -26,19 +29,14 @@ if #arg < 1 then
   usage()
 end
 
-function powerset(s)
-   local t = {{}}
-   for i = 1, #s do
-      for j = 1, #t do
-         t[#t+1] = {s[i],unpack(t[j])}
-      end
-   end
-   return t
-end
+package.path = gt.script_dir .. "/?.lua;" .. package.path
+require("lib")
+require("SimpleChainer")
 
 function get_weight(gene)
   local fac = 1
   local nof_cds = 0
+  -- count the number of CDS/exons
   for c in gene:children() do
     if c:get_type() == "CDS" then
       nof_cds = nof_cds + 1
@@ -62,60 +60,28 @@ stream.outqueue = {}
 stream.curr_gene_set = {}
 stream.curr_rng = nil
 stream.last_seqid = nil
--- find non-overlapping subset with maximal total length
 function stream:process_current_cluster()
   local bestset = nil
   local max = 0
 
-  -- make this overlapping set non-redundant
-  local nr_idx = {{}}
-  for i = #self.curr_gene_set,1,-1 do
-    local s = self.curr_gene_set[i]
-    local rng = s:get_range()
-    if nr_idx[rng:get_start()] then
-      if nr_idx[rng:get_start()][rng:get_end()] then
-        table.remove(self.curr_gene_set, i)
-      else
-        nr_idx[rng:get_start()][rng:get_end()] = s
-      end
-    else
-      nr_idx[rng:get_start()] = {}
-      nr_idx[rng:get_start()][rng:get_end()] = s
-    end
-  end
+-- XXX debug
+--  print("before: " .. #self.curr_gene_set)
+--  if #self.curr_gene_set > 50 then
+--    for _,v in ipairs(self.curr_gene_set) do
+--      v:accept(vis)
+--    end
+--  end
 
-  -- enumerate all non-subsets
-  for _,s in ipairs(powerset(self.curr_gene_set)) do
-    local overlaps = false
-    local rng = nil
-    -- check for overlaps
-    for _,v in ipairs(s) do
-      if not rng then
-        rng = v:get_range()
-      else
-        if rng:overlap(v:get_range()) then
-          overlaps = true
-          break
-        else
-          rng = rng:join(v:get_range())
-        end
-      end
-    end
-    -- score this cluster
-    if not overlaps then
-      local sum = 0
-      if bestset == nil then
-        bestset = s
-      end
-      for _,v in ipairs(s) do
-        sum = sum + get_weight(v)
-      end
-      if sum > max then
-        max = sum
-        bestset = s
-      end
-    end
-  end
+  -- keep only non-overlapping chain with highest weight
+  bestset = SimpleChainer.new(self.curr_gene_set):chain()
+
+-- XXX debug
+--  print("after: " .. #bestset .. "\n")
+--  for _,v in ipairs(bestset) do
+--    v:accept(vis)
+--  end
+
+
   for _,v in ipairs(bestset) do
     table.insert(self.outqueue, v)
   end
@@ -144,7 +110,8 @@ function stream:next_tree()
             table.insert(self.curr_gene_set, fn)
             self.curr_rng = new_rng
           else
-            if self.last_seqid == fn:get_seqid() and self.curr_rng:overlap(new_rng) then
+            if self.last_seqid == fn:get_seqid()
+                and self.curr_rng:overlap(new_rng) then
               table.insert(self.curr_gene_set, fn)
               self.curr_rng = self.curr_rng:join(new_rng)
             else
@@ -179,11 +146,6 @@ function stream:next_tree()
   end
   return outgn
 end
-
--- create feature index
---feature_index = gt.feature_index_memory_new()
--- add GFF3 file to index
---feature_index:add_gff3file(arg[2])
 
 stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
 stream.idx = feature_index
