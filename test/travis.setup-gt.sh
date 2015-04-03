@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev
 rm -f master.zip
-wget https://github.com/genometools/genometools/archive/master.zip
+wget -q https://github.com/genometools/genometools/archive/master.zip
 unzip master.zip
 cd genometools-master
 make -j3 cairo=no curses=no prefix=/usr

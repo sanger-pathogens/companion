@@ -12,7 +12,7 @@ install:
   - sudo test/travis.setup-orthomcl.sh > /dev/null
   - sudo test/travis.setup-aragorn.sh > /dev/null
   - sudo test/travis.setup-gff3toembl.sh > /dev/null
-  - sudo cpanm --force Carp Storable Bio::SearchIO List::Util Getopt::Long
+  - sudo cpanm -q --force Carp Storable Bio::SearchIO List::Util Getopt::Long
   - curl -fsSL get.nextflow.io | bash
   - wget -q http://geneontology.org/ontology/go.obo
   - wget -q http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
