@@ -1,6 +1,6 @@
 --[[
-  Copyright (c) 2014 Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -167,6 +167,24 @@ function revcomp(str)
   return table.concat(x)
 end
 
+-- remove trailing and leading whitespace from string.
+function trim(s)
+  -- from PiL2 20.4
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+-- remove leading whitespace from string.
+function ltrim(s)
+  return (s:gsub("^%s*", ""))
+end
+
+-- remove trailing whitespace from string.
+function rtrim(s)
+  local n = #s
+  while n > 0 and s:find("^%s", n) do n = n - 1 end
+  return s:sub(1, n)
+end
+
 function get_fasta(filename, sep)
   local keys = {}
   local seqs = {}
@@ -178,7 +196,7 @@ function get_fasta(filename, sep)
   for l in io.lines(filename) do
     hdr = l:match(">(.*)")
     if hdr then
-      hdr = split(hdr,"%s+")[1]
+      hdr = trim(split(hdr,"%s+")[1])
       table.insert(keys, hdr)
       if #cur_seqs > 0 and cur_hdr then
         if not seqs[cur_hdr] then
