@@ -24,4 +24,7 @@ env:
   global:
     - ROOTDIR="$TRAVIS_BUILD_DIR"
 script:
+  - cd test/testsuite
+  - ./testsuite.rb -threads 2
+  - cd ../..
   - ./nextflow -c loc_travis.config -c params_default.config run annot.nf -resume --do_circos=false
