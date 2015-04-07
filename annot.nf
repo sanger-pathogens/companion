@@ -870,9 +870,6 @@ if (params.use_reference) {
         file 'core_comparison.txt' into core_comp
 
         """
-        ls -Al /Users
-        ls -Al ${ref_dir}
-
         stream_new_against_core.lua pseudo.in.annotation.gff3 in.protein.fasta \
           ${ref_dir} ${params.GENOME_PREFIX} ${params.ref_species}
         """
