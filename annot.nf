@@ -1041,7 +1041,7 @@ if (params.do_contiguation && params.do_circos) {
         val binmap from circos_binmap
 
         output:
-        set file('bin.png'), val('bin') into circos_output
+        set file('bin.png'), val(binmap) into circos_output
 
         """
         circos  -conf ${circos_binconffile} -param image/file=bin.png  \
