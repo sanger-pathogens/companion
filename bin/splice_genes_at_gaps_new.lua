@@ -40,7 +40,7 @@ function stream:process_current_cluster()
   -- count and collect intra-scaffold gaps
   for _,n in ipairs(self.curr_gene_set) do
     if n:get_type() == "gap"
-        and n:get_attribute("gap_type")  == "within scaffold" then
+        and n:get_attribute("gap_type") == "within scaffold" then
       table.insert(gaps, n)
     end
   end
@@ -53,6 +53,17 @@ function stream:process_current_cluster()
     return 0
   end
 
+  -- sort gaps by start position just to be safe
+  table.sort(gaps, function (a,b)
+    local a_s = a:get_range():get_start()
+    local b_s = b:get_range():get_start()
+    if a_s < b_s then
+      return true
+    else
+      return false
+    end
+  end)
+
   -- adjust CDS according to gaps
   for _,n in ipairs(self.curr_gene_set) do
     local cur_gene = n
@@ -63,8 +74,37 @@ function stream:process_current_cluster()
         -- we are at a transcript
         if child:get_type() == "mRNA" then
           local mrna = child
-          -- handle gaps for this transcript
+
+          -- merge gaps if necessary to address small scattered gap clusters
+          local relevant_gaps = {}
+          local last_rng = nil
+          local relevant_s = nil
+          local relevant_e = nil
           for _,g in ipairs(gaps) do
+            this_rng = g:get_range()
+            if not relevant_s then
+              relevant_s = this_rng:get_start()
+            end
+            if last_rng and (this_rng:get_start() - last_rng:get_end()) > 5 then
+              relevant_e = last_rng:get_end()
+              local new_gap = gt.feature_node_new(g:get_seqid(), "gap",
+                                                  relevant_s, relevant_e,
+                                                  g:get_strand())
+              table.insert(relevant_gaps, new_gap)
+              relevant_s = this_rng:get_start()
+            end
+            last_rng = this_rng
+          end
+          if relevant_s then
+            relevant_e = last_rng:get_end()
+            local new_gap = gt.feature_node_new(n:get_seqid(), "gap",
+                                                    relevant_s, relevant_e,
+                                                    n:get_strand())
+            table.insert(relevant_gaps, new_gap)
+          end
+
+          -- handle gaps for this transcript
+          for _,g in ipairs(relevant_gaps) do
             local gap_rng = g:get_range()
             -- traverse all CDS
             for cds in mrna:children() do
@@ -73,19 +113,19 @@ function stream:process_current_cluster()
                 nof_cds = nof_cds + 1
                 -- is this CDS affected by the gap?
                 if cds_rng:overlap(gap_rng) then
-                  io.stderr:write(">>>>> " .. tostring(n:get_attribute("ID")) .. "\n")
-                  io.stderr:write(">>>>> overlap " .. tostring(g)
-                                  .. "  " .. tostring(cds) .. "\n")
+--                  io.stderr:write(">>>>> " .. tostring(n:get_attribute("ID")) .. "\n")
+--                  io.stderr:write(">>>>> overlap " .. tostring(g)
+--                                  .. "  " .. tostring(cds) .. "\n")
                   -- handle overlap situation:
                   if cds_rng:contains(gap_rng) then
                     -- ================  cds
                     --       ====        gap
-                    io.stderr:write(">>>>> containment\n")
+--                    io.stderr:write(">>>>> containment\n")
                     local shift = 0
                     if (gap_rng:length() % 3) ~= 0 then
                       shift = 3 - (gap_rng:length() % 3)
                     end
-                    io.stderr:write(">>> shift " .. shift .. "\n")
+--                    io.stderr:write(">>> shift " .. shift .. "\n")
                     local new_rng = nil
                     local rest_rng = nil
                     if n:get_strand() == "-" then
@@ -112,7 +152,7 @@ function stream:process_current_cluster()
                          gap_rng:get_end() >= cds_rng:get_start() then
                     --    =============  cds
                     --  ======           gap
-                    io.stderr:write(">>> case 1\n")
+--                    io.stderr:write(">>> case 1\n")
                     local new_rng = gt.range_new(gap_rng:get_end() + 1,
                                                  cds_rng:get_end())
                     cds:set_range(new_rng)
@@ -121,7 +161,7 @@ function stream:process_current_cluster()
                          gap_rng:get_start() <= cds_rng:get_end() then
                     --  =============    cds
                     --            =====  gap
-                    io.stderr:write(">>> case 2\n")
+--                    io.stderr:write(">>> case 2\n")
                     local new_rng = gt.range_new(cds_rng:get_start(),
                                                  gap_rng:get_start() - 1)
                     cds:set_range(new_rng)
@@ -132,32 +172,6 @@ function stream:process_current_cluster()
                   end
                 end
               end -- if CDS
-            end -- for mRNA children
-            -- clean up short CDS
-            local i = 1
-            for cds in mrna:children() do
-              if cds:get_range():length() < 3 then
-                if i == 1 then
-                  fn:remove_leaf(cds)
-                  if  fn:get_strand() == "-" then
-                    fn:set_attribute("threeEndPartial", "true")
-                    fn:set_attribute("Start_range", ".,.")
-                  else
-                    fn:set_attribute("fiveEndPartial", "true")
-                    fn:set_attribute("Start_range", ".,.")
-                  end
-                elseif i == nof_cds then
-                  fn:remove_leaf(cds)
-                  if  fn:get_strand() == "-" then
-                    fn:set_attribute("fiveEndPartial", "true")
-                    fn:set_attribute("End_range", ".,.")
-                  else
-                    fn:set_attribute("threeEndPartial", "true")
-                    fn:set_attribute("End_range", ".,.")
-                  end
-                end
-              end
-              i = i + 1
             end -- for mRNA children
           end  -- for gaps
         end -- if mRNA
