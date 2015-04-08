@@ -256,6 +256,7 @@ attrs_to_remove = {"translation",
                    "timelastmodified",
                    "full_GO",
                    "colour",
+                   "ratt_ortholog",
                    "feature_id",
                    "isObsolete"}
 remove_attrs_visitor = gt.custom_visitor_new()
@@ -299,16 +300,6 @@ end
 
 -- set up streams
 
-gather_stream = gt.custom_stream_new_unsorted()
-gather_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
-function gather_stream:next_tree()
-  local node = self.instream:next_tree()
-  if node then
-    node:accept(uc_getter_visitor)
-  end
-  return node
-end
-
 fixup_stream = gt.custom_stream_new_unsorted()
 fixup_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
 function fixup_stream:next_tree()
@@ -326,11 +317,6 @@ function fixup_stream:next_tree()
 end
 
 -- run streams
-
-local gn = gather_stream:next_tree()
-while (gn) do
-  gn = gather_stream:next_tree()
-end
 
 out_stream = gt.gff3_out_stream_new(fixup_stream)
 local gn = out_stream:next_tree()
