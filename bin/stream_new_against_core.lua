@@ -129,7 +129,6 @@ end
 -- visitor to output CC roots with members in its 'nididx' field to a text file
 -- vor circos visualization
 circos_visitor = gt.custom_visitor_new()
-circos_visitor.color = 'green'
 function circos_visitor:visit_feature(fn)
   for n in fn:get_children() do
     local nid = n:get_attribute("ID")
@@ -212,15 +211,17 @@ end
 -- circos output
 local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(refdir .. "/" .. refprefix .. "/annotation.gff3"), circos_visitor)
 circos_visitor.nididx = missing
+circos_visitor.color = 'green'
 circos_visitor.io = io.open("core_comp_circos.txt", "w+")
 local gn = stream:next_tree()
 while (gn) do
   gn = stream:next_tree()
 end
+
+
 local stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(ingff), circos_visitor)
 circos_visitor.nididx = singletons
 circos_visitor.color = 'black'
-circos_visitor.io = io.open("core_comp_circos.txt", "w+")
 local gn = stream:next_tree()
 while (gn) do
   gn = stream:next_tree()
