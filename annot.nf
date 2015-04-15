@@ -1038,7 +1038,7 @@ if (params.do_contiguation && params.do_circos) {
         val binmap from circos_binmap
 
         output:
-        set file('bin.png'), val(binmap) into circos_output
+        set file('bin.png'), val(binmap) into circos_bin_output
 
         """
         circos  -conf ${circos_binconffile} -param image/file=bin.png  \
@@ -1049,6 +1049,13 @@ if (params.do_contiguation && params.do_circos) {
     }
 
     circos_output.subscribe {
+        println it[0]
+        if (params.dist_dir) {
+          it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
+        }
+    }
+
+    circos_bin_output.subscribe {
         println it[0]
         if (params.dist_dir) {
           it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
