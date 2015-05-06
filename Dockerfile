@@ -29,7 +29,7 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
 #
 # Install AUGUSTUS (binaries)
 #
-ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz /opt/augustus-3.0.3.tar.gz
+ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.0.3.tar.gz /opt/augustus-3.1.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
