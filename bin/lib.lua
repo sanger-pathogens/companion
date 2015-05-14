@@ -236,9 +236,13 @@ end
 
 -- completely clones a CC
 local _clone_id = 0
-function deep_copy(root, copy)
+function deep_copy(root, copy, table)
   if not copy then
-    copy = gt.feature_node_new(root:get_seqid(), root:get_type(),
+    local ntype = root:get_type()
+    if table and table[ntype] then
+      ntype = table[ntype]
+    end
+    copy = gt.feature_node_new(root:get_seqid(), ntype,
                                    root:get_range():get_start(),
                                    root:get_range():get_end(),
                                    root:get_strand())
@@ -252,7 +256,11 @@ function deep_copy(root, copy)
     end
   end
   for c in root:direct_children() do
-    new_node = gt.feature_node_new(c:get_seqid(), c:get_type(),
+    local ntype = c:get_type()
+    if table and table[ntype] then
+      ntype = table[ntype]
+    end
+    new_node = gt.feature_node_new(c:get_seqid(), ntype,
                                    c:get_range():get_start(),
                                    c:get_range():get_end(),
                                    c:get_strand())
@@ -265,7 +273,7 @@ function deep_copy(root, copy)
       end
     end
     copy:add_child(new_node)
-    deep_copy(c, new_node)
+    deep_copy(c, new_node, table)
   end
   return copy
 end
