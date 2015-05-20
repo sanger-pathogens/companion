@@ -36,7 +36,12 @@ op:option{"-sm", action='store', dest='minratio',
 op:option{"-sx", action='store', dest='maxratio',
                 help="maximal 'stitching' gene coverage ratio "
                   .. "required to replace multiple genes (e.g. 1.2 for 120%)"}
-options,args = op:parse({threshold=0.6, minratio=0.8, maxratio=1.2})
+op:option{"-r", action='store', dest='rejectfile',
+                help="file to store 'rejected' pseudogene candidates in GFF3 format"}
+op:option{"-d", action='store', dest='debug',
+                help="output debug information on stderr"}
+options,args = op:parse({threshold=0.6, minratio=0.8, maxratio=1.2,
+                         debug=false, rejectfile=nil})
 
 function usage()
   op:help()
@@ -46,6 +51,9 @@ end
 if #args < 2 then
   usage()
 end
+
+local rejected_pseudogenes = {}
+local rm = gt.region_mapping_new_seqfile_matchdescstart(args[2])
 
 -- returns table of transcripts and their coding lengths
 function get_transcript_lengths(g, transcript_type, cds_type)
@@ -94,14 +102,11 @@ function gene_cmp_by_length(a, b)
   end
 end
 
-rm = gt.region_mapping_new_seqfile_matchdescstart(args[2])
-
 stream = gt.custom_stream_new_unsorted()
 stream.outqueue = {}
 stream.curr_gene_set = {}
 stream.curr_rng = nil
 stream.last_seqid = nil
-
 function stream:find_best_by_length(set)
   if not set or #set == 0 then
     return nil
@@ -118,7 +123,6 @@ function stream:find_best_by_length(set)
     return out
   end
 end
-
 function stream:find_best_by_score(set)
   if not set or #set == 0 then
     return nil
@@ -136,7 +140,6 @@ function stream:find_best_by_score(set)
     return best
   end
 end
-
 function stream:process_current_cluster()
   -- pull out genes
   local genes = {}
@@ -148,11 +151,12 @@ function stream:process_current_cluster()
       end
     end
   end
-
   local frame_agreement = function (f1, f1type, f2, f2type)
     local okay = true
     if f1:get_strand() ~= f2:get_strand() then
-      io.stderr:write("found strands in disagreement in frame check\n")
+      if options.debug then
+        io.stderr:write("found strands in disagreement in frame check\n")
+      end
       return false
     else
       local c1 = nil
@@ -185,14 +189,20 @@ function stream:process_current_cluster()
         end
       end
       if not (c1 and c2) then
-        io.stderr:write("could not find feature type to determine frame agreement\n")
+        if options.debug then
+          io.stderr:write("could not find feature type to determine frame agreement\n")
+        end
         return false
       end
       if (c1 % 3) ~= (c2 % 3) then
-        io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
+        if options.debug then
+          io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
+        end
         return false
       else
-        io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
+        if options.debug then
+          io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
+        end
         return true
       end
     end
@@ -216,18 +226,24 @@ function stream:process_current_cluster()
       -- no overlaps, just create a new feature
       if frameshift == 'true' or internal_stop == 'true' then
         -- this is a new pseudogene in a yet undetected spot
-        io.stderr:write("new pseudogene " .. best:get_attribute("ID") .. "\n")
+        if options.debug then
+          io.stderr:write("new pseudogene " .. best:get_attribute("ID") .. "\n")
+        end
         table.insert(self.outqueue, best)
       else
         if has_start  == 'true' and has_stop == 'true' then
           -- this is a gene with protein homology missed by the other predictors
-          io.stderr:write("new gene " .. best:get_attribute("ID") .. "\n")
+          if options.debug then
+            io.stderr:write("new gene " .. best:get_attribute("ID") .. "\n")
+          end
           table.insert(self.outqueue, deep_copy(best, nil, to_gene))
         else
           -- this is an aligned part with no mutations but no start/stop
           -- codons either, ignore for now
-          io.stderr:write("partial alignment ".. tostring(best) ..
-                          " ignored as it is not degenerated\n")
+          if options.debug then
+            io.stderr:write("partial alignment ".. tostring(best) ..
+                            " ignored as it is not degenerated\n")
+          end
         end
       end
     elseif #genes == 1 then
@@ -243,13 +259,19 @@ function stream:process_current_cluster()
           local ratio = genes[1]:get_range():length()/best:get_range():length()
           if ratio < tonumber(options.threshold) then
             -- if in frame and length ratio is below threshold
-            io.stderr:write("replaced gene " .. genes[1]:get_attribute("ID") .. "\n")
+            if options.debug then
+              io.stderr:write("replaced gene " .. genes[1]:get_attribute("ID") .. "\n")
+            end
             table.insert(self.outqueue, best)
           else
             table.insert(self.outqueue, genes[1])
+            best:add_attribute("reject_reason", "ratio_" .. tostring(ratio))
+            table.insert(rejected_pseudogenes, best)
           end
         else
           table.insert(self.outqueue, genes[1])
+          best:add_attribute("reject_reason", "frame_agreement")
+          table.insert(rejected_pseudogenes, best)
         end
       else
         -- otherwise ignore the pseudogene
@@ -280,15 +302,13 @@ function stream:process_current_cluster()
         local ratio = (total_gene_length)/(best:get_range():length())
         if ratio <= tonumber(options.maxratio)
                                     and ratio >= tonumber(options.minratio) then
-
--- DEBUG
-io.stderr:write("replaced genes (")
-for _,g in ipairs(genes) do
-  io.stderr:write(g:get_attribute("ID") .. " " )
-end
-io.stderr:write(") with " .. best:get_attribute("ID") .. "\n")
--- DEBUG
-
+          if options.debug then
+            io.stderr:write("replaced genes (")
+            for _,g in ipairs(genes) do
+              io.stderr:write(g:get_attribute("ID") .. " " )
+            end
+            io.stderr:write(") with " .. best:get_attribute("ID") .. "\n")
+          end
           if frameshift == 'true' or internal_stop == 'true' then
             table.insert(self.outqueue, best)
           else
@@ -304,18 +324,21 @@ io.stderr:write(") with " .. best:get_attribute("ID") .. "\n")
           for _,g in ipairs(genes) do
             table.insert(self.outqueue, g)
           end
+          best:add_attribute("reject_reason","ratio_" .. tostring(ratio))
+          table.insert(rejected_pseudogenes, best)
         end
       else
         -- keep genes
         for _,g in ipairs(genes) do
           table.insert(self.outqueue, g)
         end
-        io.stderr:write("has gaps " .. best:get_attribute("ID") .. "\n")
+        if options.debug then
+          io.stderr:write("has gaps " .. best:get_attribute("ID") .. "\n")
+        end
       end
     end
   end
 end
-
 function stream:next_tree()
   local complete_cluster = false
   local mygn = nil
@@ -382,4 +405,22 @@ out_stream = gt.gff3_out_stream_new(stream)
 local gn = out_stream:next_tree()
 while (gn) do
   gn = out_stream:next_tree()
+end
+
+if options.rejectfile then
+  local arr_in_stream = gt.custom_stream_new_unsorted()
+  arr_in_stream.arr = rejected_pseudogenes
+  function arr_in_stream:next_tree()
+    if #self.arr > 0  then
+      return table.remove(self.arr, 1)
+    else
+      return nil
+    end
+  end
+  local rejected_out_stream = gt.gff3_out_stream_new(arr_in_stream,
+                                                     options.rejectfile)
+  local gn = rejected_out_stream:next_tree()
+  while (gn) do
+    gn = rejected_out_stream:next_tree()
+  end
 end
