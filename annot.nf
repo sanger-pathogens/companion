@@ -91,12 +91,13 @@ pseudochr_seq_make_dist_1 = Channel.create()
 pseudochr_seq_make_dist_2 = Channel.create()
 pseudochr_seq_tmhmm = Channel.create()
 pseudochr_seq_orthomcl = Channel.create()
+pseudochr_seq_pseudogene = Channel.create()
 pseudochr_seq_splitsplice = Channel.create()
 pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
                    pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
                    pseudochr_seq_snap, pseudochr_seq_make_gaps,
                    pseudochr_seq_make_dist_1, pseudochr_seq_make_dist_2,
-                   pseudochr_seq_splitsplice,
+                   pseudochr_seq_splitsplice, pseudochr_seq_pseudogene,
                    pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
                    pseudochr_seq_exonerate)
 
@@ -424,6 +425,32 @@ process remove_exons {
     """
 }
 
+process pseudogene_calling {
+    input:
+    file 'ref.peps.fasta' from omcl_pepfile
+    file 'pseudochr.fasta' from pseudochr_seq_pseudogene
+    file 'genes.gff3' from integrated_gff3_clean
+
+    output:
+    file 'genes_and_pseudo.gff3' into gff3_with_pseudogenes
+
+    """
+    # make index for LAST
+    lastdb -p prots ref.peps.fasta
+
+    # run LAST protein-DNA alignment
+    lastal -pBLOSUM80 -F15 -e150 -m100 -f0 prots pseudochr.fasta > out.txt
+
+    # reconstruct frameshifted candidates from output
+    pseudo_merge_last.lua out.txt pseudochr.fasta > last_gff.gff3
+
+    # merge with gene models
+    gt gff3 -sort -tidy -retainids last_gff.gff3 genes.gff3 > last_and_genes.gff3
+    pseudo_merge_with_genes.lua last_and_genes.gff3 pseudochr.fasta > out_tmp.gff3
+    gt gff3 -sort -retainids -tidy out_tmp.gff3 > genes_and_pseudo.gff3
+    """
+}
+
 // MERGE ALL GENES TO FINAL SET AND CLEANUP
 // ========================================
 
@@ -433,7 +460,7 @@ process merge_structural {
     input:
     file 'ncrna.gff3' from ncrnafile
     file 'trna.gff3' from trnas
-    file 'integrated.gff3' from integrated_gff3_clean
+    file 'integrated.gff3' from gff3_with_pseudogenes
 
     output:
     file 'structural.full.gff3' into genemodels_gff3
