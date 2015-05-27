@@ -146,7 +146,6 @@ embl_vis.last_seqid = nil
 function embl_vis:visit_feature(fn)
   if embl_vis.last_seqid ~= fn:get_seqid() then
     if embl_vis.last_seqid then
-      -- sequence output disabled for now
       format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
       io.write("//\n")
       io.output():close()
