@@ -266,10 +266,12 @@ function embl_vis:visit_feature(fn)
         local prod = pp:get_attribute("product")
         if not prod:match("hypothetical") then
           if nof_orths > 0 then
-            io.write("FT                   /colour=7\n")   -- yellow: based on orthology
+            io.write("FT                   /colour=10\n")   -- orange: conserved
           else
-            io.write("FT                   /colour=8\n")    -- hypothetical
+            io.write("FT                   /colour=7\n")    -- hypothetical
           end
+        else
+          io.write("FT                   /colour=8\n")
         end
       elseif node:get_type() == "pseudogenic_transcript" then
         io.write("FT                   /colour=13\n")     -- pseudogene
