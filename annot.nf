@@ -439,7 +439,7 @@ process pseudogene_calling {
     lastdb -p prots ref.peps.fasta
 
     # run LAST protein-DNA alignment
-    lastal -pBLOSUM80 -F15 -e150 -m100 -f0 prots pseudochr.fasta > out.txt
+    lastal -pBLOSUM80 -F15 -e300 -m100 -f0 prots pseudochr.fasta > out.txt
 
     # reconstruct frameshifted candidates from output
     pseudo_merge_last.lua out.txt pseudochr.fasta > last_gff.gff3
