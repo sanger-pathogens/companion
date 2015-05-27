@@ -278,9 +278,10 @@ refgenestore = {}
 destgenestore = {}
 
 -- get annotations from reference(s)
-visitor_stream.visitors = {get_pp_vis}
+visitor_stream.visitors = {get_parent_gene_vis, get_pp_vis}
 get_pp_vis.store = store
 get_pp_vis.genestore = refgenestore
+get_parent_gene_vis.genes = refgenestore
 for i = 2,#arg do
   visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[i])
   local gn = visitor_stream:next_tree()
