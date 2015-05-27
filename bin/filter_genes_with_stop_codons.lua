@@ -34,9 +34,10 @@ visitor = gt.custom_visitor_new()
 visitor.last_seqid = nil
 function visitor:visit_feature(fn)
   local has_stop = false
+  local protseq = nil
   for node in fn:children() do
     if node:get_type() == "mRNA" then
-      local protseq = node:extract_and_translate_sequence("CDS", true,
+      protseq = node:extract_and_translate_sequence("CDS", true,
                                                           region_mapping)
       if protseq:sub(1, -2):match("[*+#]") then
         has_stop = true
@@ -57,6 +58,11 @@ function visitor:visit_feature(fn)
                                           node:get_strand())
         for k,v in node:attribute_pairs() do
           npseudogene:set_attribute(k, v)
+        end
+        npseudogene:set_attribute("has_internal_stop", "true")
+        local rorth = npseudogene:get_attribute("ratt_ortholog")
+        if rorth and protseq then
+          npseudogene:set_attribute("Target", rorth .. " 1 " .. string.len(protseq))
         end
       elseif node:get_type() == "mRNA" then
         assert(npseudogene)
