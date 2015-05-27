@@ -1,8 +1,8 @@
 #!/usr/bin/env gt
 
 --[[
-  Copyright (c) 2014 Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -19,12 +19,12 @@
 
 function usage()
   io.stderr:write("For a GFF3 file produced by annotation pipeline, output EMBL file suitable for Chado loader.\n")
-  io.stderr:write("Requires an OBO file with a GO definition to add GO terms (pipeline only has IDs).\n")
-  io.stderr:write(string.format("Usage: %s <GFF annotation> <GO OBO file> <organism name> <sequence>\n" , arg[0]))
+  io.stderr:write("Requires an OBO file with a GO definition to add GO terms (pipeline only stores IDs).\n")
+  io.stderr:write(string.format("Usage: %s <GFF annotation> <GO OBO file> <organism name> <sequence> [GAF]\n" , arg[0]))
   os.exit(1)
 end
 
-if #arg < 3 then
+if #arg < 4 then
   usage()
 end
 
@@ -194,7 +194,7 @@ function embl_vis:visit_feature(fn)
       end
       local i = 1
       for cds in node:get_children() do
-        if cds:get_type() == "CDS" then
+        if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
           if i == 1 and fn:get_attribute("Start_range") then
             io.write("<")
           end
@@ -233,7 +233,6 @@ function embl_vis:visit_feature(fn)
         io.write("FT                   /pseudo\n")
         io.write("FT                   /pseudogene=\"unknown\"\n")
       end
-      format_embl_attrib(pp, "Dbxref", "db_xref", nil)
       format_embl_attrib(pp, "Dbxref", "EC_number",
           function (s)
             m = string.match(s, "EC:([0-9.-]+)")
@@ -243,27 +242,54 @@ function embl_vis:visit_feature(fn)
               return nil
             end
           end)
-      local protseq = node:extract_and_translate_sequence("CDS", true,
-                                                          region_mapping)
+      -- translation
+      local protseq = nil
+      if node:get_type() == "mRNA" then
+        protseq = node:extract_and_translate_sequence("CDS", true,
+                                                      region_mapping)
+      elseif node:get_type() == "pseudogenic_transcript" then
+        protseq = node:extract_and_translate_sequence("pseudogenic_exon", true,
+                                                      region_mapping)
+      end
       io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
       io.write("FT                   /transl_table=1\n")
-      -- not really used in EMBL
-      -- format_embl_attrib(pp, "Ontology_term", "Ontology_term")
-      -- disabled ortholog output for now (ask maa if its even implemented)
-      if pp and false and pp:get_attribute("orthologous_to") then
+      -- orthologs
+      local nof_orths = 0
+      if pp and pp:get_attribute("orthologous_to") then
         for _,v in ipairs(split(pp:get_attribute("orthologous_to"), ",")) do
           io.write("FT                   /ortholog=\"" ..
                           v .. " " .. v .. ";program=OrthoMCL;rank=0\"\n")
+          nof_orths = nof_orths + 1
         end
       end
-      if pp and pp:get_attribute("full_GO") then
-        for _,v in ipairs(split(pp:get_attribute("full_GO"), ",")) do
-          id = string.match(v, "(GO:[0-9]+)")
-          if self.gos[id] then
-            io.write("FT                   /GO=\"" ..
-                            gff3_decode(v) .. ";term=" .. self.gos[id].."\"\n")
+      -- assign colours
+      if node:get_type() == "mRNA" then
+        local prod = pp:get_attribute("product")
+        if not prod:match("hypothetical") then
+          if nof_orths > 0 then
+            io.write("FT                   /colour=7\n")   -- yellow: based on orthology
           else
-            print("ID not found: " .. id)
+            io.write("FT                   /colour=8\n")    -- hypothetical
+          end
+        end
+      elseif node:get_type() == "pseudogenic_transcript" then
+        io.write("FT                   /colour=13\n")     -- pseudogene
+      end
+      -- add name
+      local name = fn:get_attribute("Name")
+      if name then
+        io.write("FT                   /primary_name=\"".. name .. "\"\n")
+      end
+      -- GO terms
+      local geneid = fn:get_attribute("ID")
+      if geneid then
+        if self.gaf and self.gaf[geneid] then
+          for _,v in ipairs(self.gaf[geneid]) do
+            io.write("FT                   /GO=\"aspect=" .. v.aspect ..
+                                                ";GOid=" .. v.goid ..
+                                                ";term=" .. self.gos[v.goid] ..
+                                                ";with=" .. v.withfrom ..
+                                                ";evidence=" .. v.evidence .. "\"\n")
           end
         end
       end
@@ -314,6 +340,25 @@ function embl_vis:visit_feature(fn)
   return 0
 end
 
+-- load GAF
+gaf_store = {}
+if arg[5] then
+  for l in io.lines(arg[5]) do
+    if l:sub(1,1) ~= '!' then
+      local db,dbid,dbobj,qual,goid,dbref,evidence,withfrom,aspect,dbobjname,
+        dbobjsyn,dbobjtype,taxon,data,assignedby = unpack(split(l, '\t'))
+      if not gaf_store[dbid] then
+        gaf_store[dbid] = {}
+      end
+      table.insert(gaf_store[dbid], {db=db, dbid=dbid, qual=qual, goid=goid,
+                                 dbref=dbref, evidence=evidence, withfrom=withfrom,
+                                 aspect=aspect, dbobjname=dbobjname,
+                                 dbobjsyn=dbobjsyn, dbobjtype=dbobjtype,
+                                 taxon=taxon, data=data, assignedby=assignedby})
+    end
+  end
+end
+
 -- make simple visitor stream, just applies given visitor to every node
 visitor_stream = gt.custom_stream_new_unsorted()
 function visitor_stream:next_tree()
@@ -336,6 +381,7 @@ end
 visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
 visitor_stream.vis = embl_vis
 embl_vis.obo = gos
+embl_vis.gaf = gaf_store
 local gn = visitor_stream:next_tree()
 while (gn) do
   gn = visitor_stream:next_tree()
