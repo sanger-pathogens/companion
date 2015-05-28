@@ -141,19 +141,30 @@ process predict_tRNA {
 // NCRNA PREDICTION
 // ================
 
+process press_ncRNA_cms {
+    input:
+    val ncrna_models
+
+    output:
+    file 'models.cm*' into ncrna_cmindex
+
+    """
+    cp ${ncrna_models} ./models.cm
+    cmpress -F models.cm
+    """
+}
+
 ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
-    val ncrna_models
+    file ncrna_models from ncrna_cmindex.first()
 
     output:
     file 'cm_out' into cmtblouts
 
     """
-    cp ${ncrna_models} .
-    cmpress -F *.cm
-    cmsearch --tblout cm_out --cut_ga ${ncrna_models} chunk > /dev/null
+    cmsearch --tblout cm_out --cut_ga models.cm chunk
     """
 }
 
