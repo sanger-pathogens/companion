@@ -425,24 +425,49 @@ process remove_exons {
     """
 }
 
-process pseudogene_calling {
+process pseudogene_indexing {
     input:
     file 'ref.peps.fasta' from omcl_pepfile
-    file 'pseudochr.fasta' from pseudochr_seq_pseudogene
+
+    output:
+    file 'prot_index*' into pseudochr_last_index
+
+    """
+    lastdb -p prot_index ref.peps.fasta
+    """
+}
+
+pseudochr_seq_pseudogene_align = Channel.create()
+pseudochr_seq_pseudogene_calling = Channel.create()
+pseudochr_seq_pseudogene.into(pseudochr_seq_pseudogene_align,
+                              pseudochr_seq_pseudogene_calling)
+pseudogene_align_chunk = pseudochr_seq_pseudogene_align.splitFasta( by: 3)
+
+process pseudogene_last {
+    input:
+    file 'chunk.fasta' from pseudogene_align_chunk
+    file prot_index from pseudochr_last_index.first()
+
+    output:
+    file 'last.out' into pseudochr_last_out
+
+    """
+    lastal -pBLOSUM80 -F15 -e300 -m100 -f0 prot_index chunk.fasta > last.out
+    """
+}
+
+process pseudogene_calling {
+    input:
+    file 'pseudochr.fasta' from pseudochr_seq_pseudogene_calling
     file 'genes.gff3' from integrated_gff3_clean
+    file 'last.out' from pseudochr_last_out.collectFile()
 
     output:
     file 'genes_and_pseudo.gff3' into gff3_with_pseudogenes
 
     """
-    # make index for LAST
-    lastdb -p prots ref.peps.fasta
-
-    # run LAST protein-DNA alignment
-    lastal -pBLOSUM80 -F15 -e300 -m100 -f0 prots pseudochr.fasta > out.txt
-
     # reconstruct frameshifted candidates from output
-    pseudo_merge_last.lua out.txt pseudochr.fasta > last_gff.gff3
+    pseudo_merge_last.lua last.out pseudochr.fasta > last_gff.gff3
 
     # merge with gene models
     gt gff3 -sort -tidy -retainids last_gff.gff3 genes.gff3 > last_and_genes.gff3
