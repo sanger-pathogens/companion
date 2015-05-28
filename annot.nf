@@ -1137,6 +1137,7 @@ if (params.make_embl) {
 
         output:
         file 'full.gff3' into embl_full_gff
+        file 'pseudo.fasta.gz' into embl_full_seq
 
         """
         gt inlineseq_add -seqfile pseudo.fasta.gz -matchdescstart -force \
@@ -1147,24 +1148,18 @@ if (params.make_embl) {
     process make_embl {
         input:
         file 'embl_in.gff3' from embl_full_gff
+        file embl_full_seq
+        val go_obo
 
         output:
-        file 'outfile.embl' into embl_out
+        file '*.embl' into embl_out
 
         """
-        gff3_to_embl --authors '${params.EMBL_AUTHORS}' \
-          --title '${params.EMBL_TITLE}' \
-          --publication '${params.EMBL_PUBLICATION}' \
-          --genome_type '${params.EMBL_GENOME_TYPE}' \
-          --classification '${params.EMBL_CLASSIFICATION}' \
-          --output_filename outfile.embl \
-          '${params.EMBL_ORGANISM}' '${params.TAXON_ID}' \
-            '${params.EMBL_PROJ_ACCESSION}' '${params.EMBL_DESCRIPTION}' \
-            embl_in.gff3
+        gff3_to_embl.lua embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' ${embl_full_seq}
         """
     }
 
-    embl_out.subscribe {
+    embl_out.flatMap().subscribe {
         println it
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
