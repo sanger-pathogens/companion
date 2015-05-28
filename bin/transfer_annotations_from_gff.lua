@@ -76,23 +76,13 @@ function annotate_vis:visit_feature(fn)
         if self.store[orth] then
           local onode = self.store[orth]
           local orig_orth = orth
-          -- GO
-          -- mem_go = onode:get_attribute("full_GO")
-          -- if mem_go then
-          --   for _,raw_go in ipairs(gff3_extract_structure(mem_go)) do
-          --     if raw_go.evidence and (is_experimental(raw_go.evidence)
-          --                          or is_curated(raw_go.evidence)) then
-          --       table.insert(gos, {raw_go, orig_orth})
-          --     end
-          --   end
-          -- end
           -- product
           mem_name = onode:get_attribute("product")
           if mem_name then
             prod_a = gff3_extract_structure(mem_name)
             if prod_a[1] and prod_a[1].term then
               mem_name = prod_a[1].term
-              -- remove pseudogene/fragment tags from product, new genes are functional
+              -- remove pseudogene/fragment tags from product
               mem_name = mem_name:gsub(" ?%(pseudogene%)","")
               mem_name = mem_name:gsub(",? ?pseudogene","")
               mem_name = mem_name:gsub(" ?%(fragment%)","")
@@ -127,33 +117,6 @@ function annotate_vis:visit_feature(fn)
           end
         end
       end
-      -- transfer unique GOs
-      -- if #gos > 0 then
-      --   local ontology_terms = table_unique(map(
-      --     function(go)
-      --       return gff3_encode(go[1].GOid)
-      --     end, gos))
-      --   table.sort(ontology_terms)
-      --   fn:set_attribute("Ontology_term",
-      --                    table.concat(table_unique(ontology_terms), ","))
-      --   local sorted_gos = {}
-      --   local aspects = {}
-      --   for _, go in ipairs(gos) do
-      --     if not sorted_gos[go[1].GOid] then
-      --       sorted_gos[go[1].GOid] = {}
-      --     end
-      --     -- XXX add term?
-      --     table.insert(sorted_gos[go[1].GOid], "GeneDB:"..go[2])
-      --     aspects[go[1].GOid] = go[1].aspect
-      --   end
-      --   local full_gos = {}
-      --   for k,v in pairs(sorted_gos) do
-      --     str =  "aspect=" .. aspects[k] ..
-      --            ";GOid=" .. k .. ";evidence=ISO;with=" .. table.concat(v, "|")
-      --     table.insert(full_gos, gff3_encode(str))
-      --   end
-      --   fn:set_attribute("full_GO", table.concat(full_gos, ","))
-      -- end
       -- transfer products
       if #names > 0 then
         local sorted_names = {}
