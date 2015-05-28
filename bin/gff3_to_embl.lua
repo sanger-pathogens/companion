@@ -192,6 +192,7 @@ function embl_vis:visit_feature(fn)
         io.write("join(")
       end
       local i = 1
+      local coding_length = 0
       for cds in node:get_children() do
         if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
           if i == 1 and fn:get_attribute("Start_range") then
@@ -206,6 +207,7 @@ function embl_vis:visit_feature(fn)
           if i ~= cnt then
             io.write(",")
           end
+          coding_length = coding_length + cds:get_range():length()
           i = i + 1
         end
       end
@@ -264,14 +266,18 @@ function embl_vis:visit_feature(fn)
       -- assign colours
       if node:get_type() == "mRNA" then
         local prod = pp:get_attribute("product")
-        if not prod:match("hypothetical") then
-          if nof_orths > 0 then
+        if prod ~= "term%3Dhypothetical protein" then
+          if nof_orths > 0 or prod:match("conserved") then
             io.write("FT                   /colour=10\n")   -- orange: conserved
           else
-            io.write("FT                   /colour=7\n")    -- hypothetical
+            io.write("FT                   /colour=7\n")    -- yellow: assigned Pfam
           end
         else
-          io.write("FT                   /colour=8\n")
+          if coding_length < 500 then
+            io.write("FT                   /colour=6\n")    -- dark pink: short unlikely
+          else
+            io.write("FT                   /colour=8\n")    -- light green: hypothetical
+          end
         end
       elseif node:get_type() == "pseudogenic_transcript" then
         io.write("FT                   /colour=13\n")     -- pseudogene
