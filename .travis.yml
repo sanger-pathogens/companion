@@ -1,11 +1,11 @@
 install:
-  - sudo add-apt-repository ppa:debian-med/ppa -y
+#  - sudo add-apt-repository ppa:debian-med/ppa -y
+#  - sudo apt-get update -qq
+#  - sudo apt-get install mafft
+#  - sudo test/travis.setup-apt.sh > /dev/null
   - sudo apt-get update -qq
-  - sudo apt-get install mafft
-  - sudo test/travis.setup-apt.sh > /dev/null
-  - sudo apt-get update -qq
-  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate
-  - sudo apt-get -t testing  --yes --force-yes install snap infernal last-align
+  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal last-align
+#  - sudo apt-get -t testing  --yes --force-yes install snap infernal last-align
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
   - sudo test/travis.setup-augustus.sh > /dev/null
   - sudo test/travis.setup-gt.sh > /dev/null
