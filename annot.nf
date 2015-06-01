@@ -463,7 +463,7 @@ process pseudogene_last {
     file 'last.out' into pseudochr_last_out
 
     """
-    lastal -pBLOSUM80 -F15 -e300 -m100 -f0 prot_index chunk.fasta > last.out
+    lastal -pBL80 -F15 -e300 -m100 -f0 prot_index chunk.fasta > last.out
     """
 }
 
