@@ -20,8 +20,8 @@ RUN apt-get update -qq
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos python-setuptools libc6-i386 lib32stdc++6 lib32gcc1 \
-                    last-align --yes --force-yes && \
-    ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
+                    last-align --yes --force-yes
+RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
     cpanm --force Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
     rm -rf /root/.cpanm/work/
