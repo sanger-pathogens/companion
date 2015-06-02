@@ -1,6 +1,6 @@
 # annot-nf
 
-An portable, scalable eukaryotic genome annotation pipeline implemented in Nextflow.
+A portable, scalable eukaryotic genome annotation pipeline implemented in Nextflow.
 
 ### [Purpose](#platforms)
 
@@ -9,7 +9,7 @@ eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
   - Fast generation of pseudomolecules from scaffolds by ordering and orientating against a reference
   - Accurate transfer of highly conserved gene models from the reference
-  - _De novo_ Gene finding as a complement to the gene transfer
+  - _De novo_ gene finding as a complement to the gene transfer
   - Non-coding RNA detection (tRNA, rRNA, sn(o)RNA, ...)
   - Pseudogene detection
   - Functional annotation (GO, products, ...)
