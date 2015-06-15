@@ -112,7 +112,7 @@ function stream:process_current_cluster()
                 local cds_rng = cds:get_range()
                 nof_cds = nof_cds + 1
                 -- is this CDS affected by the gap?
-                if cds_rng:overlap(gap_rng) then
+                if cds_rng:overlap(gap_rng) and not gap_rng:contains(cds_rng) then
 --                  io.stderr:write(">>>>> " .. tostring(n:get_attribute("ID")) .. "\n")
 --                  io.stderr:write(">>>>> overlap " .. tostring(g)
 --                                  .. "  " .. tostring(cds) .. "\n")
@@ -169,6 +169,12 @@ function stream:process_current_cluster()
                   else
                     -- any other case
                     -- e.g. containment of CDS in gap (should not happen)
+                    if gap_rng:contains(cds_rng) then
+                      io.stderr:write("gap (" .. tostring(g)
+                                      .. ") contains CDS ( " .. tostring(cds)
+                                      .. "), removing this CDS")
+                      mrna:remove_leaf(cds)
+                    end
                   end
                 end
               end -- if CDS
