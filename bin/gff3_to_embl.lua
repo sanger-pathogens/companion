@@ -152,7 +152,7 @@ function embl_vis:visit_feature(fn)
     end
     embl_vis.last_seqid = fn:get_seqid()
     io.output(fn:get_seqid()..".embl", "w+")
-    io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+    io.write("ID   " .. fn:get_seqid() .. "; XXX; linear; XXX; XXX; XXX; XXX.\n")
     io.write("XX   \n")
     io.write("DE   " .. arg[3] .. ", " .. fn:get_seqid() .. "\n")
     io.write("XX   \n")
@@ -229,10 +229,10 @@ function embl_vis:visit_feature(fn)
               return nil
             end
           end)
-      format_embl_attrib(fn , "ID", "locus_tag", nil)
+      format_embl_attrib(node , "ID", "locus_tag", nil)
       if fn:get_type() == "pseudogene" then
         io.write("FT                   /pseudo\n")
-        io.write("FT                   /pseudogene=\"unknown\"\n")
+        --io.write("FT                   /pseudogene=\"unknown\"\n")
       end
       format_embl_attrib(pp, "Dbxref", "EC_number",
           function (s)
@@ -243,16 +243,18 @@ function embl_vis:visit_feature(fn)
               return nil
             end
           end)
+      -- add gene to 'unroll' multiple spliceforms
+      local geneid = fn:get_attribute("ID")
+      if geneid then
+        io.write("FT                   /gene=\"".. geneid .. "\"\n")
+      end
       -- translation
       local protseq = nil
       if node:get_type() == "mRNA" then
         protseq = node:extract_and_translate_sequence("CDS", true,
                                                       region_mapping)
-      elseif node:get_type() == "pseudogenic_transcript" then
-        protseq = node:extract_and_translate_sequence("pseudogenic_exon", true,
-                                                      region_mapping)
+        io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
       end
-      io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
       io.write("FT                   /transl_table=1\n")
       -- orthologs
       local nof_orths = 0
@@ -266,17 +268,19 @@ function embl_vis:visit_feature(fn)
       -- assign colours
       if node:get_type() == "mRNA" then
         local prod = pp:get_attribute("product")
-        if prod ~= "term%3Dhypothetical protein" then
-          if nof_orths > 0 or prod:match("conserved") then
-            io.write("FT                   /colour=10\n")   -- orange: conserved
+        if prod then
+          if  prod ~= "term%3Dhypothetical protein" then
+            if nof_orths > 0 or prod:match("conserved") then
+              io.write("FT                   /colour=10\n")   -- orange: conserved
+            else
+              io.write("FT                   /colour=7\n")    -- yellow: assigned Pfam
+            end
           else
-            io.write("FT                   /colour=7\n")    -- yellow: assigned Pfam
-          end
-        else
-          if coding_length < 500 then
-            io.write("FT                   /colour=6\n")    -- dark pink: short unlikely
-          else
-            io.write("FT                   /colour=8\n")    -- light green: hypothetical
+            if coding_length < 500 then
+              io.write("FT                   /colour=6\n")    -- dark pink: short unlikely
+            else
+              io.write("FT                   /colour=8\n")    -- light green: hypothetical
+            end
           end
         end
       elseif node:get_type() == "pseudogenic_transcript" then
@@ -317,7 +321,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\"\n")
       end
-      format_embl_attrib(fn , "ID", "locus_tag", nil)
+      format_embl_attrib(node , "ID", "locus_tag", nil)
     elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
       io.write("FT   ncRNA            ")
       if node:get_strand() == "-" then
@@ -329,7 +333,7 @@ function embl_vis:visit_feature(fn)
       end
       io.write("\n")
       io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(fn , "ID", "locus_tag", nil)
+      format_embl_attrib(node , "ID", "locus_tag", nil)
     elseif string.match(node:get_type(), "rRNA") then
       io.write("FT   rRNA            ")
       if node:get_strand() == "-" then
@@ -341,7 +345,7 @@ function embl_vis:visit_feature(fn)
       end
       io.write("\n")
       io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(fn , "ID", "locus_tag", nil)
+      format_embl_attrib(node , "ID", "locus_tag", nil)
     end
   end
   return 0
