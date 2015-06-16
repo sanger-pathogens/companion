@@ -38,7 +38,7 @@ Here's how to start an example run using Docker (using the example dataset and p
 ```
 $ git clone https://github.com/satta/annot-nf.git
 $ cd annot-nf
-$ nextflow -c loc_docker.config -c params_default.config run annot.nf
+$ ROOTDIR=`pwd` nextflow -c loc_docker.config -c params_default.config run annot.nf
 ```
 
 For your own runs, clone `params_default.config` and substitute your own file names, paths, parameters, etc.
