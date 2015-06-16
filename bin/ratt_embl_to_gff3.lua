@@ -78,8 +78,9 @@ for i = 1,#arg do
           table.insert(exons, node)
           exnr = exnr + 1
         else
-          io.stderr:write("error: malformed input range " .. s .. "-" .. e .. "\n")
-          os.exit(1)
+          io.stderr:write("error: malformed input range " .. s .. "-" .. e .. ", skipping\n")
+          --reset totalrange to disable gene output
+          totalrange = nil
         end
       end
       if totalrange then
