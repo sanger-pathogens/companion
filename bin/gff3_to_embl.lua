@@ -17,21 +17,34 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
+package.path = gt.script_dir .. "/?.lua;" .. package.path
+require("lib")
+require("optparse")
+
+op = OptionParser:new({usage="%prog <options> <GFF annotation> <GO OBO file> <organism name> <sequence> [GAF]",
+                       oneliner="For a GFF3 file produced by annotation pipeline, output EMBL format.",
+                       version="0.1"})
+op:option{"-e", action='store_true', dest='embl_compliant',
+                help="output reduced 'ENA compliant' format"}
+options,args = op:parse({embl_compliant=false})
+
 function usage()
-  io.stderr:write("For a GFF3 file produced by annotation pipeline, output EMBL file suitable for Chado loader.\n")
-  io.stderr:write("Requires an OBO file with a GO definition to add GO terms (pipeline only stores IDs).\n")
-  io.stderr:write(string.format("Usage: %s <GFF annotation> <GO OBO file> <organism name> <sequence> [GAF]\n" , arg[0]))
+  op:help()
   os.exit(1)
 end
 
-if #arg < 4 then
+if #args < 4 then
   usage()
 end
 
-package.path = gt.script_dir .. "/?.lua;" .. package.path
-require("lib")
+embl_compliant = options.embl_compliant ~= false
+seqfile = args[4]
+gaffile = args[5]
+obofile = args[2]
+gff3file = args[1]
+organismname = args[3]
 
-region_mapping = gt.region_mapping_new_seqfile_matchdescstart(arg[4])
+region_mapping = gt.region_mapping_new_seqfile_matchdescstart(seqfile)
 
 function parse_obo(filename)
   local gos = {}
@@ -69,13 +82,6 @@ function collect_vis:visit_feature(fn)
     if df then
       self.pps[df] = fn
     end
-  end
-  return 0
-end
-function collect_vis:visit_sequence(sn)
-  if sn:get_sequence_length() > 0 then
-    self.lengths[sn:get_seqid()] = sn:get_sequence_length()
-    self.seqs[sn:get_seqid()] = sn:get_sequence()
   end
   return 0
 end
@@ -141,7 +147,7 @@ end
 
 embl_vis = gt.custom_visitor_new()
 embl_vis.pps = collect_vis.pps
-embl_vis.gos = parse_obo(arg[2])
+embl_vis.gos = parse_obo(obofile)
 embl_vis.last_seqid = nil
 function embl_vis:visit_feature(fn)
   if embl_vis.last_seqid ~= fn:get_seqid() then
@@ -152,13 +158,22 @@ function embl_vis:visit_feature(fn)
     end
     embl_vis.last_seqid = fn:get_seqid()
     io.output(fn:get_seqid()..".embl", "w+")
-    io.write("ID   " .. fn:get_seqid() .. "; XXX; linear; XXX; XXX; XXX; XXX.\n")
-    io.write("XX   \n")
-    io.write("DE   " .. arg[3] .. ", " .. fn:get_seqid() .. "\n")
-    io.write("XX   \n")
-    io.write("AC   XXX.\n")
-    io.write("XX   \n")
+    if embl_compliant then
+      io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+      io.write("XX   \n")
+      io.write("AC   XXX;\n")
+      io.write("XX   \n")
+    else
+      io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
+                 .. "genomic DNA; STD; UNC; "
+                 .. collect_vis.lengths[fn:get_seqid()] .." BP.\n")
+      io.write("XX   \n")
+      io.write("AC   " .. fn:get_seqid() .. ";\n")
+      io.write("XX   \n")
+    end
     io.write("PR   Project:00000000;\n")
+    io.write("XX   \n")
+    io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
     io.write("XX   \n")
     io.write("KW   \n")
     io.write("XX   \n")
@@ -219,7 +234,22 @@ function embl_vis:visit_feature(fn)
       end
       io.write("\n")
       local pp = self.pps[node:get_attribute("ID")]
-      format_embl_attrib(pp, "product", "product",
+      format_embl_attrib(node , "ID", "locus_tag", nil)
+      if fn:get_type() == "pseudogene" then
+        io.write("FT                   /pseudo\n")
+        --io.write("FT                   /pseudogene=\"unknown\"\n")
+        format_embl_attrib(pp, "product", "note",
+          function (s)
+            local pr_a = gff3_extract_structure(s)
+            local gprod = pr_a[1].term
+            if gprod then
+              return "product: " .. gprod
+            else
+              return nil
+            end
+          end)
+      else
+        format_embl_attrib(pp, "product", "product",
           function (s)
             local pr_a = gff3_extract_structure(s)
             local gprod = pr_a[1].term
@@ -229,10 +259,6 @@ function embl_vis:visit_feature(fn)
               return nil
             end
           end)
-      format_embl_attrib(node , "ID", "locus_tag", nil)
-      if fn:get_type() == "pseudogene" then
-        io.write("FT                   /pseudo\n")
-        --io.write("FT                   /pseudogene=\"unknown\"\n")
       end
       format_embl_attrib(pp, "Dbxref", "EC_number",
           function (s)
@@ -258,7 +284,7 @@ function embl_vis:visit_feature(fn)
       io.write("FT                   /transl_table=1\n")
       -- orthologs
       local nof_orths = 0
-      if pp and pp:get_attribute("orthologous_to") then
+      if pp and pp:get_attribute("orthologous_to") and not embl_compliant then
         for _,v in ipairs(split(pp:get_attribute("orthologous_to"), ",")) do
           io.write("FT                   /ortholog=\"" ..
                           v .. " " .. v .. ";program=OrthoMCL;rank=0\"\n")
@@ -266,7 +292,7 @@ function embl_vis:visit_feature(fn)
         end
       end
       -- assign colours
-      if node:get_type() == "mRNA" then
+      if node:get_type() == "mRNA" and not embl_compliant then
         local prod = pp:get_attribute("product")
         if prod then
           if  prod ~= "term%3Dhypothetical protein" then
@@ -283,18 +309,18 @@ function embl_vis:visit_feature(fn)
             end
           end
         end
-      elseif node:get_type() == "pseudogenic_transcript" then
+      elseif node:get_type() == "pseudogenic_transcript" and not embl_compliant then
         io.write("FT                   /colour=13\n")     -- pseudogene
       end
       -- add name
       local name = fn:get_attribute("Name")
-      if name then
+      if name and not embl_compliant then
         io.write("FT                   /primary_name=\"".. name .. "\"\n")
       end
       -- GO terms
       local geneid = fn:get_attribute("ID")
       if geneid then
-        if self.gaf and self.gaf[geneid] then
+        if self.gaf and self.gaf[geneid] and not embl_compliant then
           for _,v in ipairs(self.gaf[geneid]) do
             io.write("FT                   /GO=\"aspect=" .. v.aspect ..
                                                 ";GOid=" .. v.goid ..
@@ -346,6 +372,11 @@ function embl_vis:visit_feature(fn)
       io.write("\n")
       io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
       format_embl_attrib(node , "ID", "locus_tag", nil)
+    elseif string.match(node:get_type(), "gap") then
+      io.write("FT   gap             ")
+      io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+      io.write("\n")
+      io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
     end
   end
   return 0
@@ -353,8 +384,8 @@ end
 
 -- load GAF
 gaf_store = {}
-if arg[5] then
-  for l in io.lines(arg[5]) do
+if gaffile then
+  for l in io.lines(gaffile) do
     if l:sub(1,1) ~= '!' then
       local db,dbid,dbobj,qual,goid,dbref,evidence,withfrom,aspect,dbobjname,
         dbobjsyn,dbobjtype,taxon,data,assignedby = unpack(split(l, '\t'))
@@ -381,15 +412,23 @@ function visitor_stream:next_tree()
 end
 
 -- get sequences, sequence lengths and derives_from relationships
-visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
+visitor_stream.instream = gt.gff3_in_stream_new_sorted(gff3file)
 visitor_stream.vis = collect_vis
 local gn = visitor_stream:next_tree()
 while (gn) do
   gn = visitor_stream:next_tree()
 end
 
+keys, seqs = get_fasta_nosep(seqfile)
+collect_vis.seqs = {}
+collect_vis.lengths = {}
+for k,v in pairs(seqs) do
+  collect_vis.seqs[k] = v
+  collect_vis.lengths[k] = v:len()
+end
+
 -- output EMBL code as we traverse the GFF
-visitor_stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
+visitor_stream.instream = gt.gff3_in_stream_new_sorted(gff3file)
 visitor_stream.vis = embl_vis
 embl_vis.obo = gos
 embl_vis.gaf = gaf_store
