@@ -17,23 +17,28 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
+package.path = gt.script_dir .. "/?.lua;" .. package.path
+require("lib")
+require("optparse")
+
+op = OptionParser:new({usage="%prog <options> target_GFF3_file source_GAF_file db taxonid",
+                       oneliner="Transfer GO terms from orthologs in the reference.",
+                       version="0.1"})
+op:option{"-x", action='store_true', dest='exp',
+                help="transfer experimentally verified terms only"}
+options,args = op:parse({exp=false})
+
 function usage()
-  io.stderr:write("Transfer GO annotations from orthologs in "
-                  .. "reference genomes.\n")
-  io.stderr:write(string.format("Usage: %s <target GFF3_file> "
-                                .. "<source GAF file> <db> <taxonid>\n", arg[0]))
+  op:help()
   os.exit(1)
 end
 
-if #arg < 4 then
+if #args < 4 then
   usage()
 end
 
-db = arg[3]
-taxonid = arg[4]
-
-package.path = gt.script_dir .. "/?.lua;" .. package.path
-require("lib")
+db = args[3]
+taxonid = args[4]
 
 annotate_vis = gt.custom_visitor_new()
 function annotate_vis:visit_feature(fn)
@@ -44,10 +49,10 @@ function annotate_vis:visit_feature(fn)
       local gos = {}
       for _,orth in ipairs(split(orths, ",")) do
         nof_orths = nof_orths + 1
-        orth = orth:gsub("GeneDB:","")
+        orth = orth:gsub("GeneDB:",""):gsub("[:.]%d+$", "")
         if self.store[orth] then
           for _,item in ipairs(self.store[orth]) do
-            if is_experimental(item.evidence) then
+            if not options.exp or (options.exp and is_experimental(item.evidence)) then
               prod = gff3_extract_structure(fn:get_attribute("product"))
               if not gos[item.goid] then
                 gos[item.goid] = {}
@@ -87,7 +92,7 @@ end
 
 -- get annotations from reference(s)
 store = {}
-for l in io.lines(arg[2]) do
+for l in io.lines(args[2]) do
   local db,dbid,dbobj,qual,goid,dbref,evidence,withfrom,aspect,dbobjname,
     dbobjsyn,dbobjtype,taxon,data,assignedby = unpack(split(l, '\t'))
   if not store[dbid] then
@@ -100,7 +105,7 @@ for l in io.lines(arg[2]) do
                              taxon=taxon, data=data, assignedby=assignedby})
 end
 
-visitor_stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(arg[1]),
+visitor_stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(args[1]),
                                     annotate_vis)
 annotate_vis.store = store
 out_stream = visitor_stream
