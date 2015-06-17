@@ -166,7 +166,7 @@ function embl_vis:visit_feature(fn)
     else
       io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
                  .. "genomic DNA; STD; UNC; "
-                 .. collect_vis.lengths[fn:get_seqid()] .." BP.\n")
+                 .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
       io.write("XX   \n")
       io.write("AC   " .. fn:get_seqid() .. ";\n")
       io.write("XX   \n")
