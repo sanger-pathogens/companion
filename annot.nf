@@ -1155,7 +1155,8 @@ if (params.make_embl) {
         file '*.embl' into embl_out
 
         """
-        gff3_to_embl.lua embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' ${embl_full_seq}
+        zcat ${embl_full_seq} > 1
+        gff3_to_embl.lua embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
         """
     }
 
