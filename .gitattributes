@@ -1,1 +1,2 @@
-data linguist-vendored
+data/ linguist-vendored
+example-data/ linguist-vendored
