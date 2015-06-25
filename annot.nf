@@ -79,46 +79,34 @@ if (params.do_contiguation) {
 }
 
 // fork important output streams
-pseudochr_seq_tRNA = Channel.create()
-pseudochr_seq_ncRNA = Channel.create()
-pseudochr_seq_ratt = Channel.create()
-pseudochr_seq_exonerate = Channel.create()
-pseudochr_seq_augustus = Channel.create()
-pseudochr_seq_snap = Channel.create()
-pseudochr_seq_augustus_ctg = Channel.create()
-pseudochr_seq_make_gaps = Channel.create()
-pseudochr_seq_make_dist_1 = Channel.create()
-pseudochr_seq_make_dist_2 = Channel.create()
-pseudochr_seq_tmhmm = Channel.create()
-pseudochr_seq_orthomcl = Channel.create()
-pseudochr_seq_pseudogene = Channel.create()
-pseudochr_seq_splitsplice = Channel.create()
-pseudochr_seq.into(pseudochr_seq_tRNA, pseudochr_seq_ncRNA, pseudochr_seq_ratt,
-                   pseudochr_seq_augustus, pseudochr_seq_augustus_ctg,
-                   pseudochr_seq_snap, pseudochr_seq_make_gaps,
-                   pseudochr_seq_make_dist_1, pseudochr_seq_make_dist_2,
-                   pseudochr_seq_splitsplice, pseudochr_seq_pseudogene,
-                   pseudochr_seq_tmhmm, pseudochr_seq_orthomcl,
-                   pseudochr_seq_exonerate)
+pseudochr_seq.into{ pseudochr_seq_tRNA
+					pseudochr_seq_ncRNA
+					pseudochr_seq_ratt
+					pseudochr_seq_augustus
+					pseudochr_seq_augustus_ctg
+                    pseudochr_seq_snap
+                    pseudochr_seq_make_gaps
+                    pseudochr_seq_make_dist_1
+                    pseudochr_seq_make_dist_2
+                    pseudochr_seq_splitsplice
+                    pseudochr_seq_pseudogene
+                    pseudochr_seq_tmhmm
+                    pseudochr_seq_orthomcl
+                    pseudochr_seq_exonerate }
 
-scaffolds_seq_augustus = Channel.create()
-scaffolds_seq_make_gaps = Channel.create()
-scaffolds_seq_make_dist_1 = Channel.create()
-scaffolds_seq_make_dist_2 = Channel.create()
-scaffolds_seq.into(scaffolds_seq_augustus, scaffolds_seq_make_gaps,
-                   scaffolds_seq_make_dist_1, scaffolds_seq_make_dist_2)
+scaffolds_seq.into{ scaffolds_seq_augustus
+				    scaffolds_seq_make_gaps
+                    scaffolds_seq_make_dist_1
+                    scaffolds_seq_make_dist_2 }
 
-scaffolds_agp_augustus = Channel.create()
-scaffolds_agp_make_gaps = Channel.create()
-scaffolds_agp_make_dist = Channel.create()
-scaffolds_agp.into(scaffolds_agp_augustus, scaffolds_agp_make_gaps,
-                   scaffolds_agp_make_dist)
 
-pseudochr_agp_augustus = Channel.create()
-pseudochr_agp_make_gaps = Channel.create()
-pseudochr_agp_make_dist = Channel.create()
-pseudochr_agp.into(pseudochr_agp_augustus, pseudochr_agp_make_gaps,
-                   pseudochr_agp_make_dist)
+scaffolds_agp.into{ scaffolds_agp_augustus
+					scaffolds_agp_make_gaps
+                    scaffolds_agp_make_dist }
+
+pseudochr_agp.into{ pseudochr_agp_augustus 
+				    pseudochr_agp_make_gaps
+                    pseudochr_agp_make_dist }
 
 // TRNA PREDICTION
 // ===============
@@ -154,7 +142,8 @@ process press_ncRNA_cms {
     """
 }
 
-ncrna_genome_chunk = pseudochr_seq_ncRNA.splitFasta( by: 3)
+pseudochr_seq_ncRNA.splitFasta( by: 3 ).set { ncrna_genome_chunk }
+
 process predict_ncRNA {
     input:
     file 'chunk' from ncrna_genome_chunk
@@ -448,11 +437,9 @@ process pseudogene_indexing {
     """
 }
 
-pseudochr_seq_pseudogene_align = Channel.create()
-pseudochr_seq_pseudogene_calling = Channel.create()
-pseudochr_seq_pseudogene.into(pseudochr_seq_pseudogene_align,
-                              pseudochr_seq_pseudogene_calling)
-pseudogene_align_chunk = pseudochr_seq_pseudogene_align.splitFasta( by: 3)
+
+pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
+pseudochr_seq_pseudogene_align.splitFasta( by: 3 ).set { pseudogene_align_chunk }
 
 process pseudogene_last {
     input:
@@ -603,10 +590,7 @@ process add_polypeptides {
 // ORTHOMCL AND FUNCTIONAL TRANSFER
 // ================================
 
-genemodels_for_omcl_proteins = Channel.create()
-genemodels_for_omcl_annot = Channel.create()
-genemodels_with_polypeptides_gff3.into(genemodels_for_omcl_proteins,
-                                       genemodels_for_omcl_annot)
+genemodels_with_polypeptides_gff3.into{ genemodels_for_omcl_proteins; genemodels_for_omcl_annot }
 
 process get_proteins_for_orthomcl {
     input:
@@ -628,12 +612,11 @@ process get_proteins_for_orthomcl {
         | truncate_header.lua >> proteins.fas
     """
 }
-proteins_orthomcl = Channel.create()
-proteins_pfam = Channel.create()
-refcomp_protein_in = Channel.create()
-proteins_output = Channel.create()
-proteins_target.into(proteins_orthomcl, proteins_pfam, refcomp_protein_in,
-                     proteins_output)
+
+proteins_target.into{ proteins_orthomcl
+					  proteins_pfam
+					  refcomp_protein_in
+                      proteins_output }
 
 process make_ref_input_for_orthomcl {
     input:
@@ -672,13 +655,11 @@ process make_target_input_for_orthomcl {
     """
 }
 
-full_gg = gg_file.mix(gg_file_ref).collectFile()
-full_shortnames = shortname.mix(shortname_ref).collectFile()
-full_mapped_fasta = mapped_fasta.mix(mapped_fasta_ref).collectFile()
+gg_file.mix(gg_file_ref).collectFile().set { full_gg }
+shortname.mix(shortname_ref).collectFile().set { full_shortnames }
+mapped_fasta.mix(mapped_fasta_ref).collectFile().set { full_mapped_fasta }
 
-full_mapped_fasta_for_index = Channel.create()
-full_mapped_fasta_for_query = Channel.create()
-full_mapped_fasta.into(full_mapped_fasta_for_index, full_mapped_fasta_for_query)
+full_mapped_fasta.into{ full_mapped_fasta_for_index; full_mapped_fasta_for_query }
 
 process blast_for_orthomcl_formatdb {
     cache 'deep'
@@ -737,9 +718,7 @@ process run_orthomcl {
     """
 }
 
-orthomcl_cluster_out_annot = Channel.create()
-result_ortho = Channel.create()
-orthomcl_cluster_out.into(orthomcl_cluster_out_annot, result_ortho)
+orthomcl_cluster_out.into{ orthomcl_cluster_out_annot; result_ortho }
 
 process annotate_orthologs {
     cache 'deep'
@@ -878,23 +857,22 @@ process make_distribution_seqs {
     """
 }
 
-stats_inseq = Channel.create()
-circos_inseq = Channel.create()
-report_inseq = Channel.create()
-embl_inseq = Channel.create()
-out_seq = Channel.create()
-result_seq.into(stats_inseq, circos_inseq, report_inseq, out_seq, embl_inseq)
 
-stats_gff3 = Channel.create()
-circos_gff3 = Channel.create()
-report_gff3 = Channel.create()
-embl_gff3 = Channel.create()
-out_gff3 = Channel.create()
-refcomp_gff3_in = Channel.create()
-genelist_gff3_in = Channel.create()
-prot_fasta_annot_gff3 = Channel.create()
-result_gff3.into(stats_gff3, circos_gff3, report_gff3, out_gff3, embl_gff3,
-                 refcomp_gff3_in, genelist_gff3_in, prot_fasta_annot_gff3)
+result_seq.into{ stats_inseq
+				 circos_inseq
+				 report_inseq 
+				 out_seq
+				 embl_inseq }
+
+
+result_gff3.into{ stats_gff3
+				  circos_gff3
+				  report_gff3
+				  out_gff3 
+				  embl_gff3
+                  refcomp_gff3_in
+                  genelist_gff3_in
+                  prot_fasta_annot_gff3 }
 
 // GENOME STATS GENERATION
 // =======================
@@ -1035,34 +1013,20 @@ if (params.do_contiguation && params.do_circos) {
         """
     }
 
-    circos_input_links_chr = Channel.create()
-    circos_input_links_bin = Channel.create()
-    circos_input_links.into(circos_input_links_chr,circos_input_links_bin)
+    circos_input_links.into{ circos_input_links_chr; circos_input_links_bin }
+    core_comp_circos.into{ core_comp_circos_chr; core_comp_circos_bin }
 
-    core_comp_circos_chr = Channel.create()
-    core_comp_circos_bin = Channel.create()
-    core_comp_circos.into(core_comp_circos_chr,core_comp_circos_bin)
+    circos_input_karyotype.into{ circos_input_karyotype_chr; circos_input_karyotype_bin }
 
-    circos_input_karyotype_chr = Channel.create()
-    circos_input_karyotype_bin = Channel.create()
-    circos_input_karyotype.into(circos_input_karyotype_chr,
-                                circos_input_karyotype_bin)
+    circos_input_chromosomes.into{ circos_input_chromosomes_chr; circos_input_chromosomes_bin }
 
-    circos_input_chromosomes_chr = Channel.create()
-    circos_input_chromosomes_bin = Channel.create()
-    circos_input_chromosomes.into(circos_input_chromosomes_chr,
-                                  circos_input_chromosomes_bin)
+    circos_input_genes.into{ circos_input_genes_chr; circos_input_genes_bin }
 
-    circos_input_genes_chr = Channel.create()
-    circos_input_genes_bin = Channel.create()
-    circos_input_genes.into(circos_input_genes_chr,circos_input_genes_bin)
+    circos_input_gaps.into{ circos_input_gaps_chr; circos_input_gaps_bin }
 
-    circos_input_gaps_chr = Channel.create()
-    circos_input_gaps_bin = Channel.create()
-    circos_input_gaps.into(circos_input_gaps_chr,circos_input_gaps_bin)
-
-    circos_chromosomes = ref_target_mapping.splitCsv(sep: "\t")
+    ref_target_mapping.splitCsv(sep: "\t").set { circos_chromosomes }
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
+    
     process circos_run_chrs {
         tag { chromosome[0] }
 
@@ -1085,8 +1049,9 @@ if (params.do_contiguation && params.do_circos) {
         """
     }
 
-    circos_binmap = bin_target_mapping.splitCsv(sep: "\t")
+    bin_target_mapping.splitCsv(sep: "\t").set { circos_binmap }
     circos_binconffile = file(params.CIRCOS_BIN_CONFIG_FILE)
+    
     process circos_run_bin {
         // this process can fail
         errorStrategy 'ignore'
