@@ -15,7 +15,7 @@ install:
   - curl -fsSL get.nextflow.io | bash
   - wget -q http://geneontology.org/ontology/go.obo
   - wget -q http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz
-  - zcat Pfam-A.hmm.gz | test/split_hmm.lua 1000 > Pfam-A.hmm
+  - zcat Pfam-A.hmm.gz | test/split-hmm.lua 1000 > Pfam-A.hmm
   - hmmpress Pfam-A.hmm
   - rm -f Pfam-A.hmm
 
