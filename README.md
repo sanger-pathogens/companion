@@ -51,4 +51,4 @@ TODO: add documentation on how to prepare references.
 Sascha Steinbiss (ss34@sanger.ac.uk)
 
 ###[Build status](#build)
-![Travis status](https://api.travis-ci.org/satta/annot-nf.svg)
+![Travis status](https://api.travis-ci.org/sanger-pathogens/annot-nf.svg)
