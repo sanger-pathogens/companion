@@ -9,3 +9,13 @@ make install
 cd ..
 rm -rf last-581
 rm -f last-581.zip
+
+rm -f tantan-13.zip
+wget -q http://cbrc3.cbrc.jp/~martin/tantan/tantan-13.zip
+unzip tantan-13.zip
+cd ltantan-13
+make
+make install
+cd ..
+rm -rf tantan-13
+rm -f tantan-13.zip
