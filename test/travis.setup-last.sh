@@ -13,7 +13,7 @@ rm -f last-581.zip
 rm -f tantan-13.zip
 wget -q http://cbrc3.cbrc.jp/~martin/tantan/tantan-13.zip
 unzip tantan-13.zip
-cd ltantan-13
+cd tantan-13
 make
 make install
 cd ..
