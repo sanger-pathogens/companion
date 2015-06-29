@@ -104,7 +104,7 @@ scaffolds_agp.into{ scaffolds_agp_augustus
 					scaffolds_agp_make_gaps
                     scaffolds_agp_make_dist }
 
-pseudochr_agp.into{ pseudochr_agp_augustus 
+pseudochr_agp.into{ pseudochr_agp_augustus
 				    pseudochr_agp_make_gaps
                     pseudochr_agp_make_dist }
 
@@ -860,7 +860,7 @@ process make_distribution_seqs {
 
 result_seq.into{ stats_inseq
 				 circos_inseq
-				 report_inseq 
+				 report_inseq
 				 out_seq
 				 embl_inseq }
 
@@ -868,7 +868,7 @@ result_seq.into{ stats_inseq
 result_gff3.into{ stats_gff3
 				  circos_gff3
 				  report_gff3
-				  out_gff3 
+				  out_gff3
 				  embl_gff3
                   refcomp_gff3_in
                   genelist_gff3_in
@@ -1026,7 +1026,7 @@ if (params.do_contiguation && params.do_circos) {
 
     ref_target_mapping.splitCsv(sep: "\t").set { circos_chromosomes }
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
-    
+
     process circos_run_chrs {
         tag { chromosome[0] }
 
@@ -1051,7 +1051,7 @@ if (params.do_contiguation && params.do_circos) {
 
     bin_target_mapping.splitCsv(sep: "\t").set { circos_binmap }
     circos_binconffile = file(params.CIRCOS_BIN_CONFIG_FILE)
-    
+
     process circos_run_bin {
         // this process can fail
         errorStrategy 'ignore'
