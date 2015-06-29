@@ -92,6 +92,19 @@ RUN cd /opt && \
     chmod 755 /usr/bin/Gblocks
 
 #
+# Install tantan
+#
+ADD http://cbrc3.cbrc.jp/~martin/tantan/tantan-13.zip /opt/tantan-13.zip
+RUN cd /opt && \
+    unzip tantan-13.zip && \
+    rm -rf tantan-13.zip && \
+    cd tantan-13 && \
+    make -j2 && \
+    make install && \
+    cd .. && \
+    rm -rf tantan-13
+
+#
 # get GO OBO file
 #
 ADD http://geneontology.org/ontology/go.obo /opt/go.obo

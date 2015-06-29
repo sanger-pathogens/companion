@@ -104,7 +104,7 @@ scaffolds_agp.into{ scaffolds_agp_augustus
 					scaffolds_agp_make_gaps
                     scaffolds_agp_make_dist }
 
-pseudochr_agp.into{ pseudochr_agp_augustus 
+pseudochr_agp.into{ pseudochr_agp_augustus
 				    pseudochr_agp_make_gaps
                     pseudochr_agp_make_dist }
 
@@ -387,13 +387,13 @@ process integrate_genemodels {
     file 'ratt.full.gff3' from ratt_gff3
 
     output:
-    file 'integrated.fixed.sorted.gff3' into integrated_gff3
+    file 'integrated.gff3' into integrated_gff3
 
     """
-    unset GT_RETAINIDS
+    unset GT_RETAINIDS && \
     gt gff3 -fixregionboundaries -retainids no -sort -tidy \
         augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 ratt.full.gff3 \
-        > merged.pre.gff3
+        > merged.pre.gff3 && \
     export GT_RETAINIDS=yes
 
     # avoid huge gene clusters
@@ -403,19 +403,32 @@ process integrate_genemodels {
     integrate_gene_calls.lua merged.gff3 | \
         gt gff3 -sort -tidy -retainids \
         > integrated.gff3
-
-    # TODO: make this parameterisable
-    fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
-
-    # make sure final output is sorted
-    gt gff3 -sort -tidy -retainids \
-      integrated.fixed.gff3 > integrated.fixed.sorted.gff3
     """
+}
+
+if (params.fix_polycistrons) {
+    process fix_polycistrons {
+        input:
+        file 'integrated.gff3' from integrated_gff3
+
+        output:
+        file 'integrated.fixed.sorted.gff3' into integrated_gff3_processed
+
+        """
+        fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
+
+        # make sure final output is sorted
+        gt gff3 -sort -tidy -retainids \
+          integrated.fixed.gff3 > integrated.fixed.sorted.gff3
+        """
+    }
+} else {
+    integrated_gff3.into { integrated_gff3_processed }
 }
 
 process remove_exons {
     input:
-    file 'integrated.gff3' from integrated_gff3
+    file 'integrated.gff3' from integrated_gff3_processed
 
     output:
     file 'integrated_clean.gff3' into integrated_gff3_clean
@@ -433,10 +446,9 @@ process pseudogene_indexing {
     file 'prot_index*' into pseudochr_last_index
 
     """
-    lastdb -p prot_index ref.peps.fasta
+    tantan -p -r0.02 ref.peps.fasta | lastdb -p -c prot_index
     """
 }
-
 
 pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
 pseudochr_seq_pseudogene_align.splitFasta( by: 3 ).set { pseudogene_align_chunk }
@@ -450,7 +462,7 @@ process pseudogene_last {
     file 'last.out' into pseudochr_last_out
 
     """
-    lastal -pBL80 -F15 -e300 -m100 -f0 prot_index chunk.fasta > last.out
+    lastal -pBL80 -F15 -e100 -m10 -f0 prot_index chunk.fasta > last.out
     """
 }
 
@@ -860,7 +872,7 @@ process make_distribution_seqs {
 
 result_seq.into{ stats_inseq
 				 circos_inseq
-				 report_inseq 
+				 report_inseq
 				 out_seq
 				 embl_inseq }
 
@@ -868,7 +880,7 @@ result_seq.into{ stats_inseq
 result_gff3.into{ stats_gff3
 				  circos_gff3
 				  report_gff3
-				  out_gff3 
+				  out_gff3
 				  embl_gff3
                   refcomp_gff3_in
                   genelist_gff3_in
@@ -1026,7 +1038,7 @@ if (params.do_contiguation && params.do_circos) {
 
     ref_target_mapping.splitCsv(sep: "\t").set { circos_chromosomes }
     circos_conffile = file(params.CIRCOS_CONFIG_FILE)
-    
+
     process circos_run_chrs {
         tag { chromosome[0] }
 
@@ -1051,7 +1063,7 @@ if (params.do_contiguation && params.do_circos) {
 
     bin_target_mapping.splitCsv(sep: "\t").set { circos_binmap }
     circos_binconffile = file(params.CIRCOS_BIN_CONFIG_FILE)
-    
+
     process circos_run_bin {
         // this process can fail
         errorStrategy 'ignore'
