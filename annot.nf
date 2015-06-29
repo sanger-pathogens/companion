@@ -387,13 +387,13 @@ process integrate_genemodels {
     file 'ratt.full.gff3' from ratt_gff3
 
     output:
-    file 'integrated.fixed.sorted.gff3' into integrated_gff3
+    file 'integrated.gff3' into integrated_gff3
 
     """
-    unset GT_RETAINIDS
+    unset GT_RETAINIDS && \
     gt gff3 -fixregionboundaries -retainids no -sort -tidy \
         augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 ratt.full.gff3 \
-        > merged.pre.gff3
+        > merged.pre.gff3 && \
     export GT_RETAINIDS=yes
 
     # avoid huge gene clusters
@@ -403,19 +403,32 @@ process integrate_genemodels {
     integrate_gene_calls.lua merged.gff3 | \
         gt gff3 -sort -tidy -retainids \
         > integrated.gff3
-
-    # TODO: make this parameterisable
-    fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
-
-    # make sure final output is sorted
-    gt gff3 -sort -tidy -retainids \
-      integrated.fixed.gff3 > integrated.fixed.sorted.gff3
     """
+}
+
+if (params.fix_polycistrons) {
+    process fix_polycistrons {
+        input:
+        file 'integrated.gff3' from integrated_gff3
+
+        output:
+        file 'integrated.fixed.sorted.gff3' into integrated_gff3_processed
+
+        """
+        fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
+
+        # make sure final output is sorted
+        gt gff3 -sort -tidy -retainids \
+          integrated.fixed.gff3 > integrated.fixed.sorted.gff3
+        """
+    }
+} else {
+    integrated_gff3.into { integrated_gff3_processed }
 }
 
 process remove_exons {
     input:
-    file 'integrated.gff3' from integrated_gff3
+    file 'integrated.gff3' from integrated_gff3_processed
 
     output:
     file 'integrated_clean.gff3' into integrated_gff3_clean
