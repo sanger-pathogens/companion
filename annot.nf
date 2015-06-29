@@ -433,10 +433,9 @@ process pseudogene_indexing {
     file 'prot_index*' into pseudochr_last_index
 
     """
-    lastdb -p prot_index ref.peps.fasta
+    tantan -p -r0.02 ref.peps.fasta | lastdb -p -c prot_index
     """
 }
-
 
 pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
 pseudochr_seq_pseudogene_align.splitFasta( by: 3 ).set { pseudogene_align_chunk }
@@ -450,7 +449,7 @@ process pseudogene_last {
     file 'last.out' into pseudochr_last_out
 
     """
-    lastal -pBL80 -F15 -e300 -m100 -f0 prot_index chunk.fasta > last.out
+    lastal -pBL80 -F15 -e100 -m10 -f0 prot_index chunk.fasta > last.out
     """
 }
 
