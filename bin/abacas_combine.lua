@@ -75,7 +75,7 @@ for file in lfs.dir(arg[1]) do
                            seq = string.sub(this_scaf.seq, i_start, i_end)}
             -- sanity check
             if this_contig.seq:match("[Nn]") then
-              io.stderr:write("contig with N character encountered")
+              io.stderr:write("contig with N character encountered\n")
               os.exit(1)
             end
             table.insert(this_scaf.contigs, this_contig)
@@ -85,7 +85,7 @@ for file in lfs.dir(arg[1]) do
           -- just a sanity check
           gapseq = string.sub(seqs[seqid], start, stop)
           if gapseq:match("[^Nn]") then
-            io.stderr:write("Gap with non-N character encountered")
+            io.stderr:write("Gap with non-N character encountered\n")
             os.exit(1)
           end
         end
@@ -101,8 +101,13 @@ newscafs = {}
 newkeys = {}
 newpseudochr_seq = {}
 for k,v in pairs(scafs) do
-  local chr = tonumber(k:match(refpat))
-  local newid =  chrprefix .. "_" .. string.format("%02d", chr)
+  local chr = k:match(refpat)
+  local newid =  chrprefix .. "_" .. chr
+  if newscafs[newid] then
+    io.stderr:write("new ID " .. newid .. " assigned more than once, "
+                     .. "check your refpattern\n")
+    os.exit(1)
+  end
   newscafs[newid] = v
   newpseudochr_seq[newid] = pseudochr_seq[k]
   table.insert(newkeys, newid)
