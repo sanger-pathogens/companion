@@ -1010,6 +1010,7 @@ if (params.do_contiguation && params.do_circos) {
         file 'blast.in' from circos_blastout
         val params.CHR_PATTERN
         val params.ABACAS_BIN_CHR
+        val params.ABACAS_CHR_PATTERN
 
         output:
         file 'links.txt' into circos_input_links
@@ -1021,7 +1022,7 @@ if (params.do_contiguation && params.do_circos) {
 
         """
         prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . \
-           "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}"
+           "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}" "${params.ABACAS_CHR_PATTERN}"
         """
     }
 
