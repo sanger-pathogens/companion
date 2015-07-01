@@ -119,7 +119,9 @@ end
 
 for l in io.lines(arg[3]) do
   targetid, refid, _, _, _, _, tfrom, tto, rfrom, rto, eval = unpack(split(l, "%s+"))
-  links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
+  if math.abs(tonumber(tto) - tonumber(tfrom)) >= 1500 then
+    links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
+  end
 end
 
 if has_bin then
