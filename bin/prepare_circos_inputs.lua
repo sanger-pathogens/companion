@@ -20,7 +20,7 @@
 function usage()
   io.stderr:write(string.format("Usage: %s <ref GFF annotation> " ..
                                 "<target GFF annotation> <blast output> " ..
-                                "<outpath> <chr_prefix> <bin_chr>\n" , arg[0]))
+                                "<outpath> <chr_prefix> <bin_chr> <ref_prefix>\n" , arg[0]))
   os.exit(1)
 end
 
@@ -40,6 +40,7 @@ bin_out = io.open(arg[4] .. "/bin.txt", "w+")
 
 chr_prefix = arg[5]
 bin_chr = arg[6]
+ref_prefix = arg[7]
 
 has_bin = false
 
@@ -83,7 +84,7 @@ function visitor:visit_region(rn)
       chr_out:write(m .. "\n")
     end
   end
-  if self.is_ref then
+  if self.is_ref and rn:get_seqid():match(ref_prefix) then
     table.insert(ref_chr, rn:get_seqid())
   end
 end
@@ -118,7 +119,9 @@ end
 
 for l in io.lines(arg[3]) do
   targetid, refid, _, _, _, _, tfrom, tto, rfrom, rto, eval = unpack(split(l, "%s+"))
-  links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
+  if math.abs(tonumber(tto) - tonumber(tfrom)) >= 1500 then
+    links_out:write(targetid .. " " .. tfrom .. " " .. tto .. " " .. refid .. " " .. rfrom .. " " .. rto .."\n")
+  end
 end
 
 if has_bin then
