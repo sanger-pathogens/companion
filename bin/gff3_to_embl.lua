@@ -26,7 +26,9 @@ op = OptionParser:new({usage="%prog <options> <GFF annotation> <GO OBO file> <or
                        version="0.1"})
 op:option{"-e", action='store_true', dest='embl_compliant',
                 help="output reduced 'ENA compliant' format"}
-options,args = op:parse({embl_compliant=false})
+op:option{"-o", action='store_true', dest='only_on_seq',
+                help="ignore features for which no sequence is found"}
+options,args = op:parse({embl_compliant=false, only_on_seq=false})
 
 function usage()
   op:help()
@@ -150,233 +152,240 @@ embl_vis.pps = collect_vis.pps
 embl_vis.gos = parse_obo(obofile)
 embl_vis.last_seqid = nil
 function embl_vis:visit_feature(fn)
-  if embl_vis.last_seqid ~= fn:get_seqid() then
-    if embl_vis.last_seqid then
-      format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
-      io.write("//\n")
-      io.output():close()
-    end
-    embl_vis.last_seqid = fn:get_seqid()
-    io.output(fn:get_seqid()..".embl", "w+")
-    if embl_compliant then
-      io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
-      io.write("XX   \n")
-      io.write("AC   XXX;\n")
-      io.write("XX   \n")
-    else
-      io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
-                 .. "genomic DNA; STD; UNC; "
-                 .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
-      io.write("XX   \n")
-      io.write("AC   " .. fn:get_seqid() .. ";\n")
-      io.write("XX   \n")
-    end
-    io.write("PR   Project:00000000;\n")
-    io.write("XX   \n")
-    io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
-    io.write("XX   \n")
-    io.write("KW   \n")
-    io.write("XX   \n")
-    io.write("RN   [1]\n")
-    io.write("RA   Authors;\n")
-    io.write("RT   Title;\n")
-    io.write("RL   Unpublished.\n")
-    io.write("XX   \n")
-    io.write("OS   " .. arg[3] .. "\n")
-    io.write("XX   \n")
-    io.write("FH   Key             Location/Qualifiers\n")
-    io.write("FH   \n")
-    io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
-    io.write("FT                   /organism=\"" .. arg[3] .. "\"\n")
-    io.write("FT                   /mol_type=\"genomic DNA\"\n")
-  end
-
-  for node in fn:get_children() do
-    if node:get_type() == "mRNA" or node:get_type() == "pseudogenic_transcript" then
-      local cnt = 0
-      for cds in node:get_children() do
-        if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
-          cnt = cnt + 1
-        end
+  if collect_vis.seqs[fn:get_seqid()] then
+    if embl_vis.last_seqid ~= fn:get_seqid() then
+      if embl_vis.last_seqid then
+        format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
+        io.write("//\n")
+        io.output():close()
       end
-      io.write("FT   CDS             ")
-      if node:get_strand() == "-" then
-        io.write("complement(")
-      end
-      if cnt > 1 then
-        io.write("join(")
-      end
-      local i = 1
-      local coding_length = 0
-      for cds in node:get_children() do
-        if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
-          if i == 1 and fn:get_attribute("Start_range") then
-            io.write("<")
-          end
-          io.write(cds:get_range():get_start())
-          io.write("..")
-          if i == cnt and fn:get_attribute("End_range") then
-            io.write(">")
-          end
-          io.write(cds:get_range():get_end())
-          if i ~= cnt then
-            io.write(",")
-          end
-          coding_length = coding_length + cds:get_range():length()
-          i = i + 1
-        end
-      end
-      if cnt > 1 then
-        io.write(")")
-      end
-      if node:get_strand() == "-" then
-        io.write(")")
-      end
-      io.write("\n")
-      local pp = self.pps[node:get_attribute("ID")]
-      format_embl_attrib(node , "ID", "locus_tag", nil)
-      if fn:get_type() == "pseudogene" then
-        io.write("FT                   /pseudo\n")
-        --io.write("FT                   /pseudogene=\"unknown\"\n")
-        format_embl_attrib(pp, "product", "note",
-          function (s)
-            local pr_a = gff3_extract_structure(s)
-            local gprod = pr_a[1].term
-            if gprod then
-              return "product: " .. gprod
-            else
-              return nil
-            end
-          end)
+      embl_vis.last_seqid = fn:get_seqid()
+      io.output(fn:get_seqid()..".embl", "w+")
+      if embl_compliant then
+        io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+        io.write("XX   \n")
+        io.write("AC   XXX;\n")
+        io.write("XX   \n")
       else
-        format_embl_attrib(pp, "product", "product",
-          function (s)
-            local pr_a = gff3_extract_structure(s)
-            local gprod = pr_a[1].term
-            if gprod then
-              return gprod
-            else
-              return nil
-            end
-          end)
+        io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
+                   .. "genomic DNA; STD; UNC; "
+                   .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
+        io.write("XX   \n")
+        io.write("AC   " .. fn:get_seqid() .. ";\n")
+        io.write("XX   \n")
       end
-      format_embl_attrib(pp, "Dbxref", "EC_number",
-          function (s)
-            m = string.match(s, "EC:([0-9.-]+)")
-            if m then
-              return m
-            else
-              return nil
-            end
-          end)
-      -- add gene to 'unroll' multiple spliceforms
-      local geneid = fn:get_attribute("ID")
-      if geneid then
-        io.write("FT                   /gene=\"".. geneid .. "\"\n")
-      end
-      -- translation
-      local protseq = nil
-      if node:get_type() == "mRNA" then
-        protseq = node:extract_and_translate_sequence("CDS", true,
-                                                      region_mapping)
-        io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
-      end
-      io.write("FT                   /transl_table=1\n")
-      -- orthologs
-      local nof_orths = 0
-      if pp and pp:get_attribute("orthologous_to") and not embl_compliant then
-        for _,v in ipairs(split(pp:get_attribute("orthologous_to"), ",")) do
-          io.write("FT                   /ortholog=\"" ..
-                          v .. " " .. v .. ";program=OrthoMCL;rank=0\"\n")
-          nof_orths = nof_orths + 1
+      io.write("PR   Project:00000000;\n")
+      io.write("XX   \n")
+      io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
+      io.write("XX   \n")
+      io.write("KW   \n")
+      io.write("XX   \n")
+      io.write("RN   [1]\n")
+      io.write("RA   Authors;\n")
+      io.write("RT   Title;\n")
+      io.write("RL   Unpublished.\n")
+      io.write("XX   \n")
+      io.write("OS   " .. arg[3] .. "\n")
+      io.write("XX   \n")
+      io.write("FH   Key             Location/Qualifiers\n")
+      io.write("FH   \n")
+      io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
+      io.write("FT                   /organism=\"" .. arg[3] .. "\"\n")
+      io.write("FT                   /mol_type=\"genomic DNA\"\n")
+    end
+
+    for node in fn:get_children() do
+      if node:get_type() == "mRNA" or node:get_type() == "pseudogenic_transcript" then
+        local cnt = 0
+        for cds in node:get_children() do
+          if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
+            cnt = cnt + 1
+          end
         end
-      end
-      -- assign colours
-      if node:get_type() == "mRNA" and not embl_compliant then
-        local prod = pp:get_attribute("product")
-        if prod then
-          if  prod ~= "term%3Dhypothetical protein" then
-            if nof_orths > 0 or prod:match("conserved") then
-              io.write("FT                   /colour=10\n")   -- orange: conserved
-            else
-              io.write("FT                   /colour=7\n")    -- yellow: assigned Pfam
+        io.write("FT   CDS             ")
+        if node:get_strand() == "-" then
+          io.write("complement(")
+        end
+        if cnt > 1 then
+          io.write("join(")
+        end
+        local i = 1
+        local coding_length = 0
+        for cds in node:get_children() do
+          if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
+            if i == 1 and fn:get_attribute("Start_range") then
+              io.write("<")
             end
-          else
-            if coding_length < 500 then
-              io.write("FT                   /colour=6\n")    -- dark pink: short unlikely
+            io.write(cds:get_range():get_start())
+            io.write("..")
+            if i == cnt and fn:get_attribute("End_range") then
+              io.write(">")
+            end
+            io.write(cds:get_range():get_end())
+            if i ~= cnt then
+              io.write(",")
+            end
+            coding_length = coding_length + cds:get_range():length()
+            i = i + 1
+          end
+        end
+        if cnt > 1 then
+          io.write(")")
+        end
+        if node:get_strand() == "-" then
+          io.write(")")
+        end
+        io.write("\n")
+        local pp = self.pps[node:get_attribute("ID")]
+        format_embl_attrib(node , "ID", "locus_tag", nil)
+        if fn:get_type() == "pseudogene" then
+          io.write("FT                   /pseudo\n")
+          --io.write("FT                   /pseudogene=\"unknown\"\n")
+          format_embl_attrib(pp, "product", "note",
+            function (s)
+              local pr_a = gff3_extract_structure(s)
+              local gprod = pr_a[1].term
+              if gprod then
+                return "product: " .. gprod
+              else
+                return nil
+              end
+            end)
+        else
+          format_embl_attrib(pp, "product", "product",
+            function (s)
+              local pr_a = gff3_extract_structure(s)
+              local gprod = pr_a[1].term
+              if gprod then
+                return gprod
+              else
+                return nil
+              end
+            end)
+        end
+        format_embl_attrib(pp, "Dbxref", "EC_number",
+            function (s)
+              m = string.match(s, "EC:([0-9.-]+)")
+              if m then
+                return m
+              else
+                return nil
+              end
+            end)
+        -- add gene to 'unroll' multiple spliceforms
+        local geneid = fn:get_attribute("ID")
+        if geneid then
+          io.write("FT                   /gene=\"".. geneid .. "\"\n")
+        end
+        -- translation
+        local protseq = nil
+        if node:get_type() == "mRNA" then
+          protseq = node:extract_and_translate_sequence("CDS", true,
+                                                        region_mapping)
+          io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
+        end
+        io.write("FT                   /transl_table=1\n")
+        -- orthologs
+        local nof_orths = 0
+        if pp and pp:get_attribute("orthologous_to") and not embl_compliant then
+          for _,v in ipairs(split(pp:get_attribute("orthologous_to"), ",")) do
+            io.write("FT                   /ortholog=\"" ..
+                            v .. " " .. v .. ";program=OrthoMCL;rank=0\"\n")
+            nof_orths = nof_orths + 1
+          end
+        end
+        -- assign colours
+        if node:get_type() == "mRNA" and not embl_compliant then
+          local prod = pp:get_attribute("product")
+          if prod then
+            if  prod ~= "term%3Dhypothetical protein" then
+              if nof_orths > 0 or prod:match("conserved") then
+                io.write("FT                   /colour=10\n")   -- orange: conserved
+              else
+                io.write("FT                   /colour=7\n")    -- yellow: assigned Pfam
+              end
             else
-              io.write("FT                   /colour=8\n")    -- light green: hypothetical
+              if coding_length < 500 then
+                io.write("FT                   /colour=6\n")    -- dark pink: short unlikely
+              else
+                io.write("FT                   /colour=8\n")    -- light green: hypothetical
+              end
+            end
+          end
+        elseif node:get_type() == "pseudogenic_transcript" and not embl_compliant then
+          io.write("FT                   /colour=13\n")     -- pseudogene
+        end
+        -- add name
+        local name = fn:get_attribute("Name")
+        if name and not embl_compliant then
+          io.write("FT                   /primary_name=\"".. name .. "\"\n")
+        end
+        -- GO terms
+        local geneid = fn:get_attribute("ID")
+        if geneid then
+          if self.gaf and self.gaf[geneid] and not embl_compliant then
+            for _,v in ipairs(self.gaf[geneid]) do
+              io.write("FT                   /GO=\"aspect=" .. v.aspect ..
+                                                  ";GOid=" .. v.goid ..
+                                                  ";term=" .. self.gos[v.goid] ..
+                                                  ";with=" .. v.withfrom ..
+                                                  ";evidence=" .. v.evidence .. "\"\n")
             end
           end
         end
-      elseif node:get_type() == "pseudogenic_transcript" and not embl_compliant then
-        io.write("FT                   /colour=13\n")     -- pseudogene
-      end
-      -- add name
-      local name = fn:get_attribute("Name")
-      if name and not embl_compliant then
-        io.write("FT                   /primary_name=\"".. name .. "\"\n")
-      end
-      -- GO terms
-      local geneid = fn:get_attribute("ID")
-      if geneid then
-        if self.gaf and self.gaf[geneid] and not embl_compliant then
-          for _,v in ipairs(self.gaf[geneid]) do
-            io.write("FT                   /GO=\"aspect=" .. v.aspect ..
-                                                ";GOid=" .. v.goid ..
-                                                ";term=" .. self.gos[v.goid] ..
-                                                ";with=" .. v.withfrom ..
-                                                ";evidence=" .. v.evidence .. "\"\n")
+      elseif node:get_type() == "tRNA" then
+        io.write("FT   tRNA            ")
+        if node:get_strand() == "-" then
+          io.write("complement(")
+        end
+        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        if node:get_strand() == "-" then
+          io.write(")")
+        end
+        io.write("\n")
+        if node:get_attribute("aa") then
+          io.write("FT                   /product=\"" .. node:get_attribute("aa") .. " transfer RNA")
+          if node:get_attribute("anticodon") then
+            io.write(" (" .. node:get_attribute("anticodon") .. ")")
           end
+          io.write("\"\n")
         end
-      end
-    elseif node:get_type() == "tRNA" then
-      io.write("FT   tRNA            ")
-      if node:get_strand() == "-" then
-        io.write("complement(")
-      end
-      io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
-      if node:get_strand() == "-" then
-        io.write(")")
-      end
-      io.write("\n")
-      if node:get_attribute("aa") then
-        io.write("FT                   /product=\"" .. node:get_attribute("aa") .. " transfer RNA")
-        if node:get_attribute("anticodon") then
-          io.write(" (" .. node:get_attribute("anticodon") .. ")")
+        format_embl_attrib(node , "ID", "locus_tag", nil)
+      elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
+        io.write("FT   ncRNA            ")
+        if node:get_strand() == "-" then
+          io.write("complement(")
         end
-        io.write("\"\n")
+        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        if node:get_strand() == "-" then
+          io.write(")")
+        end
+        io.write("\n")
+        io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
+        format_embl_attrib(node , "ID", "locus_tag", nil)
+      elseif string.match(node:get_type(), "rRNA") then
+        io.write("FT   rRNA            ")
+        if node:get_strand() == "-" then
+          io.write("complement(")
+        end
+        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        if node:get_strand() == "-" then
+          io.write(")")
+        end
+        io.write("\n")
+        io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
+        format_embl_attrib(node , "ID", "locus_tag", nil)
+      elseif string.match(node:get_type(), "gap") then
+        io.write("FT   gap             ")
+        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write("\n")
+        io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
       end
-      format_embl_attrib(node , "ID", "locus_tag", nil)
-    elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
-      io.write("FT   ncRNA            ")
-      if node:get_strand() == "-" then
-        io.write("complement(")
-      end
-      io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
-      if node:get_strand() == "-" then
-        io.write(")")
-      end
-      io.write("\n")
-      io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(node , "ID", "locus_tag", nil)
-    elseif string.match(node:get_type(), "rRNA") then
-      io.write("FT   rRNA            ")
-      if node:get_strand() == "-" then
-        io.write("complement(")
-      end
-      io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
-      if node:get_strand() == "-" then
-        io.write(")")
-      end
-      io.write("\n")
-      io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
-      format_embl_attrib(node , "ID", "locus_tag", nil)
-    elseif string.match(node:get_type(), "gap") then
-      io.write("FT   gap             ")
-      io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
-      io.write("\n")
-      io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
+    end
+  else
+    if not options.only_on_seq then
+      error("sequence " .. tostring(fn:get_seqid()) .. " for " .. tostring(fn) .. " cannot be found in input")
+      os.exit(1)
     end
   end
   return 0
