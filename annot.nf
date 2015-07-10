@@ -459,7 +459,7 @@ process pseudogene_last {
     file 'last.out' into pseudochr_last_out
 
     """
-    lastal -pBL80 -F15 -e100 -m10 -f0 prot_index chunk.fasta > last.out
+    lastal -pBL80 -F15 -e400 -m10 -f0 prot_index chunk.fasta > last.out
     """
 }
 
@@ -744,8 +744,11 @@ process annotate_orthologs {
     file 'orthomcl.gaf' into gaf_with_ortho_transferred
 
     """
+    # ensure sorting of input file
+    gt gff3 -sort -retainids -tidy input.gff3 > input.gff3.sorted
+
     # annotate GFF with ortholog clusters and members
-    map_clusters_gff.lua input.gff3 orthomcl_out > with_clusters.gff3
+    map_clusters_gff.lua input.gff3.sorted orthomcl_out > with_clusters.gff3
 
     # transfer functional annotation from orthologs
     transfer_annotations_from_gff.lua with_clusters.gff3 \
@@ -755,6 +758,9 @@ process annotate_orthologs {
     transfer_annotations_from_gaf.lua with_func.gff3 \
         gaf_ref.gaf ${params.DB_ID} \
         ${params.TAXON_ID} > orthomcl.gaf
+
+    # clean up
+    rm -f input.gff3 input.gff3.sorted with_clusters.gff3
     """
 }
 
