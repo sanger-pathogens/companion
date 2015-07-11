@@ -59,6 +59,31 @@ function vis:visit_feature(fn)
     and problematic_genes[fn:get_attribute("ratt_ortholog")] then
     self.ok = false
   end
+  -- check for overlapping exons per transcripts -> do not allow those
+  if self.ok then
+    for n in fn:children() do
+      if not self.ok then
+        break
+      end
+      if n:get_type() == "mRNA" then
+        for c1 in n:children() do
+          if not self.ok then
+            break
+          end
+          if c1:get_type() == 'CDS' then
+            for c2 in n:children() do
+              if c2:get_type() == 'CDS' then
+                if c1 ~= c2 and c1:get_range():overlap(c2:get_range()) then
+                  self.ok = false
+                  break
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 end
 function vis:visit_sequence(gn)
   self.ok = true
