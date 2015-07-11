@@ -17,42 +17,42 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
-function usage()
-  io.stderr:write("Selects the 'best' gene models from a pooled set of " ..
-                  "GFF3 annotations.\n")
-  io.stderr:write(string.format("Usage: %s <GFF with overlapping annotation>\n",
-                                arg[0]))
-  os.exit(1)
-end
-
-if #arg < 1 then
-  usage()
-end
-
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
 require("SimpleChainer")
+require("optparse")
 
-function get_weight(gene)
-  local fac = 1
-  local nof_cds = 0
-  -- count the number of CDS/exons
-  for c in gene:children() do
-    if c:get_type() == "CDS" then
-      nof_cds = nof_cds + 1
-    end
-  end
-  -- apply reward for being annotated by RATT
-  -- unless RATT would produce a multi-exon gene, then only use that
-  -- if there's no other gene
-  if gene:get_source() == "RATT" then
-    if nof_cds == 1 then
-      fac = 3
-    else
-      fac = .1
-    end
-  end
-  return gene:get_range():length() * fac
+op = OptionParser:new({usage="%prog <options> < merged.gff3",
+                       oneliner="Selects the 'best' gene models "
+                         .. "from a pooled set of GFF3 annotations.",
+                       version="0.1"})
+op:option{"-w", action='store', dest='weight_func',
+                help="Lua script defining the weight function 'get_weight()'"}
+options,args = op:parse({weight_func=nil})
+
+function usage()
+  op:help()
+  os.exit(1)
+end
+
+-- default weight function: gene length
+-- this should most of the time be overridden by a more specific,
+-- evidence aware function
+function _get_weight(gene)
+  return gene:get_range():length()
+end
+
+-- load weight function, if given
+if not options.weight_func then
+  get_weight = _get_weight
+else
+  dofile(options.weight_func)
+end
+
+if not get_weight then
+  error("no weight function ('get_weight()') found in file "
+           .. options.weight_func)
+  os.exit(1)
 end
 
 stream = gt.custom_stream_new_unsorted()
@@ -64,23 +64,8 @@ function stream:process_current_cluster()
   local bestset = nil
   local max = 0
 
--- XXX debug
---  print("before: " .. #self.curr_gene_set)
---  if #self.curr_gene_set > 50 then
---    for _,v in ipairs(self.curr_gene_set) do
---      v:accept(vis)
---    end
---  end
-
   -- keep only non-overlapping chain with highest weight
   bestset = SimpleChainer.new(self.curr_gene_set):chain()
-
--- XXX debug
---  print("after: " .. #bestset .. "\n")
---  for _,v in ipairs(bestset) do
---    v:accept(vis)
---  end
-
 
   for _,v in ipairs(bestset) do
     table.insert(self.outqueue, v)
@@ -147,7 +132,7 @@ function stream:next_tree()
   return outgn
 end
 
-stream.instream = gt.gff3_in_stream_new_sorted(arg[1])
+stream.instream = gt.gff3_in_stream_new_sorted()
 stream.idx = feature_index
 
 out_stream = gt.gff3_out_stream_new(stream)

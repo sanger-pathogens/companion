@@ -386,7 +386,7 @@ if (params.run_snap) {
     }
 }
 
-process integrate_genemodels {
+process merge_genemodels {
     cache 'deep'
 
     input:
@@ -396,7 +396,7 @@ process integrate_genemodels {
     file 'ratt.full.gff3' from ratt_gff3
 
     output:
-    file 'integrated.gff3' into integrated_gff3
+    file 'merged.gff3' into merged_gff3
 
     """
     unset GT_RETAINIDS && \
@@ -407,12 +407,30 @@ process integrate_genemodels {
 
     # avoid huge gene clusters
     gt select -maxgenelength ${params.MAX_GENE_LENGTH} merged.pre.gff3 > merged.gff3
-
-    # choose best gene model for overlapping region
-    integrate_gene_calls.lua merged.gff3 | \
-        gt gff3 -sort -tidy -retainids \
-        > integrated.gff3
     """
+}
+
+process integrate_genemodels {
+    cache 'deep'
+
+    input:
+    file 'merged.gff3' from merged_gff3
+    val params.WEIGHT_FILE
+
+    output:
+    file 'integrated.gff3' into integrated_gff3
+
+    script:
+    if(params.WEIGHT_FILE.length() > 0)
+        """
+        integrate_gene_calls.lua -w ${params.WEIGHT_FILE} < merged.gff3 | \
+            gt gff3 -sort -tidy -retainids > integrated.gff3
+        """
+    else
+        """
+        integrate_gene_calls.lua < merged.gff3 | \
+            gt gff3 -sort -tidy -retainids > integrated.gff3
+        """
 }
 
 if (params.fix_polycistrons) {
