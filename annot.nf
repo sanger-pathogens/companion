@@ -359,19 +359,31 @@ process run_augustus_contigs {
     """
 }
 
-process run_snap {
-    input:
-    file 'pseudo.pseudochr.fasta' from pseudochr_seq_snap
+if (params.run_snap) {
+    process run_snap {
+        input:
+        file 'pseudo.pseudochr.fasta' from pseudochr_seq_snap
+        val params.SNAP_MODEL
 
-    output:
-    file 'snap.gff3' into snap_gff3
+        output:
+        file 'snap.gff3' into snap_gff3
 
-    """
-    snap -gff -quiet  ${SNAP_MODEL} \
-        pseudo.pseudochr.fasta > snap.tmp
-    snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
-    gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
-    """
+        """
+        snap -gff -quiet  ${params.SNAP_MODEL} \
+            pseudo.pseudochr.fasta > snap.tmp
+        snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
+        gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
+        """
+    }
+} else {
+    process make_empty_snap {
+        output:
+        file 'snap.gff3' into snap_gff3
+
+        """
+        echo '##gff-version 3' > snap.gff3
+        """
+    }
 }
 
 process integrate_genemodels {
