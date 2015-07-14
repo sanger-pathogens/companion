@@ -195,6 +195,8 @@ if (params.run_exonerate) {
     exn_genome_chunk = pseudochr_seq_exonerate.splitFasta( by: 3)
     process run_exonerate {
         cache 'deep'
+        // this process can fail for rogue exonerate processes
+        errorStrategy 'ignore'
 
         input:
         set file('genome.fasta'), file('prot.fasta') from exn_genome_chunk.spread(exn_prot_chunk)
