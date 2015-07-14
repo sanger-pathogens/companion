@@ -142,16 +142,25 @@ function annotate_vis:visit_feature(fn)
       for k,v in pairs(hits) do
         if not FILTERED_SOURCES[k] then
           for _,n in ipairs(v) do
-            rng = aminoloc_to_dnaloc(fn, n:get_range(), n:get_strand())
-            new_node = gt.feature_node_new(fn:get_seqid(), "protein_match",
-                                           rng[1], rng[2], fn:get_strand())
-            new_node:set_source(k)
-            for attr, attrv in n:attribute_pairs() do
-              if not FILTERED_ATTRIBS[attr] then
-                new_node:set_attribute(attr, string.gsub(attrv, "\"",""))
+            local rng = aminoloc_to_dnaloc(fn, n:get_range(), n:get_strand())
+            if fn:get_range():contains(gt.range_new(rng[1],rng[2])) then
+              local new_node = gt.feature_node_new(fn:get_seqid(),
+                                                   "protein_match",
+                                                   rng[1], rng[2],
+                                                   fn:get_strand())
+              new_node:set_source(k)
+              for attr, attrv in n:attribute_pairs() do
+                if not FILTERED_ATTRIBS[attr] then
+                  new_node:set_attribute(attr, string.gsub(attrv, "\"",""))
+                end
               end
+              fn:add_child(new_node)
+            else
+              io.stderr:write("coordinates for feature outside of parent: "
+                               .. tostring(fn:get_range()) .. " vs. "
+                               .. tostring(rng) .. " -- not attaching to "
+                               .. "polypeptide parent")
             end
-            fn:add_child(new_node)
           end
         end
       end
