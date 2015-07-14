@@ -191,10 +191,12 @@ if (params.run_exonerate) {
           -join -type CDS -translate -retainids 1 > ref.pep
         """
     }
-    exn_prot_chunk = ref_pep.splitFasta( by: 20)
+    exn_prot_chunk = ref_pep.splitFasta( by: 100)
     exn_genome_chunk = pseudochr_seq_exonerate.splitFasta( by: 3)
     process run_exonerate {
         cache 'deep'
+        // this process can fail for rogue exonerate processes
+        errorStrategy 'ignore'
 
         input:
         set file('genome.fasta'), file('prot.fasta') from exn_genome_chunk.spread(exn_prot_chunk)
