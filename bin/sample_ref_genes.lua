@@ -20,7 +20,7 @@
 math.randomseed(os.time())
 
 function usage()
-  io.stderr:write("Randomly samples a number of protein coding gene CCs.\n")
+  io.stderr:write("Randomly samples a number of single transcript protein coding gene CCs.\n")
   io.stderr:write(string.format("Usage: %s <GFF with gene annotations> " ..
                                 "<number of genes to sample>\n" , arg[0]))
   os.exit(1)
@@ -36,17 +36,19 @@ cv.out = nil
 function cv:visit_feature(fn)
   local gene = false
   local mrna = false
+  local nof_transcripts = 0
   local cds = false
   for n in fn:get_children() do
     if n:get_type() == "gene" then
       gene = true
     elseif n:get_type() == "mRNA" then
       mrna = true
+      nof_transcripts = nof_transcripts + 1
     elseif n:get_type() == "CDS" then
       cds = true
     end
   end
-  if gene and mrna and cds then
+  if gene and mrna and nof_transcripts == 1 and cds then
     self.out = fn
   else
     self.out = nil
