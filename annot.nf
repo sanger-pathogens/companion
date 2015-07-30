@@ -329,6 +329,7 @@ process merge_hints {
     set stdout, file('hints.txt') into all_hints
 
     """
+    touch hints.txt
     if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo '--hintsfile=augustus.hints'; fi
     """
 }
