@@ -326,7 +326,7 @@ process merge_hints {
     file 'hints.concatenated.txt' from exn_hints.concat(trans_hints).collectFile()
 
     output:
-    set val(stdout), file('hints.txt') into all_hints
+    set stdout, file('hints.txt') into all_hints
 
     """
     if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo '--hintsfile=augustus.hints'; fi
