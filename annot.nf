@@ -172,6 +172,8 @@ process merge_ncrnas {
     """
 }
 
+hints = Channel.create()
+
 // PROTEIN-DNA ALIGNMENT
 // =====================
 if (params.run_exonerate) {
@@ -211,17 +213,16 @@ if (params.run_exonerate) {
            genome.fasta > exn_out
         """
     }
-    process make_hints {
+    process exonerate_make_hints {
         cache 'deep'
 
         input:
         file 'exnout' from exn_results.collectFile()
 
         output:
-        set val(outline), file('augustus.hints') into exn_hints
+        file 'augustus.hints' into exn_hints
 
         script:
-        outline = "--hintsfile=augustus.hints"
         """
         exonerate2hints.pl \
           --source=P --maxintronlen=${params.AUGUSTUS_HINTS_MAXINTRONLEN} \
@@ -230,7 +231,14 @@ if (params.run_exonerate) {
         """
     }
 } else {
-    exn_hints = Channel.just(["",""])
+    process exonerate_empty_hints {
+        output:
+        file 'augustus.hints' into exn_hints
+
+        """
+        touch augustus.hints
+        """
+    }
 }
 
 // RATT
@@ -282,14 +290,55 @@ process ratt_to_gff3 {
     """
 }
 
+// TRANSCRIPT EVIDENCE PREPARATION
+// ===============================
+
+if (params.TRANSCRIPT_FILE) {
+  transcript_evidence = file(params.TRANSCRIPT_FILE)
+  process prepare_transcript_hints {
+    input:
+    file 'transcripts.gtf' from transcript_evidence
+
+    output:
+    file 'transcripts.hints' into trans_hints
+
+    script:
+    """
+    cufflinks_to_hints.lua < transcripts.gtf > transcripts.hints
+    """
+  }
+} else {
+  process transcript_empty_hints {
+    output:
+    file 'transcripts.hints' into trans_hints
+
+    """
+    touch transcripts.hints
+    """
+  }
+}
+
+// HINTS PREPARATION
+// =================
+
+process merge_hints {
+    input:
+    file 'hints.concatenated.txt' from exn_hints.concat(trans_hints).collectFile()
+
+    output:
+    set val(stdout), file('hints.txt') into all_hints
+
+    """
+    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo '--hintsfile=augustus.hints'; fi
+    """
+}
+
 // AUGUSTUS
-// ================
+// ========
 
 process run_augustus_pseudo {
-    cache 'deep'
-
     input:
-    set val(hintsline), file('augustus.hints') from exn_hints
+    set val(hintsline), file('augustus.hints') from all_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
     val extrinsic_cfg
 
@@ -315,8 +364,6 @@ process run_augustus_pseudo {
 }
 
 process run_augustus_contigs {
-    cache 'deep'
-
     input:
     file 'pseudo.contigs.fasta' from contigs_seq
     file 'pseudo.scaffolds.agp' from scaffolds_agp_augustus
