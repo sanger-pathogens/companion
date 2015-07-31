@@ -36,25 +36,12 @@ describe.feature("gene", function(gene)
 
   does_not_cross_a_contig_boundary(gene)
 
-  it("has only allowed child types", function()
-    for f in gene:direct_children() do
-      expect({"mRNA","tRNA","rRNA","snoRNA","snRNA", "scRNA",
-              "lncRNA", "ncRNA", "promoter"}).should_contain(f:get_type())
-    end
-  end)
-
-  it("only contains allowed attributes", function()
-    for k,_ in gene:attribute_pairs() do
-      expect({"ID", "Name", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id", "fiveEndPartial", "threeEndPartial",
-              "literature", "synonym", "eupathdb_uc",
-              "internalGap"}).should_contain(k)
-    end
-  end)
-
   it("appears as a root node", function()
     expect(gene:appears_as_root_node()).should_be(true)
+  end)
+
+  it("contains a mRNA", function()
+    expect(gene:has_child_of_type("mRNA")).should_be(true)
   end)
 
   it("contains all child features within its coordinates", function()
@@ -95,28 +82,19 @@ describe.feature("pseudogene", function(pseudogene)
     expect(pseudogene:has_child_of_type("pseudogenic_transcript")).should_be(true)
   end)
 
-  it("has only allowed child types", function()
-    for f in pseudogene:direct_children() do
-      expect({"pseudogenic_transcript"}).should_contain(f:get_type())
-    end
-  end)
-
   it("appears as a root node", function()
     expect(pseudogene:appears_as_root_node()).should_be(true)
-  end)
-
-  it("only contains allowed attributes", function()
-    for k,_ in pseudogene:attribute_pairs() do
-      expect({"ID", "Name", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id", "literature",
-              "synonym", "eupathdb_uc"}).should_contain(k)
-    end
   end)
 
   it("contains all child features within its coordinates", function()
     for child in pseudogene:children() do
       expect(pseudogene:get_range():overlap(child:get_range())).should_be(true)
+    end
+  end)
+
+  it("has consistent strands across all children", function()
+    for child in pseudogene:children() do
+      expect(pseudogene:get_strand()).should_be(child:get_strand())
     end
   end)
 end)
@@ -127,38 +105,17 @@ end)
 describe.feature("pseudogenic_transcript", function(ptranscript)
   check_parent(ptranscript, "pseudogene")
 
-  it("only contains allowed attributes", function()
-    for k,_ in ptranscript:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id"}).should_contain(k)
-    end
-  end)
-
   it("contains at least one pseudogenic_exon", function()
     expect(ptranscript:has_child_of_type("pseudogenic_exon")).should_be(true)
   end)
 
-  it("has only allowed child types", function()
-    for f in ptranscript:direct_children() do
-      expect({"pseudogenic_exon"}).should_contain(f:get_type())
-    end
-  end)
-end)
+send)
 
 --[[  PSEUDOGENIC_EXON
       ================  ]]
 
 describe.feature("pseudogenic_exon", function(pexon)
   check_parent(pexon, "pseudogenic_transcript")
-
-  it("only contains allowed attributes", function()
-    for k,_ in pexon:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id"}).should_contain(k)
-    end
-  end)
 
   it("should not have children", function()
     expect(count(pexon:direct_children())).should_be(0)
@@ -174,19 +131,6 @@ describe.feature("mRNA", function(mrna)
                                                       region_mapping)
 
   check_parent(mrna, "gene")
-
-  it("only contains allowed attributes", function()
-    for k,_ in mrna:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id",
-              "stop_codon_redefined_as_selenocysteine"}).should_contain(k)
-    end
-  end)
-
-  it("consists of less than 50% Ns", function()
-    expect(dnaseq:char_count("n")/dnaseq:len()).should_be_smaller_than(0.5)
-  end)
 
   it("has at least one CDS child", function()
     expect(mrna:has_child_of_type("CDS")).should_be(true)
@@ -241,25 +185,6 @@ describe.feature("mRNA", function(mrna)
     end
   end)
 
-  it("has non-selenocysteine CDS with no internal stop codons", function()
-    local overlapping = feature_index:get_features_for_range(mrna:get_seqid(),
-                                                             mrna:get_range())
-    is_selenocysteine = false
-    for _,n in pairs(overlapping) do
-      for c in n:children() do
-        if not is_selenocysteine
-           and c:get_attribute("stop_codon_redefined_as_selenocysteine") then
-          is_selenocysteine = true
-          break
-        end
-      end
-    end
-    if not is_selenocysteine then
-      expect(protseq:sub(1, -2)).should_not_match("[*+#]")
-    end
-  end)
-
-
   it("agrees exactly with CDS/UTR coordinates of its children", function()
     local rng = nil
     -- collect and join CDS ranges
@@ -288,14 +213,6 @@ end)
 describe.feature("five_prime_UTR", function(futr)
   check_parent(futr, "gene")
 
-  it("only contains allowed attributes", function()
-    for k,_ in futr:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id", "literature"}).should_contain(k)
-    end
-  end)
-
   it("should not have children", function()
     expect(#(collect(futr:direct_children()))).should_be(0)
   end)
@@ -306,14 +223,6 @@ end)
 
 describe.feature("three_prime_UTR", function(tutr)
   check_parent(tutr, "gene")
-
-  it("only contains allowed attributes", function()
-    for k,_ in tutr:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id", "literature"}).should_contain(k)
-    end
-  end)
 
   it("should not have children", function()
     expect(#(collect(tutr:direct_children()))).should_be(0)
@@ -326,14 +235,6 @@ end)
 describe.feature("CDS", function(cds)
   it("appears as child of an mRNA", function()
     expect(cds:appears_as_child_of_type("mRNA")).should_be(true)
-  end)
-
-  it("only contains allowed attributes", function()
-    for k,_ in cds:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id"}).should_contain(k)
-    end
   end)
 
   it("should not have children", function()
@@ -362,32 +263,6 @@ describe.feature("polypeptide", function(pp)
 
   it("has a required product attribute", function()
     expect(pp:get_attribute("product")).should_not_be(nil)
-  end)
-
-  it("has only allowed child types", function()
-    for f in pp:direct_children() do
-      expect({"polypeptide_motif","protein_match",
-              "polypeptide_domain", "transmembrane_polypeptide_region",
-              "transmembrane_polypeptide_region",
-              "non_cytoplasmic_polypeptide_region",
-              "membrane_structure"}).should_contain(f:get_type())
-    end
-  end)
-
-  it("only contains allowed attributes", function()
-    for k,_ in pp:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "End_range",
-              "Start_range", "Dbxref", "controlled_curation",
-              "previous_systematic_id", "Ontology_term", "Derives_from",
-              "cytoplasmic_polypeptide_region", "literature",
-              "non_cytoplasmic_polypeptide_region",
-              "transmembrane_polypeptide_region", "membrane_structure",
-              "gPI_anchor_cleavage_site", "paralogous_to", "orthologous_to",
-              "polypeptide_domain", "product", "product_synonym",
-              "signal_peptide", "similarity",
-              "stop_codon_redefined_as_selenocysteine",
-              "translation"}).should_contain(k)
-    end
   end)
 
   local overlapping = feature_index:get_features_for_range(pp:get_seqid(),
@@ -454,14 +329,6 @@ describe.feature("polypeptide_motif", function(cds)
     expect(cds:appears_as_child_of_type("polypeptide")).should_be(true)
   end)
 
-  it("only contains allowed attributes", function()
-    for k,_ in cds:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note",
-              "Dbxref", "controlled_curation",
-              "literature"}).should_contain(k)
-    end
-  end)
-
   it("should not have children", function()
     expect(#(collect(cds:direct_children()))).should_be(0)
   end)
@@ -472,15 +339,6 @@ end)
 
 describe.feature("ncRNA", function(node)
   check_parent(node, "gene")
-
-  it("only contains allowed attributes", function()
-    for k,_ in node:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation", "product",
-              "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
-    end
-  end)
 
   it("should not have children", function()
     expect(#(collect(node:direct_children()))).should_be(0)
@@ -493,15 +351,6 @@ end)
 describe.feature("tRNA", function(node)
   check_parent(node, "gene")
 
-  it("only contains allowed attributes", function()
-    for k,_ in node:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation", "product",
-              "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
-    end
-  end)
-
   it("should not have children", function()
     expect(#(collect(node:direct_children()))).should_be(0)
   end)
@@ -513,130 +362,7 @@ end)
 describe.feature("rRNA", function(node)
   check_parent(node, "gene")
 
-  it("only contains allowed attributes", function()
-    for k,_ in node:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation", "product",
-              "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
-    end
-  end)
-
   it("should not have children", function()
     expect(#(collect(node:direct_children()))).should_be(0)
   end)
-end)
-
---[[  SNRNA
-      =====  ]]
-
-describe.feature("snRNA", function(node)
-  check_parent(node, "gene")
-
-  it("only contains allowed attributes", function()
-    for k,_ in node:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation", "product",
-              "product_synonym", "previous_systematic_id",
-              "literature", "internalGap", "Ontology_term"}).should_contain(k)
-    end
-  end)
-
-  it("should not have children", function()
-    expect(#(collect(node:direct_children()))).should_be(0)
-  end)
-end)
-
---[[  SNORNA
-      ======  ]]
-
-describe.feature("snoRNA", function(node)
-  check_parent(node, "gene")
-
-  it("only contains allowed attributes", function()
-    for k,_ in node:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation", "product",
-              "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
-    end
-  end)
-
-  it("should not have children", function()
-    expect(#(collect(node:direct_children()))).should_be(0)
-  end)
-end)
-
---[[  GAP
-      ===  ]]
-
-describe.feature("gap", function(gap)
-  is_a_lone_feature(gap)
-
-  it("only contains allowed attributes", function()
-    for k,_ in gap:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation",
-              "previous_systematic_id", "literature", "estimated_length",
-              "gap_type"}).should_contain(k)
-    end
-  end)
-end)
-
---[[  CONTIG
-      ======  ]]
-
-describe.feature("contig", function(contig)
-  is_a_lone_feature(contig)
-
-  it("only contains allowed attributes", function()
-    for k,_ in contig:attribute_pairs() do
-      expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
-              "End_range",  "Dbxref", "controlled_curation",
-              "previous_systematic_id", "literature"}).should_contain(k)
-    end
-  end)
-end)
-
---[[  CENTROMERE
-      ==========  ]]
-
-describe.feature("centromere", function(centromere)
-  is_a_lone_feature(centromere)
-end)
-
---[[  DIRECT_REPEAT
-      =============  ]]
-
-describe.feature("direct_repeat", function(node)
-  is_a_lone_feature(node)
-end)
-
---[[  INVERTED_REPEAT
-      ===============  ]]
-
-describe.feature("inverted_repeat", function(node)
-  is_a_lone_feature(node)
-end)
-
-
---[[  REPEAT_REGION
-      =============  ]]
-
-describe.feature("repeat_region", function(node)
-  is_a_lone_feature(node)
-end)
-
---[[  REPEAT_UNIT
-      ===========  ]]
-
-describe.feature("repeat_unit", function(node)
-  is_a_lone_feature(node)
-end)
-
---[[  NUCLEOTIDE_MATCH
-      ================  ]]
-
-describe.feature("nucleotide_match", function(node)
-  is_a_lone_feature(node)
 end)
