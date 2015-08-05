@@ -40,8 +40,8 @@ describe.feature("gene", function(gene)
     expect(gene:appears_as_root_node()).should_be(true)
   end)
 
-  it("contains a mRNA", function()
-    expect(gene:has_child_of_type("mRNA")).should_be(true)
+  it("contains a transcript", function()
+    expect(gene:has_child_of_supertype("transcript")).should_be(true)
   end)
 
   it("contains all child features within its coordinates", function()
@@ -109,7 +109,7 @@ describe.feature("pseudogenic_transcript", function(ptranscript)
     expect(ptranscript:has_child_of_type("pseudogenic_exon")).should_be(true)
   end)
 
-send)
+end)
 
 --[[  PSEUDOGENIC_EXON
       ================  ]]
@@ -247,7 +247,6 @@ end)
 
 derives_from = {}
 describe.feature("polypeptide", function(pp)
-
   does_not_cross_a_contig_boundary(pp)
 
   it("must be derived_from a unique mRNA", function()
@@ -321,28 +320,11 @@ describe.feature("polypeptide", function(pp)
   end)
 end)
 
---[[  POLYPEPTIDE_MOTIF
-      =================  ]]
-
-describe.feature("polypeptide_motif", function(cds)
-  it("appears as child of a polypeptide", function()
-    expect(cds:appears_as_child_of_type("polypeptide")).should_be(true)
-  end)
-
-  it("should not have children", function()
-    expect(#(collect(cds:direct_children()))).should_be(0)
-  end)
-end)
-
 --[[  NCRNA
       =====  ]]
 
 describe.feature("ncRNA", function(node)
   check_parent(node, "gene")
-
-  it("should not have children", function()
-    expect(#(collect(node:direct_children()))).should_be(0)
-  end)
 end)
 
 --[[  TRNA
@@ -350,10 +332,6 @@ end)
 
 describe.feature("tRNA", function(node)
   check_parent(node, "gene")
-
-  it("should not have children", function()
-    expect(#(collect(node:direct_children()))).should_be(0)
-  end)
 end)
 
 --[[  RRNA
@@ -361,8 +339,4 @@ end)
 
 describe.feature("rRNA", function(node)
   check_parent(node, "gene")
-
-  it("should not have children", function()
-    expect(#(collect(node:direct_children()))).should_be(0)
-  end)
 end)
