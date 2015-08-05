@@ -37,6 +37,7 @@ omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta
 if (params.do_contiguation) {
     process contiguate_pseudochromosomes {
         afterScript 'rm -rf Ref.* Res.*'
+
         input:
         file genome_file
         file ref_chr
@@ -143,7 +144,7 @@ process press_ncRNA_cms {
     """
 }
 
-pseudochr_seq_ncRNA.splitFasta( by: 3 ).set { ncrna_genome_chunk }
+pseudochr_seq_ncRNA.splitFasta( by: 3, file: true).set { ncrna_genome_chunk }
 
 process predict_ncRNA {
     input:
@@ -194,15 +195,15 @@ if (params.run_exonerate) {
           -join -type CDS -translate -retainids 1 > ref.pep
         """
     }
-    exn_prot_chunk = ref_pep.splitFasta( by: 100)
-    exn_genome_chunk = pseudochr_seq_exonerate.splitFasta( by: 3)
+    exn_prot_chunk = ref_pep.splitFasta( by: 100, file: true)
     process run_exonerate {
         cache 'deep'
         // this process can fail for rogue exonerate processes
         errorStrategy 'ignore'
 
         input:
-        set file('genome.fasta'), file('prot.fasta') from exn_genome_chunk.spread(exn_prot_chunk)
+        file 'genome.fasta' from pseudochr_seq_exonerate.first()
+        file 'prot.fasta' from exn_prot_chunk
 
         output:
         file 'exn_out' into exn_results
@@ -305,7 +306,7 @@ if (params.TRANSCRIPT_FILE) {
 
     script:
     """
-    cufflinks_to_hints.lua < transcripts.gtf > transcripts.hints
+    LC_ALL='C' sort -k 1,1 -k 4,4n transcripts.gtf | uniq | cufflinks_to_hints.lua > transcripts.hints
     """
   }
 } else {
@@ -322,16 +323,17 @@ if (params.TRANSCRIPT_FILE) {
 // HINTS PREPARATION
 // =================
 
+combined_hints = exn_hints.concat(trans_hints)
 process merge_hints {
     input:
-    file 'hints.concatenated.txt' from exn_hints.concat(trans_hints).collectFile()
+    file 'hints.concatenated.txt' from combined_hints.collectFile()
 
     output:
     set stdout, file('hints.txt') into all_hints
 
     """
     touch hints.txt
-    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo '--hintsfile=augustus.hints'; fi
+    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--hintsfile=augustus.hints'; fi
     """
 }
 
@@ -529,7 +531,7 @@ process pseudogene_indexing {
 }
 
 pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
-pseudochr_seq_pseudogene_align.splitFasta( by: 3 ).set { pseudogene_align_chunk }
+pseudochr_seq_pseudogene_align.splitFasta( by: 3, file: true).set { pseudogene_align_chunk }
 
 process pseudogene_last {
     input:
@@ -768,7 +770,7 @@ process blast_for_orthomcl_formatdb {
     """
 }
 
-proteins_orthomcl_blast_chunk = full_mapped_fasta_for_query.splitFasta( by: 50)
+proteins_orthomcl_blast_chunk = full_mapped_fasta_for_query.splitFasta( by: 50, file: true)
 process blast_for_orthomcl {
     cache 'deep'
 
@@ -848,7 +850,7 @@ process annotate_orthologs {
 // PFAM DOMAIN ANNOTATION
 // ======================
 
-proteins_pfam_chunk = proteins_pfam.splitFasta( by: 30)
+proteins_pfam_chunk = proteins_pfam.splitFasta( by: 30, file: true)
 process run_pfam {
     cache 'deep'
 
