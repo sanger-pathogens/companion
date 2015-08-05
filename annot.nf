@@ -36,6 +36,7 @@ omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta
 
 if (params.do_contiguation) {
     process contiguate_pseudochromosomes {
+        afterScript 'rm -rf Ref.* Res.*'
         input:
         file genome_file
         file ref_chr
