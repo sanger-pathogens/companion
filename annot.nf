@@ -261,6 +261,8 @@ process ratt_make_ref_embl {
 }
 
 process run_ratt {
+    afterScript 'rm -rf Reference* Sequences Query query.*'
+
     input:
     file 'in*.embl' from ref_embl
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_ratt
@@ -325,6 +327,8 @@ if (params.TRANSCRIPT_FILE) {
 
 combined_hints = exn_hints.concat(trans_hints)
 process merge_hints {
+    cache 'deep'
+
     input:
     file 'hints.concatenated.txt' from combined_hints.collectFile()
 
