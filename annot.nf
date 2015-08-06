@@ -261,6 +261,8 @@ process ratt_make_ref_embl {
 }
 
 process run_ratt {
+    afterScript 'rm -rf Reference* Sequences Query query.*'
+
     input:
     file 'in*.embl' from ref_embl
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_ratt
