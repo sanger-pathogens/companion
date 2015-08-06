@@ -119,6 +119,12 @@ describe.feature("pseudogene", function(pseudogene)
       expect(pseudogene:get_range():overlap(child:get_range())).should_be(true)
     end
   end)
+
+  it("has consistent strands across all children", function()
+    for child in pseudogene:children() do
+      expect(pseudogene:get_strand()).should_be(child:get_strand())
+    end
+  end)
 end)
 
 --[[  PSEUDOGENIC_TRANSCRIPT

@@ -48,10 +48,11 @@ local feats = {}
 -- parse from GTF input
 for l in io.lines() do
   local larr = split(l:gsub('"'," "), "%s")
-  if not feats[larr[11]] then
-    feats[larr[11]] = {}
+  if not feats[larr[15]] then
+    feats[larr[15]] = {}
   end
-  table.insert(feats[larr[11]], {seq = larr[1], name = larr[11],
+  table.insert(feats[larr[15]], {seq = larr[1], name = larr[11],
+    tid = larr[15],
                                  start = tonumber(larr[4]),
                                  stop = tonumber(larr[5]),
                                  strand=larr[7]})
@@ -75,13 +76,13 @@ for n,fs in pairs(feats) do
   for i,f in ipairs(fs) do
     if i > 1 then
       local intron_start = fs[i-1].stop + 1
-      local intron_end = f.start - 1
-      print_gff(f.seq, "intron", intron_start, intron_end, f.strand, f.name)
+      local intron_end = fs[i].start - 1
+      print_gff(f.seq, "intron", intron_start, intron_end, f.strand, f.tid)
     end
     if i == 0 or i == #fs then
-      print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.name)
+      print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.tid)
     else
-      print_gff(f.seq, "exon", f.start, f.stop, f.strand, f.name)
+      print_gff(f.seq, "exon", f.start, f.stop, f.strand, f.tid)
     end
   end
 end
