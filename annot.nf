@@ -325,6 +325,8 @@ if (params.TRANSCRIPT_FILE) {
 
 combined_hints = exn_hints.concat(trans_hints)
 process merge_hints {
+    cache 'deep'
+
     input:
     file 'hints.concatenated.txt' from combined_hints.collectFile()
 
