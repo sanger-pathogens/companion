@@ -341,6 +341,8 @@ process merge_hints {
 // ========
 
 process run_augustus_pseudo {
+    cache 'deep'
+
     input:
     set val(hintsline), file('augustus.hints') from all_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
