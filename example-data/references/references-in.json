@@ -5,6 +5,8 @@
       "genome" : "../genomes/L_major.fasta.1",
       "gaf" : "../genomes/L_major.gaf.1",
       "name" : "Leishmania major Friedlin chromosome 1",
+      "augustus-model" : "../../data/augustus/species/leishmania_major_sampled/",
+      "snap-model" : "../../data/snap/LmjF.hmm",
       "chromosome_pattern" : "LmjF.(%d+)"
     },
     "LbrM.1" : {
@@ -12,6 +14,7 @@
       "genome" : "../genomes/L_braziliensis.fasta.1",
       "gaf" : "../genomes/L_braziliensis.gaf.1",
       "name" : "Leishmania braziliensis chromosome 1",
+      "augustus-model": "../../data/augustus/species/leishmania_braziliensis_sampled/",
       "chromosome_pattern" : "LbrM.([0-9.]+)$"
     },
     "Tb927.1" : {
@@ -19,6 +22,7 @@
       "genome" : "../genomes/T_brucei_927.fasta.1",
       "gaf" : "../genomes/T_brucei_927.gaf.1",
       "name" : "Trypanosoma brucei TREU927 chromosome 1",
+      "augustus-model": "../../data/augustus/species/trypanosoma_brucei_927_sampled/",
       "chromosome_pattern" : "Tb927_(%d+)_v%d"
     },
   },
