@@ -1,13 +1,14 @@
 {
-  "pep":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/proteins.fasta",
-  "nof_genes":76,
-  "gaf":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/go.gaf",
-  "genome":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/genome.fasta",
+  "pep":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/proteins.fasta",
+  "gff":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/annotation.gff3",
+  "gaf":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/go.gaf",
+  "genome":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/genome.fasta",
+  "nof_chromosomes":1,
   "chromosome_pattern":"LbrM.([0-9.]+)$",
   "name":"Leishmania braziliensis chromosome 1",
-  "nof_chromosomes":1,
   "nof_regions":1,
+  "augustus-model":"../../data/augustus/species/leishmania_braziliensis_sampled/",
   "nof_coding_genes":76,
-  "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/chromosomes.fasta",
-  "gff":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/annotation.gff3"
+  "chromosomes":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/chromosomes.fasta",
+  "nof_genes":76
 }
