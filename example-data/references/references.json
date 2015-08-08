@@ -5,43 +5,43 @@
   },
   "species":{
     "LbrM.1":{
-      "pep":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/proteins.fasta",
+      "pep":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/proteins.fasta",
       "nof_genes":76,
-      "gaf":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/go.gaf",
-      "genome":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/genome.fasta",
+      "gaf":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/go.gaf",
+      "genome":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/genome.fasta",
       "chromosome_pattern":"LbrM.([0-9.]+)$",
       "name":"Leishmania braziliensis chromosome 1",
       "nof_chromosomes":1,
       "nof_regions":1,
       "nof_coding_genes":76,
-      "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/chromosomes.fasta",
-      "gff":"/Users/ss34/develop/annot-nf/example-data/references/LbrM.1/annotation.gff3"
+      "chromosomes":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/chromosomes.fasta",
+      "gff":"/Users/satta/uni/annot-nf/example-data/references/LbrM.1/annotation.gff3"
     },
     "LmjF.1":{
-      "pep":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/proteins.fasta",
+      "pep":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/proteins.fasta",
       "nof_genes":85,
-      "gaf":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/go.gaf",
-      "genome":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/genome.fasta",
+      "gaf":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/go.gaf",
+      "genome":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/genome.fasta",
       "chromosome_pattern":"LmjF.(%d+)",
       "name":"Leishmania major Friedlin chromosome 1",
       "nof_chromosomes":1,
       "nof_regions":1,
       "nof_coding_genes":85,
-      "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/chromosomes.fasta",
-      "gff":"/Users/ss34/develop/annot-nf/example-data/references/LmjF.1/annotation.gff3"
+      "chromosomes":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/chromosomes.fasta",
+      "gff":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/annotation.gff3"
     },
     "Tb927.1":{
-      "pep":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/proteins.fasta",
+      "pep":"/Users/satta/uni/annot-nf/example-data/references/Tb927.1/proteins.fasta",
       "nof_genes":480,
-      "gaf":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/go.gaf",
-      "genome":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/genome.fasta",
+      "gaf":"/Users/satta/uni/annot-nf/example-data/references/Tb927.1/go.gaf",
+      "genome":"/Users/satta/uni/annot-nf/example-data/references/Tb927.1/genome.fasta",
       "chromosome_pattern":"Tb927_(%d+)_v%d",
       "name":"Trypanosoma brucei TREU927 chromosome 1",
       "nof_chromosomes":1,
       "nof_regions":1,
       "nof_coding_genes":471,
-      "chromosomes":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/chromosomes.fasta",
-      "gff":"/Users/ss34/develop/annot-nf/example-data/references/Tb927.1/annotation.gff3"
+      "chromosomes":"/Users/satta/uni/annot-nf/example-data/references/Tb927.1/chromosomes.fasta",
+      "gff":"/Users/satta/uni/annot-nf/example-data/references/Tb927.1/annotation.gff3"
     }
   }
 }
