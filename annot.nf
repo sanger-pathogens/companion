@@ -418,17 +418,17 @@ process run_augustus_contigs {
 }
 
 if (params.run_snap ) {
+    snap_model = file(params.ref_dir + "/" + params.ref_species + "/snap.hmm")
     process run_snap {
         input:
         file 'pseudo.pseudochr.fasta' from pseudochr_seq_snap
-        val params.SNAP_MODEL
+        file 'snap.hmm' from snap_model
 
         output:
         file 'snap.gff3' into snap_gff3
 
         """
-        snap -gff -quiet  ${params.SNAP_MODEL} \
-            pseudo.pseudochr.fasta > snap.tmp
+        snap -gff -quiet snap.hmm pseudo.pseudochr.fasta > snap.tmp
         snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
         gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
         """
