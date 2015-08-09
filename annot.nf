@@ -30,6 +30,7 @@ extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
+augustus_modeldir = Channel.just(params.ref_dir + "/" + params.ref_species)
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -351,13 +352,14 @@ process run_augustus_pseudo {
     set val(hintsline), file('augustus.hints') from all_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
     val extrinsic_cfg
+    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
 
     """
     augustus \
-        --species=${params.AUGUSTUS_SPECIES} \
+        --species=augustus_species \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both \
         --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
@@ -380,12 +382,13 @@ process run_augustus_contigs {
     file 'pseudo.scaffolds.fasta' from scaffolds_seq_augustus
     file 'pseudo.pseudochr.agp' from pseudochr_agp_augustus
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus_ctg
+    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
 
     output:
     file 'augustus.scaf.pseudo.mapped.gff3' into augustus_ctg_gff3
 
     """
-    augustus --species=${params.AUGUSTUS_SPECIES} \
+    augustus --species=augustus_species \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both --genemodel=partial \
         --gff3=on \
@@ -418,7 +421,7 @@ process run_augustus_contigs {
     """
 }
 
-if (params.run_snap) {
+if (params.run_snap ) {
     process run_snap {
         input:
         file 'pseudo.pseudochr.fasta' from pseudochr_seq_snap
