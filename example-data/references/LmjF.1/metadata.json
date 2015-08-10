@@ -1,15 +1,10 @@
 {
-  "pep":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/proteins.fasta",
-  "gff":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/annotation.gff3",
-  "gaf":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/go.gaf",
-  "genome":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/genome.fasta",
   "nof_chromosomes":1,
-  "nof_regions":1,
-  "augustus_model":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/species/augustus_species",
+  "chromosome_pattern":"LmjF.(%d+)",
   "name":"Leishmania major Friedlin chromosome 1",
-  "snap_model":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/snap.hmm",
+  "snap_model":true,
   "nof_coding_genes":85,
-  "nof_genes":85,
-  "chromosomes":"/Users/satta/uni/annot-nf/example-data/references/LmjF.1/chromosomes.fasta",
-  "chromosome_pattern":"LmjF.(%d+)"
+  "augustus_model":true,
+  "nof_regions":1,
+  "nof_genes":85
 }
