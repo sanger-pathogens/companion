@@ -352,6 +352,36 @@ for name, values in pairs(refs.species) do
   end
   values.gaf = lfs.currentdir() .. "/" .. name .. "/go.gaf"
 
+  -- prepare models
+  -- SNAP
+  if values.snap_model and file_exists(values.snap_model) then
+    os.execute("cp " .. values.snap_model .. " " .. name .. "/snap.hmm")
+    values.snap_model = lfs.currentdir() .. "/" .. name .. "/snap.hmm"
+  end
+  -- AUGUSTUS
+  AUG_MODEL_FILES = {'_parameters.cfg', '_parameters.cfg.orig1'}
+  if values.augustus_model and file_exists(values.augustus_model) then
+    os.execute("mkdir -p " .. lfs.currentdir() .. "/" .. name .. "/species")
+    os.execute("cp -pr " .. values.augustus_model
+               .. " " .. lfs.currentdir() .. "/"
+               ..name .. "/species/augustus_species")
+    os.execute("cp -pr " .. gt.script_dir .. "/../data/augustus/model "
+               .. lfs.currentdir() .. "/" ..name .. "/model")
+    os.execute("cp -pr " .. gt.script_dir .. "/../data/augustus/profile "
+               .. lfs.currentdir() .. "/" ..name .. "/profile")
+    values.augustus_model = lfs.currentdir() .. "/"
+                             .. name .. "/species/augustus_species"
+    for file in lfs.dir(values.augustus_model) do
+      --file is the current file or directory name
+      for _,pat in ipairs(AUG_MODEL_FILES) do
+        if file:match(pat .. "$") then
+          os.rename(values.augustus_model .."/" .. file,
+                    values.augustus_model .. "/augustus_species" .. pat)
+        end
+      end
+    end
+  end
+
   -- extract proteins
   -- XXX TODO: check for applicability of mapping
   os.execute("gt extractfeat -type CDS -join -retainids -translate -seqfile "

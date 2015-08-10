@@ -30,6 +30,7 @@ extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
+augustus_modeldir = Channel.just(params.ref_dir + "/" + params.ref_species)
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -351,13 +352,14 @@ process run_augustus_pseudo {
     set val(hintsline), file('augustus.hints') from all_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
     val extrinsic_cfg
+    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
 
     """
     augustus \
-        --species=${params.AUGUSTUS_SPECIES} \
+        --species=augustus_species \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both \
         --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
@@ -380,12 +382,13 @@ process run_augustus_contigs {
     file 'pseudo.scaffolds.fasta' from scaffolds_seq_augustus
     file 'pseudo.pseudochr.agp' from pseudochr_agp_augustus
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus_ctg
+    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
 
     output:
     file 'augustus.scaf.pseudo.mapped.gff3' into augustus_ctg_gff3
 
     """
-    augustus --species=${params.AUGUSTUS_SPECIES} \
+    augustus --species=augustus_species \
         --stopCodonExcludedFromCDS=false \
         --protein=off --codingseq=off --strand=both --genemodel=partial \
         --gff3=on \
@@ -411,25 +414,21 @@ process run_augustus_contigs {
         pseudo.pseudochr.fasta | \
         gt gff3 -sort -tidy -retainids > \
         augustus.scaf.pseudo.mapped.gff3
-    #clean_accessions.lua \
-    #    augustus.scaf.pseudo.mapped.tmp.gff3 | \
-    #    gt gff3 -sort -tidy -retainids > \
-    #    augustus.scaf.pseudo.mapped.gff3
     """
 }
 
-if (params.run_snap) {
+if (params.run_snap ) {
+    snap_model = file(params.ref_dir + "/" + params.ref_species + "/snap.hmm")
     process run_snap {
         input:
         file 'pseudo.pseudochr.fasta' from pseudochr_seq_snap
-        val params.SNAP_MODEL
+        file 'snap.hmm' from snap_model
 
         output:
         file 'snap.gff3' into snap_gff3
 
         """
-        snap -gff -quiet  ${params.SNAP_MODEL} \
-            pseudo.pseudochr.fasta > snap.tmp
+        snap -gff -quiet snap.hmm pseudo.pseudochr.fasta > snap.tmp
         snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
         gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
         """
@@ -791,8 +790,6 @@ process blast_for_orthomcl {
     file 'blastout' into orthomcl_blastout
 
     """
-   # blastp -word_size 6 -evalue 1e-5 -db mapped.fasta -outfmt 6 \
-   #  -query mapped_chunk.fasta > blastout
     blastall -p blastp -W 4 -e 0.00001 -F T -d mapped.fasta -m 8 \
       -i mapped_chunk.fasta > blastout
     """
