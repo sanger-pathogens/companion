@@ -322,7 +322,8 @@ for name, values in pairs(refs.species) do
   if file_exists(name .. "/annotation_preclean.gff3") then
     os.remove(name .. "/annotation_preclean.gff3")
   end
-  values.gff = lfs.currentdir() .. "/" .. name .. "/annotation.gff3"
+  values.gff = nil -- lfs.currentdir() .. "/" .. name .. "/annotation.gff3"
+  out_stream = nil -- trigger GC -> trigger finishing of output file
 
   -- prepare genome FASTA
   if file_exists(values.genome) then
@@ -343,21 +344,24 @@ for name, values in pairs(refs.species) do
       end
     end
   end
-  values.genome = lfs.currentdir() .. "/" .. name .. "/genome.fasta"
-  values.chromosomes = lfs.currentdir() .. "/" .. name .. "/chromosomes.fasta"
+  values.genome = nil -- lfs.currentdir() .. "/" .. name .. "/genome.fasta"
+  values.chromosomes = nil -- lfs.currentdir() .. "/" .. name .. "/chromosomes.fasta"
 
   -- prepare GAF
   if file_exists(values.gaf) then
     os.execute("cp " .. values.gaf .. " " .. name .. "/go.gaf")
   end
-  values.gaf = lfs.currentdir() .. "/" .. name .. "/go.gaf"
+  values.gaf = nil -- lfs.currentdir() .. "/" .. name .. "/go.gaf"
 
   -- prepare models
   -- SNAP
   if values.snap_model and file_exists(values.snap_model) then
     os.execute("cp " .. values.snap_model .. " " .. name .. "/snap.hmm")
-    values.snap_model = lfs.currentdir() .. "/" .. name .. "/snap.hmm"
+    values.snap_model = true -- lfs.currentdir() .. "/" .. name .. "/snap.hmm"
+  else
+    values.snap_model = nil
   end
+
   -- AUGUSTUS
   AUG_MODEL_FILES = {'_parameters.cfg', '_parameters.cfg.orig1'}
   if values.augustus_model and file_exists(values.augustus_model) then
@@ -369,24 +373,26 @@ for name, values in pairs(refs.species) do
                .. lfs.currentdir() .. "/" ..name .. "/model")
     os.execute("cp -pr " .. gt.script_dir .. "/../data/augustus/profile "
                .. lfs.currentdir() .. "/" ..name .. "/profile")
-    values.augustus_model = lfs.currentdir() .. "/"
-                             .. name .. "/species/augustus_species"
-    for file in lfs.dir(values.augustus_model) do
+    values.augustus_model = true
+    local species_path = lfs.currentdir() .. "/" .. name .. "/species/augustus_species"
+    for file in lfs.dir(species_path) do
       --file is the current file or directory name
       for _,pat in ipairs(AUG_MODEL_FILES) do
         if file:match(pat .. "$") then
-          os.rename(values.augustus_model .."/" .. file,
-                    values.augustus_model .. "/augustus_species" .. pat)
+          os.rename(species_path .."/" .. file,
+                    species_path .. "/augustus_species" .. pat)
         end
       end
     end
+  else
+    values.augustus_model = nil
   end
 
   -- extract proteins
   -- XXX TODO: check for applicability of mapping
   os.execute("gt extractfeat -type CDS -join -retainids -translate -seqfile "
-    .. name .. "/genome.fasta -matchdescstart "
-    .. name .. "/annotation.gff3 > " .. name .. "/proteins_preclean.fasta")
+    .. name .. "/genome.fasta -matchdescstart -o ".. name .. "/proteins_preclean.fasta "
+    .. name .. "/annotation.gff3")
 
   -- open ggfile
   local ggfile = io.open(name .. "/ggline.gg", "w+")
@@ -394,7 +400,7 @@ for name, values in pairs(refs.species) do
 
   -- truncate proteins, make gg line
   if file_exists(name .. "/proteins_preclean.fasta") then
-    local keys, seqs =get_fasta_nosep(name .. "/proteins_preclean.fasta")
+    local keys, seqs = get_fasta_nosep(name .. "/proteins_preclean.fasta")
     local outfile = io.open(name .. "/proteins.fasta", "w+")
     for hdr, seq in pairs(seqs) do
       local trans_id = hdr:split(' ')[1]
@@ -405,9 +411,9 @@ for name, values in pairs(refs.species) do
   end
   ggfile:write("\n")
   if file_exists(name .. "/proteins_preclean.fasta") then
-    os.remove(name .. "/proteins_preclean.fasta")
+    --os.remove(name .. "/proteins_preclean.fasta")
   end
-  values.pep =lfs.currentdir() .. "/" .. name .. "/proteins.fasta"
+  values.pep = nil -- lfs.currentdir() .. "/" .. name .. "/proteins.fasta"
 
   values.nof_genes = stat_visitor.stats.nof_genes
   values.nof_coding_genes = stat_visitor.stats.nof_coding_genes
