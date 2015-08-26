@@ -309,7 +309,8 @@ if (params.TRANSCRIPT_FILE) {
 
     script:
     """
-    LC_ALL='C' sort -k 1,1 -k 4,4n transcripts.gtf | uniq | cufflinks_to_hints.lua > transcripts.hints
+    LC_ALL='C' sort -k 1,1 -k 4,4n transcripts.gtf | uniq | \
+      cufflinks_to_hints.lua > transcripts.hints
     """
   }
 } else {
@@ -479,7 +480,7 @@ process integrate_genemodels {
     file 'integrated.gff3' into integrated_gff3
 
     script:
-    if(params.WEIGHT_FILE.length() > 0)
+    if (params.WEIGHT_FILE.length() > 0)
         """
         integrate_gene_calls.lua -w ${params.WEIGHT_FILE} < merged.gff3 | \
             gt gff3 -sort -tidy -retainids > integrated.gff3
@@ -820,7 +821,6 @@ process annotate_orthologs {
 
     input:
     file 'orthomcl_out' from orthomcl_cluster_out_annot
-   //  file 'mapfile' from full_mapfile
     file 'input.gff3' from genemodels_for_omcl_annot
     file 'gff_ref.gff3' from omcl_gfffile
     file 'gaf_ref.gaf' from omcl_gaffile
