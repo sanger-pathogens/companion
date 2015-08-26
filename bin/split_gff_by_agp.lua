@@ -30,8 +30,6 @@ end
 
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
---require("cliargs")
-local lfs = require("lfs")
 
 gff = arg[1]
 agp = arg[2]
@@ -90,7 +88,7 @@ hdrcache = {}
 function get_real_seqhdr(hdr)
   if not hdrcache[hdr] then
     for _,v in ipairs(tkeys) do
-      if v:match(hdr) then
+      if v == hdr then
         v = v:split("%s")[1]
         hdrcache[hdr] = v
         return v
