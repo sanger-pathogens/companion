@@ -88,8 +88,8 @@ hdrcache = {}
 function get_real_seqhdr(hdr)
   if not hdrcache[hdr] then
     for _,v in ipairs(tkeys) do
+      v = v:split("%s")[1]
       if v == hdr then
-        v = v:split("%s")[1]
         hdrcache[hdr] = v
         return v
       end
