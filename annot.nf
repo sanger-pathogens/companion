@@ -553,6 +553,8 @@ process pseudogene_last {
 }
 
 process pseudogene_calling {
+    cache 'deep'
+
     input:
     file 'pseudochr.fasta' from pseudochr_seq_pseudogene_calling
     file 'genes.gff3' from integrated_gff3_clean
@@ -1035,28 +1037,36 @@ if (params.use_reference) {
     }
 
     tree_out.subscribe {
-        println it
+        if (params.print_paths) {
+          println it
+        }
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
         }
     }
 
     tree_genes.subscribe {
-        println it
+        if (params.print_paths) {
+          println it
+        }
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
         }
     }
 
     tree_aln.subscribe {
-        println it
+        if (params.print_paths) {
+          println it
+        }
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
         }
     }
 
     core_comp.subscribe {
-        println it
+        if (params.print_paths) {
+          println it
+        }
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
         }
@@ -1179,14 +1189,18 @@ if (params.do_contiguation && params.do_circos) {
     }
 
     circos_output.subscribe {
-        println it[0]
+        if (params.print_paths) {
+          println it[0]
+        }
         if (params.dist_dir) {
           it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
         }
     }
 
     circos_bin_output.subscribe {
-        println it[0]
+        if (params.print_paths) {
+          println it[0]
+        }
         if (params.dist_dir) {
           it[0].copyTo(params.dist_dir + "/chr" + it[1][0] + ".png")
         }
@@ -1228,7 +1242,9 @@ if (params.make_embl) {
     }
 
     embl_out.flatMap().subscribe {
-        println it
+        if (params.print_paths) {
+          println it
+        }
         if (params.dist_dir) {
           it.copyTo(params.dist_dir)
         }
@@ -1272,7 +1288,9 @@ process make_genelist {
 }
 
 genelist_csv_out.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
     }
@@ -1298,7 +1316,9 @@ process add_products_to_protein_fasta {
 // ======
 
 out_gff3.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       for (file in it) {
         file.copyTo(params.dist_dir)
@@ -1307,7 +1327,9 @@ out_gff3.subscribe {
 }
 
 out_seq.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       for (file in it) {
         file.copyTo(params.dist_dir)
@@ -1316,7 +1338,9 @@ out_seq.subscribe {
 }
 
 result_agp.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       for (file in it) {
         file.copyTo(params.dist_dir)
@@ -1325,35 +1349,45 @@ result_agp.subscribe {
 }
 
 result_gaf.collectFile().subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
     }
 }
 
 result_ortho.collectFile().subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
     }
 }
 
 result_protein.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
     }
 }
 
 stats_output.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       it.copyTo(params.dist_dir)
     }
 }
 
 report_output.subscribe {
-    println it
+    if (params.print_paths) {
+      println it
+    }
     if (params.dist_dir) {
       for (file in it) {
         file.copyTo(params.dist_dir)
