@@ -162,9 +162,9 @@ treegenes = io.open("tree_selection.genes", "w+")
 for _,cl in ipairs(global_core_clusters) do
   local seen_species = {}
   for _,m in ipairs(cl.members) do
-    if not seen_species[m[2]] then
+    local seq = prots[m[2]][m[1]]
+    if not seen_species[m[2]] and seq then
       seen_species[m[2]] = true
-      local seq = prots[m[2]][m[1]]
       treegenes:write(m[1] .. "\t")
       specseqs[m[2]] = specseqs[m[2]] .. seq
     end

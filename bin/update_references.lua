@@ -350,6 +350,8 @@ for name, values in pairs(refs.species) do
   -- prepare GAF
   if file_exists(values.gaf) then
     os.execute("cp " .. values.gaf .. " " .. name .. "/go.gaf")
+  else
+    io.stderr:write("warning: GAF for " .. name .. " does not exist in " .. values.gaf .. "\n")
   end
   values.gaf = nil -- lfs.currentdir() .. "/" .. name .. "/go.gaf"
 
@@ -411,7 +413,7 @@ for name, values in pairs(refs.species) do
   end
   ggfile:write("\n")
   if file_exists(name .. "/proteins_preclean.fasta") then
-    --os.remove(name .. "/proteins_preclean.fasta")
+    os.remove(name .. "/proteins_preclean.fasta")
   end
   values.pep = nil -- lfs.currentdir() .. "/" .. name .. "/proteins.fasta"
 

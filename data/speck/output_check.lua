@@ -49,7 +49,7 @@ describe.feature("gene", function(gene)
               "Start_range", "Dbxref", "controlled_curation",
               "previous_systematic_id", "fiveEndPartial", "threeEndPartial",
               "literature", "synonym", "eupathdb_uc",
-              "internalGap"}).should_contain(k)
+              "internalGap", "ratt_ortholog"}).should_contain(k)
     end
   end)
 
@@ -110,7 +110,10 @@ describe.feature("pseudogene", function(pseudogene)
       expect({"ID", "Name", "comment", "Note", "End_range",
               "Start_range", "Dbxref", "controlled_curation",
               "previous_systematic_id", "literature",
-              "synonym", "eupathdb_uc"}).should_contain(k)
+              "synonym", "eupathdb_uc", "has_internal_stop",
+              "has_frameshift", "has_start", "has_stop",
+              "original_prot_length", "Target",
+              "ratt_ortholog"}).should_contain(k)
     end
   end)
 
@@ -392,7 +395,7 @@ describe.feature("polypeptide", function(pp)
               "polypeptide_domain", "product", "product_synonym",
               "signal_peptide", "similarity",
               "stop_codon_redefined_as_selenocysteine",
-              "translation"}).should_contain(k)
+              "translation", "ortholog_cluster"}).should_contain(k)
     end
   end)
 
@@ -504,7 +507,8 @@ describe.feature("tRNA", function(node)
       expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
               "End_range",  "Dbxref", "controlled_curation", "product",
               "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
+              "literature", "Ontology_term", "aa", "anticodon",
+              "gc_content"}).should_contain(k)
     end
   end)
 
@@ -524,7 +528,8 @@ describe.feature("rRNA", function(node)
       expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
               "End_range",  "Dbxref", "controlled_curation", "product",
               "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
+              "literature", "Ontology_term", "model_name", "model_range",
+              "gc", "evalue", "score"}).should_contain(k)
     end
   end)
 
@@ -544,7 +549,9 @@ describe.feature("snRNA", function(node)
       expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
               "End_range",  "Dbxref", "controlled_curation", "product",
               "product_synonym", "previous_systematic_id",
-              "literature", "internalGap", "Ontology_term"}).should_contain(k)
+              "literature", "internalGap", "Ontology_term",
+              "model_name", "model_range",
+              "gc", "evalue", "score"}).should_contain(k)
     end
   end)
 
@@ -564,7 +571,8 @@ describe.feature("snoRNA", function(node)
       expect({"ID", "Name", "Parent", "comment", "Note", "Start_range",
               "End_range",  "Dbxref", "controlled_curation", "product",
               "product_synonym", "previous_systematic_id",
-              "literature", "Ontology_term"}).should_contain(k)
+              "literature", "Ontology_term", "model_name", "model_range",
+              "gc", "evalue", "score"}).should_contain(k)
     end
   end)
 

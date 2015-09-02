@@ -48,7 +48,11 @@ function cv:visit_feature(fn)
   local chr = "00"
   m = seqid:match(arg[3])
   if m then
-    chr = m
+    if tonumber(m) then
+      chr = string.format("%02d", tonumber(m))
+    else
+      chr = m
+    end
   end
   -- initialize counter for feature numbers
   if not self.numbers[chr] then
