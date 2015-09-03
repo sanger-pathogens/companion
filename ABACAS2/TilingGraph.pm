@@ -969,7 +969,7 @@ sub buildOverlap
 
 #  print Dumper $$ref_contigSeq{$actualContig};
 
-  my $contigLength=(scalar(@{$$ref_contigSeq{$actualContig}})-1);
+  my $contigLength=(scalar(@{$$ref_contigSeq{$actualContig}}));
 
   my $ref_cont=\@{$$ref_contigSeq{$actualContig}};
 
