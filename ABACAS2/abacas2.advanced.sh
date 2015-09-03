@@ -7,10 +7,6 @@ ABA_MIN_IDENTITY=$4
 doBlast=$5
 MemBig=$6
 
-PERL5LIB=$PERL5LIB:/software/badger/lib/perl5:/software/pathogen/psu_svn/trunk/genlib/perl/src:/software/pathogen/external/lib/site_perl:/software/pathogen/external/lib/perl:/software/pathogen/external/lib/perl/lib:/software/pathogen/external/lib/perl/lib/site_perl:/software/pathogen/external/lib/perl5:/software/pubseq/PerlModules/Modules:/software/badger/lib/perl5:/software/noarch/badger/lib/perl5:/nfs/users/nfs_t/tdo/bin/oldPerl:/nfs/users/nfs_t/tdo/pathogen/user/mh12/perl/lib:/software/pathogen/projects/protocols/lib/perl5
-
-export PERL5LIB
-
 if [ -z "$contig" ] ; then
 	echo "
 
@@ -31,14 +27,14 @@ ABA_CHECK_OVERLAP=0; export ABA_CHECK_OVERLAP # this will not try to overlap con
 ABA_splitContigs=1; export ABA_splitContigs # this parameter will split contigs. This is good to split the orign, and to find rearrangement. A split contigs has the suffix _i (i the part)
 ABA_WORD_SIZE  # sets the word size. This is critical for speed issues in nucmer. default is 20
 "
-	
+
 exit;
 fi
 
-if [ -z "$ABA_MIN_LENGTH" ] ; then 
+if [ -z "$ABA_MIN_LENGTH" ] ; then
 	ABA_MIN_LENGTH=200;
 fi
-if [ -z "$ABA_MIN_IDENTITY" ] ; then 
+if [ -z "$ABA_MIN_IDENTITY" ] ; then
 	ABA_MIN_IDENTITY=95;
 fi
 if [ -z "$MemBig" ]; then
@@ -63,15 +59,15 @@ tmp=$$
 
 
 #do ordering
-for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ;       
-  do 
+for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ;
+  do
 #  echo " bsub -w\"stage1.$tmp\" -J\"stage2.$tmp\" -R \"select[type==X86_64 && mem > $MemBig] rusage[mem=$MemBig]\" -M\"$MemBig\"000 -o output2.$x.o -e output2.$x.e \"~tdo/Bin/goTilingGraph.pl $x.coords  $contig Res\";"
 
   if [ -f "$x.coords" ] ; then
   bsub  -J"stage2.$tmp" -R "select[type==X86_64 && mem > $MemBig] rusage[mem=$MemBig]" -M"$MemBig"000 -o output2.$x.o -e output2.$x.e "~tdo/Bin/goTilingGraph.pl $x.coords  $contig Res";
   fi
 
-done 
+done
 
 
 #do bin
