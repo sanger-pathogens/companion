@@ -75,7 +75,7 @@ for l in io.lines(arg[2]) do
         table.insert(gapqueue, fn)
       end
     else
-      mappings[c6:gsub("%.%d+$","")] = {obj=obj, obj_s=tonumber(obj_s),
+      mappings[c6] = {obj=obj, obj_s=tonumber(obj_s),
                                         obj_e=tonumber(obj_e),
                                         s_s=tonumber(c7), s_e=tonumber(c8),
                                         strand=c9}

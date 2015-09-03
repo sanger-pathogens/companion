@@ -60,9 +60,12 @@ for file in lfs.dir(arg[1]) do
           os.exit(1)
         end
         if type1 == "Contig" then
+          local contig_name = attr:match('contig=([^"]+)')
+          assert(contig_name)
           -- this is a 'scaffold'
           this_scaf = {start = start,
                        stop = stop,
+                       name = contig_name,
                        seq = string.sub(seqs[seqid], start, stop),
                        contigs = {}}
           local i_end = 0
@@ -129,6 +132,7 @@ if #binkeys > 0 then
     stop = start + string.len(v) - 1
     this_scaf ={start = tonumber(start),
                 stop = tonumber(stop),
+                name = k,
                 seq = v,
                 contigs = {}}
     local i_end = 0
@@ -172,7 +176,7 @@ for _,seqid in ipairs(newkeys) do
   local i = 1
   local s_last_stop = 0
   for _, s in ipairs(scafs[seqid]) do
-    local scafname = seqprefix .. "_SCAF" .. string.format("%06d", scaf_i)
+    local scafname = tostring(s.name) -- seqprefix .. "_SCAF" .. string.format("%06d", scaf_i)
     scaf_fasta_out:write(">" .. scafname .. "\n")
     print_max_width(s.seq, scaf_fasta_out, 60)
     if s_last_stop > 0 then
