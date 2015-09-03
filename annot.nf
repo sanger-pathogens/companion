@@ -104,10 +104,12 @@ scaffolds_seq.into{ scaffolds_seq_augustus
 
 
 scaffolds_agp.into{ scaffolds_agp_augustus
+                    scaffolds_agp_rnaseq
 					scaffolds_agp_make_gaps
                     scaffolds_agp_make_dist }
 
 pseudochr_agp.into{ pseudochr_agp_augustus
+                    pseudochr_agp_rnaseq
 				    pseudochr_agp_make_gaps
                     pseudochr_agp_make_dist }
 
@@ -247,52 +249,63 @@ if (params.run_exonerate) {
 // RATT
 // ====
 
-process ratt_make_ref_embl {
-    input:
-    file ref_annot
-    file ref_chr
-    val go_obo
+if (params.run_ratt) {
+    process ratt_make_ref_embl {
+        input:
+        file ref_annot
+        file ref_chr
+        val go_obo
 
+        output:
+        file '*.embl' into ref_embl
+
+        """
+        gff3_to_embl.lua -o ${ref_annot} ${go_obo} Foo ${ref_chr}
+        """
+    }
+
+    process run_ratt {
+        afterScript 'rm -rf Reference* Sequences Query query.*'
+
+        input:
+        file 'in*.embl' from ref_embl
+        file 'pseudo.pseudochr.fasta' from pseudochr_seq_ratt
+
+        output:
+        file 'Out*.final.embl' into ratt_result
+        file 'Out*.Report.txt' into ratt_reports
+
+        """
+        start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
+        """
+    }
+
+    process ratt_to_gff3 {
+        input:
+        file 'in*.embl' from ratt_result
+        file 'in*.report' from ratt_reports
+
+        output:
+        file 'ratt.gff3' into ratt_gff3
+
+        """
+        ratt_embl_to_gff3.lua in*.embl | \
+          gt gff3 -sort -retainids -tidy > \
+          ratt.tmp.gff3
+        ratt_remove_problematic.lua ratt.tmp.gff3 in*report | \
+          gt gff3 -sort -retainids -tidy > \
+          ratt.gff3
+        """
+    }
+} else {
+    process ratt_empty_models {
     output:
-    file '*.embl' into ref_embl
+    file 'result.gff3' into ratt_gff3
 
     """
-    gff3_to_embl.lua -o ${ref_annot} ${go_obo} Foo ${ref_chr}
+    echo '##gff-version 3' > result.gff3
     """
-}
-
-process run_ratt {
-    afterScript 'rm -rf Reference* Sequences Query query.*'
-
-    input:
-    file 'in*.embl' from ref_embl
-    file 'pseudo.pseudochr.fasta' from pseudochr_seq_ratt
-
-    output:
-    file 'Out*.final.embl' into ratt_result
-    file 'Out*.Report.txt' into ratt_reports
-
-    """
-    start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
-    """
-}
-
-process ratt_to_gff3 {
-    input:
-    file 'in*.embl' from ratt_result
-    file 'in*.report' from ratt_reports
-
-    output:
-    file 'ratt.gff3' into ratt_gff3
-
-    """
-    ratt_embl_to_gff3.lua in*.embl | \
-      gt gff3 -sort -retainids -tidy > \
-      ratt.tmp.gff3
-    ratt_remove_problematic.lua ratt.tmp.gff3 in*report | \
-      gt gff3 -sort -retainids -tidy > \
-      ratt.gff3
-    """
+  }
 }
 
 // TRANSCRIPT EVIDENCE PREPARATION
@@ -300,14 +313,28 @@ process ratt_to_gff3 {
 
 if (params.TRANSCRIPT_FILE) {
   transcript_evidence = file(params.TRANSCRIPT_FILE)
-  process prepare_transcript_hints {
+
+  process transform_input_gtf {
     input:
     file 'transcripts.gtf' from transcript_evidence
+    file 'pseudochr.agp' from pseudochr_agp_rnaseq
+
+    output:
+    file 'transcripts_transformed.gtf' into transcript_evidence_transformed
+
+    """
+    LC_ALL='C' sort -k 1,1 -k 4,4n transcripts.gtf | uniq > 1
+    transform_gtf_with_agp.lua 1 pseudochr.agp > transcripts_transformed.gtf
+    """
+  }
+
+  process prepare_transcript_hints {
+    input:
+    file 'transcripts.gtf' from transcript_evidence_transformed
 
     output:
     file 'transcripts.hints' into trans_hints
 
-    script:
     """
     LC_ALL='C' sort -k 1,1 -k 4,4n transcripts.gtf | uniq | \
       cufflinks_to_hints.lua > transcripts.hints
@@ -327,18 +354,18 @@ if (params.TRANSCRIPT_FILE) {
 // HINTS PREPARATION
 // =================
 
-combined_hints = exn_hints.concat(trans_hints)
 process merge_hints {
     cache 'deep'
 
     input:
-    file 'hints.concatenated.txt' from combined_hints.collectFile()
+    file 'hints.exon.txt' from exn_hints
+    file 'hints.trans.txt' from trans_hints
 
     output:
     set stdout, file('hints.txt') into all_hints
 
     """
-    touch hints.txt
+    cat hints.exon.txt hints.trans.txt > hints.concatenated.txt
     if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--hintsfile=augustus.hints'; fi
     """
 }
