@@ -271,6 +271,9 @@ end
 
 -- load local 'references.json' file
 local reffile = io.open("references-in.json", "rb")
+if not reffile then
+  error("could not open references-in.json in current directory")
+end
 local refcontent = reffile:read("*all")
 reffile:close()
 refs = json.decode(refcontent)

@@ -13,12 +13,11 @@
 
 use strict;
 
-use lib '/nfs/pathogen003/tdo/Tools/ABACAS2';
 use TilingGraph;
 
 if (scalar(@ARGV) < 3) {
   die "Usage: coords sequence Resultname\n";
-  
+
 }
 TilingGraph::startTiling(shift,shift,shift);
 
