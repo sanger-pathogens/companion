@@ -1,7 +1,7 @@
 #!/usr/bin/env gt
 
 --[[
-  Copyright (c) 2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+  Author: Sascha Steinbiss <ss34@sanger.ac.uk>
   Copyright (c) 2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
