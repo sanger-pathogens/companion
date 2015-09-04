@@ -1265,7 +1265,7 @@ if (params.make_embl) {
 
         """
         zcat ${embl_full_seq} > 1
-        gff3_to_embl.lua embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
+        gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
         """
     }
 
