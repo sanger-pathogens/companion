@@ -894,7 +894,7 @@ process run_pfam {
     file 'pfamout' into pfam_output
 
     """
-    hmmscan --domtblout pfamout --cut_ga --noali --cpu 2 ${PFAM} proteins.fas
+    hmmscan --domtblout pfamout --cut_ga --noali ${PFAM} proteins.fas
     """
 }
 
