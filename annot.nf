@@ -367,7 +367,7 @@ process merge_hints {
     """
     touch hints.txt
     cat hints.exon.txt hints.trans.txt > hints.concatenated.txt
-    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--hintsfile=augustus.hints'; fi
+    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints'; fi
     """
 }
 
