@@ -82,7 +82,7 @@ for n,fs in pairs(feats) do
     if i == 0 or i == #fs then
       print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.tid)
     else
-      print_gff(f.seq, "exon", f.start, f.stop, f.strand, f.tid)
+      print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.tid)
     end
   end
 end
