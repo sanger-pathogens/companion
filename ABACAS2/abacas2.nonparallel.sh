@@ -68,7 +68,10 @@ for x in `grep '>' $reference | perl -nle '/>(\S+)/;print $1' ` ; do
 	abacas2.doTilingGraph.pl $x.coords  $contig Res
 done
 
-abacas2.bin.sh $contig Res.abacasBin.fna && grep -v '>'  Res.abacasBin.fna | awk 'BEGIN {print ">Bin.union"} {print}' > Res.abacasBin.oneSeq.fna_ && cat Res*fna > Genome.abacas.fasta && bam.correctLineLength.sh Genome.abacas.fasta  &> /dev/null && mv  Res.abacasBin.fna_ Res.abacasBin.fna
+abacas2.bin.sh $contig Res.abacasBin.fna && grep -v '>'  Res.abacasBin.fna | awk 'BEGIN {print ">Bin.union"} {print}' > Res.abacasBin.oneSeq.fna_ && cat Res*fna > Genome.abacas.fasta && bam.correctLineLength.sh Genome.abacas.fasta  &> /dev/null
+if [ -f "Res.abacasBin.fna_" ] ; then
+    mv Res.abacasBin.fna_ Res.abacasBin.fna
+fi
 
 #~tdo/Bin/abacas2.doblast.sh $reference Res
 #ef=$reference
