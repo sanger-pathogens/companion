@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 
 /*
-    Copyright (c) 2014-2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+    Author: Sascha Steinbiss <ss34@sanger.ac.uk>
     Copyright (c) 2014-2015 Genome Research Ltd
 
     Permission to use, copy, modify, and distribute this software for any
@@ -367,7 +367,7 @@ process merge_hints {
     """
     touch hints.txt
     cat hints.exon.txt hints.trans.txt > hints.concatenated.txt
-    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--hintsfile=augustus.hints'; fi
+    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints'; fi
     """
 }
 
@@ -552,54 +552,58 @@ process remove_exons {
     """
 }
 
-process pseudogene_indexing {
-    input:
-    file 'ref.peps.fasta' from omcl_pepfile
+if (params.do_pseudo) {
+    process pseudogene_indexing {
+        input:
+        file 'ref.peps.fasta' from omcl_pepfile
 
-    output:
-    file 'prot_index*' into pseudochr_last_index
+        output:
+        file 'prot_index*' into pseudochr_last_index
 
-    """
-    tantan -p -r0.02 ref.peps.fasta | lastdb -p -c prot_index
-    """
-}
+        """
+        tantan -p -r0.02 ref.peps.fasta | lastdb -p -c prot_index
+        """
+    }
 
-pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
-pseudochr_seq_pseudogene_align.splitFasta( by: 3, file: true).set { pseudogene_align_chunk }
+    pseudochr_seq_pseudogene.into{ pseudochr_seq_pseudogene_align; pseudochr_seq_pseudogene_calling }
+    pseudochr_seq_pseudogene_align.splitFasta( by: 3, file: true).set { pseudogene_align_chunk }
 
-process pseudogene_last {
-    input:
-    file 'chunk.fasta' from pseudogene_align_chunk
-    file prot_index from pseudochr_last_index.first()
+    process pseudogene_last {
+        input:
+        file 'chunk.fasta' from pseudogene_align_chunk
+        file prot_index from pseudochr_last_index.first()
 
-    output:
-    file 'last.out' into pseudochr_last_out
+        output:
+        file 'last.out' into pseudochr_last_out
 
-    """
-    lastal -pBL80 -F15 -e400 -m10 -f0 prot_index chunk.fasta > last.out
-    """
-}
+        """
+        lastal -pBL80 -F15 -e400 -m10 -f0 prot_index chunk.fasta > last.out
+        """
+    }
 
-process pseudogene_calling {
-    cache 'deep'
+    process pseudogene_calling {
+        cache 'deep'
 
-    input:
-    file 'pseudochr.fasta' from pseudochr_seq_pseudogene_calling
-    file 'genes.gff3' from integrated_gff3_clean
-    file 'last.out' from pseudochr_last_out.collectFile()
+        input:
+        file 'pseudochr.fasta' from pseudochr_seq_pseudogene_calling
+        file 'genes.gff3' from integrated_gff3_clean
+        file 'last.out' from pseudochr_last_out.collectFile()
 
-    output:
-    file 'genes_and_pseudo.gff3' into gff3_with_pseudogenes
+        output:
+        file 'genes_and_pseudo.gff3' into gff3_with_pseudogenes
 
-    """
-    # reconstruct frameshifted candidates from output
-    pseudo_merge_last.lua last.out pseudochr.fasta > last_gff.gff3
+        """
+        # reconstruct frameshifted candidates from output
+        pseudo_merge_last.lua last.out pseudochr.fasta > last_gff.gff3
 
-    # merge with gene models
-    gt gff3 -sort -tidy -retainids last_gff.gff3 genes.gff3 > last_and_genes.gff3
-    pseudo_merge_with_genes.lua last_and_genes.gff3 pseudochr.fasta > out_tmp.gff3
-    gt gff3 -sort -retainids -tidy out_tmp.gff3 > genes_and_pseudo.gff3
-    """
+        # merge with gene models
+        gt gff3 -sort -tidy -retainids last_gff.gff3 genes.gff3 > last_and_genes.gff3
+        pseudo_merge_with_genes.lua last_and_genes.gff3 pseudochr.fasta > out_tmp.gff3
+        gt gff3 -sort -retainids -tidy out_tmp.gff3 > genes_and_pseudo.gff3
+        """
+    }
+} else {
+    gff3_with_pseudogenes = integrated_gff3_clean
 }
 
 // MERGE ALL GENES TO FINAL SET AND CLEANUP
@@ -894,7 +898,7 @@ process run_pfam {
     file 'pfamout' into pfam_output
 
     """
-    hmmscan --domtblout pfamout --cut_ga --noali --cpu 2 ${PFAM} proteins.fas
+    hmmscan --domtblout pfamout --cut_ga --noali ${PFAM} proteins.fas
     """
 }
 
@@ -1265,7 +1269,7 @@ if (params.make_embl) {
 
         """
         zcat ${embl_full_seq} > 1
-        gff3_to_embl.lua embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
+        gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
         """
     }
 

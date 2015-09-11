@@ -1,7 +1,7 @@
 #!/usr/bin/env gt
 
 --[[
-  Copyright (c) 2015 Sascha Steinbiss <ss34@sanger.ac.uk>
+  Author: Sascha Steinbiss <ss34@sanger.ac.uk>
   Copyright (c) 2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
@@ -82,7 +82,7 @@ for n,fs in pairs(feats) do
     if i == 0 or i == #fs then
       print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.tid)
     else
-      print_gff(f.seq, "exon", f.start, f.stop, f.strand, f.tid)
+      print_gff(f.seq, "exonpart", f.start, f.stop, f.strand, f.tid)
     end
   end
 end
