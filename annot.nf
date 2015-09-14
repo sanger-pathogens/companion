@@ -276,6 +276,7 @@ if (params.run_ratt) {
         file 'Out*.Report.txt' into ratt_reports
 
         """
+        touch Out.0.Report.txt
         start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
         """
     }
