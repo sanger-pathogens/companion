@@ -60,7 +60,7 @@ RUN cd /opt && \
     tar -xvf aragorn.tgz && \
     mv aragorn1* aragorn && \
     cd aragorn && \
-    gcc -O2 -o aragorn aragorn*.c
+    gcc -o aragorn aragorn*.c
 
 #
 # Install and configure OrthoMCL
