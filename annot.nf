@@ -182,6 +182,22 @@ hints = Channel.create()
 // PROTEIN-DNA ALIGNMENT
 // =====================
 if (params.run_exonerate) {
+    process make_exonerate_index {
+        input:
+        file 'genome.fasta' from pseudochr_seq_exonerate.first()
+
+        output:
+        file 'index.esi' into exn_index_esi
+        file 'index.esd' into exn_index_esd
+        file 'genome.fasta' into exn_index_fasta
+
+        """
+        fasta2esd --softmask no genome.fasta index.esd
+        esd2esi index.esd index.esi --translate yes
+        """
+
+    }
+
     process make_ref_peps {
         cache 'deep'
 
@@ -198,26 +214,35 @@ if (params.run_exonerate) {
           -join -type CDS -translate -retainids 1 > ref.pep
         """
     }
-    exn_prot_chunk = ref_pep.splitFasta( by: 100, file: true)
+
+    exn_prot_chunk = ref_pep.splitFasta( by: 200, file: true)
     process run_exonerate {
         cache 'deep'
         // this process can fail for rogue exonerate processes
         errorStrategy 'ignore'
 
         input:
-        file 'genome.fasta' from pseudochr_seq_exonerate.first()
+        file 'index.esi' from exn_index_esi.first()
+        file 'index.esd' from exn_index_esd.first()
+        file 'genome.fasta' from exn_index_fasta.first()
         file 'prot.fasta' from exn_prot_chunk
 
         output:
         file 'exn_out' into exn_results
 
         """
+        get_unused_port.sh > port
+        reaper.sh exonerate-server --port `cat port` --input index.esi &
+        sleep 5
         exonerate -E false --model p2g --showvulgar no --showalignment no \
-          --showquerygff no --showtargetgff yes --percent 80 \
+          --showquerygff no --showtargetgff yes --percent 80 --geneseed 250 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
-           genome.fasta > exn_out
+          localhost:`cat port` > exn_out
+        kill `cat exonerate-server.pid`
+        rm -f exonerate-server.pid
         """
     }
+
     process exonerate_make_hints {
         cache 'deep'
 
