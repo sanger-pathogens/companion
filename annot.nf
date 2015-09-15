@@ -1262,6 +1262,8 @@ if (params.make_embl) {
     }
 
     process make_embl {
+        afterScript 'rm -rf 1 1.*'
+
         input:
         file 'embl_in.gff3' from embl_full_gff
         file embl_full_seq
@@ -1271,8 +1273,7 @@ if (params.make_embl) {
         file '*.embl' into embl_out
 
         """
-        zcat ${embl_full_seq} > 1
-        gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
+        zcat ${embl_full_seq} > 1 && gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1
         """
     }
 
