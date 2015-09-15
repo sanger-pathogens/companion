@@ -3,7 +3,7 @@ before_install:
   - sudo apt-get -qq update
 
 install:
-  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal mafft
+  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal mafft telnet
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
   - sudo test/travis.setup-augustus.sh > /dev/null
   - sudo test/travis.setup-gt.sh > /dev/null
