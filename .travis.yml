@@ -29,7 +29,7 @@ script:
   - cd test/testsuite
   - ./testsuite.rb -threads 2
   - cd ../..
-  - ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false
-  - ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true
-  - ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false
-  - ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_snap=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_snap=false
