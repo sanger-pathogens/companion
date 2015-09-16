@@ -393,7 +393,10 @@ process merge_hints {
     """
     touch hints.txt
     cat hints.exon.txt hints.trans.txt > hints.concatenated.txt
-    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints'; fi
+    if [ -s hints.concatenated.txt ] ; then
+      mv hints.concatenated.txt hints.txt;
+      echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints';
+    fi
     """
 }
 
@@ -1084,15 +1087,19 @@ if (params.use_reference) {
 
     process make_tree {
         input:
-        file 'tree_selection.fasta' from tree_fasta
+        file 'tree_selection.fasta ' from tree_fasta
 
         output:
         file "tree.out" into tree_out
         file "tree.aln" into tree_aln
 
         """
-        mafft --auto --anysymbol --parttree --quiet tree_selection.fasta > tree.aln
-        FastTree tree.aln > tree.out
+        touch tree.out
+        touch tree.aln
+        if [ -s tree_selection.fasta ] ; then
+          mafft --auto --anysymbol --memsave --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
+          FastTree tree.aln > tree.out;
+        fi
         """
     }
 
