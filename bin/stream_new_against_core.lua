@@ -159,26 +159,32 @@ prots[speciesprefix] = nseq
 specseqs[speciesprefix] = ""
 i = 0
 treegenes = io.open("tree_selection.genes", "w+")
+treeclusters = io.open("tree_selection.clusters", "w+")
+treeout = io.open("tree_selection.fasta", "w+")
 for _,cl in ipairs(global_core_clusters) do
   local seen_species = {}
-  for _,m in ipairs(cl.members) do
-    local seq = prots[m[2]][m[1]]
-    if not seen_species[m[2]] and seq then
-      seen_species[m[2]] = true
-      treegenes:write(m[1] .. "\t")
-      specseqs[m[2]] = specseqs[m[2]] .. seq
+  if cl.specidx[speciesprefix] then
+    for _,m in ipairs(cl.members) do
+      local seq = prots[m[2]][m[1]]
+      if not seen_species[m[2]] and seq then
+        seen_species[m[2]] = true
+        treegenes:write(m[1] .. "\t")
+        specseqs[m[2]] = specseqs[m[2]] .. seq
+      end
+    end
+    treegenes:write("\n")
+    treeclusters:write(cl.name .. "\n")
+    i = i + 1
+    if i == 50 then
+      break
     end
   end
-  treegenes:write("\n")
-  i = i + 1
-  if i == 50 then
-    break
-  end
 end
-treeout = io.open("tree_selection.fasta", "w+")
-for s,seq in pairs(specseqs) do
-  treeout:write(">" .. s .. "\n")
-  print_max_width(seq, treeout, 80)
+if i > 0 then
+  for s,seq in pairs(specseqs) do
+    treeout:write(">" .. s .. "\n")
+    print_max_width(seq, treeout, 80)
+  end
 end
 
 -- searching for global core clusters with missing members in new species
