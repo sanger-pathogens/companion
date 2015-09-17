@@ -1087,7 +1087,7 @@ if (params.use_reference) {
 
     process make_tree {
         input:
-        file 'tree_selection.fasta ' from tree_fasta
+        file 'tree_selection.fasta' from tree_fasta
 
         output:
         file "tree.out" into tree_out
