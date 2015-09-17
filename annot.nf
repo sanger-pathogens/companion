@@ -158,7 +158,7 @@ process predict_ncRNA {
     file 'cm_out' into cmtblouts
 
     """
-    cmscan --cpu 1 --tblout cm_out --cut_ga models.cm chunk
+    cmsearch --tblout cm_out --cut_ga models.cm chunk
     """
 }
 
