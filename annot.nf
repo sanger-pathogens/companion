@@ -30,7 +30,7 @@ extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
-augustus_modeldir = Channel.just(params.ref_dir + "/" + params.ref_species)
+augustus_modeldir = file(params.ref_dir + "/" + params.ref_species)
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
@@ -158,7 +158,7 @@ process predict_ncRNA {
     file 'cm_out' into cmtblouts
 
     """
-    cmsearch --tblout cm_out --cut_ga models.cm chunk
+    cmscan --cpu 1 --tblout cm_out --cut_ga models.cm chunk
     """
 }
 
@@ -182,6 +182,22 @@ hints = Channel.create()
 // PROTEIN-DNA ALIGNMENT
 // =====================
 if (params.run_exonerate) {
+    process make_exonerate_index {
+        input:
+        file 'genome.fasta' from pseudochr_seq_exonerate.first()
+
+        output:
+        file 'index.esi' into exn_index_esi
+        file 'index.esd' into exn_index_esd
+        file 'genome.fasta' into exn_index_fasta
+
+        """
+        fasta2esd --softmask no genome.fasta index.esd
+        esd2esi index.esd index.esi --translate yes
+        """
+
+    }
+
     process make_ref_peps {
         cache 'deep'
 
@@ -198,26 +214,35 @@ if (params.run_exonerate) {
           -join -type CDS -translate -retainids 1 > ref.pep
         """
     }
-    exn_prot_chunk = ref_pep.splitFasta( by: 100, file: true)
+
+    exn_prot_chunk = ref_pep.splitFasta( by: 200, file: true)
     process run_exonerate {
         cache 'deep'
         // this process can fail for rogue exonerate processes
         errorStrategy 'ignore'
 
         input:
-        file 'genome.fasta' from pseudochr_seq_exonerate.first()
+        file 'index.esi' from exn_index_esi.first()
+        file 'index.esd' from exn_index_esd.first()
+        file 'genome.fasta' from exn_index_fasta.first()
         file 'prot.fasta' from exn_prot_chunk
 
         output:
         file 'exn_out' into exn_results
 
         """
+        get_unused_port.sh > port
+        reaper.sh exonerate-server --port `cat port` --input index.esi &
+        sleep 5
         exonerate -E false --model p2g --showvulgar no --showalignment no \
-          --showquerygff no --showtargetgff yes --percent 80 \
+          --showquerygff no --showtargetgff yes --percent 80 --geneseed 250 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
-           genome.fasta > exn_out
+          localhost:`cat port` > exn_out
+        kill `cat exonerate-server.pid`
+        rm -f exonerate-server.pid
         """
     }
+
     process exonerate_make_hints {
         cache 'deep'
 
@@ -276,6 +301,7 @@ if (params.run_ratt) {
         file 'Out*.Report.txt' into ratt_reports
 
         """
+        touch Out.0.Report.txt
         start.ratt.sh . pseudo.pseudochr.fasta Out ${params.RATT_TRANSFER_TYPE}
         """
     }
@@ -367,7 +393,10 @@ process merge_hints {
     """
     touch hints.txt
     cat hints.exon.txt hints.trans.txt > hints.concatenated.txt
-    if [ -s hints.concatenated.txt ] ; then mv hints.concatenated.txt hints.txt; echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints'; fi
+    if [ -s hints.concatenated.txt ] ; then
+      mv hints.concatenated.txt hints.txt;
+      echo -n '--alternatives-from-evidence=false --hintsfile=augustus.hints';
+    fi
     """
 }
 
@@ -381,21 +410,22 @@ process run_augustus_pseudo {
     set val(hintsline), file('augustus.hints') from all_hints
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus
     val extrinsic_cfg
-    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
+    file augustus_modeldir
 
     output:
     file 'augustus.gff3' into augustus_pseudo_gff3
 
     """
-    augustus \
-        --species=augustus_species \
-        --stopCodonExcludedFromCDS=false \
-        --protein=off --codingseq=off --strand=both \
-        --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
-        ${hintsline} \
-        --noInFrameStop=true \
-        --extrinsicCfgFile=${extrinsic_cfg} \
-        pseudo.pseudochr.fasta > augustus.full.tmp
+    AUGUSTUS_CONFIG_PATH=${augustus_modeldir} \
+        augustus \
+            --species=augustus_species \
+            --stopCodonExcludedFromCDS=false \
+            --protein=off --codingseq=off --strand=both \
+            --genemodel=${params.AUGUSTUS_GENEMODEL} --gff3=on \
+            ${hintsline} \
+            --noInFrameStop=true \
+            --extrinsicCfgFile=${extrinsic_cfg} \
+            pseudo.pseudochr.fasta > augustus.full.tmp
     augustus_to_gff3.lua < augustus.full.tmp \
         | gt gff3 -sort -tidy -retainids \
         | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
@@ -411,18 +441,19 @@ process run_augustus_contigs {
     file 'pseudo.scaffolds.fasta' from scaffolds_seq_augustus
     file 'pseudo.pseudochr.agp' from pseudochr_agp_augustus
     file 'pseudo.pseudochr.fasta' from pseudochr_seq_augustus_ctg
-    env AUGUSTUS_CONFIG_PATH from augustus_modeldir.first()
+    file augustus_modeldir
 
     output:
     file 'augustus.scaf.pseudo.mapped.gff3' into augustus_ctg_gff3
 
     """
-    augustus --species=augustus_species \
-        --stopCodonExcludedFromCDS=false \
-        --protein=off --codingseq=off --strand=both --genemodel=partial \
-        --gff3=on \
-        --noInFrameStop=true \
-        pseudo.contigs.fasta > augustus.ctg.tmp && \
+    AUGUSTUS_CONFIG_PATH=${augustus_modeldir} \
+        augustus --species=augustus_species \
+            --stopCodonExcludedFromCDS=false \
+            --protein=off --codingseq=off --strand=both --genemodel=partial \
+            --gff3=on \
+            --noInFrameStop=true \
+            pseudo.contigs.fasta > augustus.ctg.tmp
     augustus_to_gff3.lua < augustus.ctg.tmp \
         | gt gff3 -sort -tidy -retainids \
         | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
@@ -446,7 +477,7 @@ process run_augustus_contigs {
     """
 }
 
-if (params.run_snap ) {
+if (params.run_snap) {
     snap_model = file(params.ref_dir + "/" + params.ref_species + "/snap.hmm")
     process run_snap {
         input:
@@ -1056,15 +1087,19 @@ if (params.use_reference) {
 
     process make_tree {
         input:
-        file 'tree_selection.fasta' from tree_fasta
+        file 'tree_selection.fasta ' from tree_fasta
 
         output:
         file "tree.out" into tree_out
         file "tree.aln" into tree_aln
 
         """
-        mafft --auto --anysymbol --parttree --quiet tree_selection.fasta > tree.aln
-        FastTree tree.aln > tree.out
+        touch tree.out
+        touch tree.aln
+        if [ -s tree_selection.fasta ] ; then
+          mafft --auto --anysymbol --memsave --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
+          FastTree tree.aln > tree.out;
+        fi
         """
     }
 
@@ -1259,6 +1294,8 @@ if (params.make_embl) {
     }
 
     process make_embl {
+        afterScript 'rm -rf 1 1.*'
+
         input:
         file 'embl_in.gff3' from embl_full_gff
         file embl_full_seq
@@ -1268,8 +1305,7 @@ if (params.make_embl) {
         file '*.embl' into embl_out
 
         """
-        zcat ${embl_full_seq} > 1
-        gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1 && rm -f 1
+        zcat ${embl_full_seq} > 1 && gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1
         """
     }
 

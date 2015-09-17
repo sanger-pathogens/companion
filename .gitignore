@@ -4,3 +4,4 @@ work
 trace.csv*
 *.[eo]
 *.i1*
+*_out/

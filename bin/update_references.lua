@@ -338,7 +338,7 @@ for name, values in pairs(refs.species) do
   end
   -- filter out chromosomes
   if file_exists(name .. "/genome.fasta") then
-    local keys, seqs =get_fasta_nosep(name .. "/genome.fasta")
+    local keys, seqs = get_fasta_nosep(name .. "/genome.fasta")
     local outfile = io.open(name .. "/chromosomes.fasta", "w+")
     for hdr, seq in pairs(seqs) do
       if hdr:match(values.chromosome_pattern) then

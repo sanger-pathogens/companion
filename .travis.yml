@@ -3,7 +3,7 @@ before_install:
   - sudo apt-get -qq update
 
 install:
-  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal mafft
+  - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal mafft telnet
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
   - sudo test/travis.setup-augustus.sh > /dev/null
   - sudo test/travis.setup-gt.sh > /dev/null
@@ -29,4 +29,7 @@ script:
   - cd test/testsuite
   - ./testsuite.rb -threads 2
   - cd ../..
-  - ./nextflow -c loc_travis.config -c params_default.config run annot.nf -resume --do_circos=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false
+  - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_snap=false

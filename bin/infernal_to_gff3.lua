@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -47,7 +47,7 @@ while true do
     la = split(line, '%s+')
     seqid = la[1]
     seqacc = la[2]
-    qry = la[3]
+    qryid = la[3]
     qryacc = la[4]
     mfrom = la[6]
     mto = la[7]
@@ -63,13 +63,13 @@ while true do
     if strand == '-' then
       sfrom, sto = sto, sfrom
     end
-    print(seqid .. "\tGenomeTools\tgene\t" .. sfrom .. "\t" .. sto .. "\t"
+    print(qryid .. "\tGenomeTools\tgene\t" .. sfrom .. "\t" .. sto .. "\t"
             .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i)
-    print(seqid .. "\tINFERNAL\t" .. qry2type(qry) .. "\t" .. sfrom .. "\t"
+    print(qryid .. "\tINFERNAL\t" .. qry2type(seqid) .. "\t" .. sfrom .. "\t"
             .. sto .. "\t" .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i
-            .. ":" .. qry2type(qry) .. ";Parent=ncRNA"
-            .. i ..";Name=" .. qry .. ";gc=" .. gc .. ";evalue=" .. evalue
-            ..";score=" .. score ..";model_name=" .. qryacc .. ";model_range="
+            .. ":" .. qry2type(seqid) .. ";Parent=ncRNA"
+            .. i ..";Name=" .. seqid .. ";gc=" .. gc .. ";evalue=" .. evalue
+            ..";score=" .. score ..";model_name=" .. seqacc .. ";model_range="
             .. mfrom .. "-" .. mto)
     i = i + 1
   end

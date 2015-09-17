@@ -20,7 +20,7 @@ RUN apt-get update -qq
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
-                    libc6-i386 lib32stdc++6 lib32gcc1 \
+                    libc6-i386 lib32stdc++6 lib32gcc1 telnet \
                     last-align --yes --force-yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
     cpanm --force SVG Carp Storable Bio::SearchIO List::Util \
@@ -60,7 +60,7 @@ RUN cd /opt && \
     tar -xvf aragorn.tgz && \
     mv aragorn1* aragorn && \
     cd aragorn && \
-    gcc -O2 -o aragorn aragorn*.c
+    gcc -o aragorn aragorn*.c
 
 #
 # Install and configure OrthoMCL
