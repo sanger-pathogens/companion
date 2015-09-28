@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ev
-wget -q http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.1.tar.gz
+wget -q http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus.3.0.1.tar.gz
 tar -xzvf augustus*.tar.gz
 rm -rf augustus*.tar.gz
 mv augustus* augustus
