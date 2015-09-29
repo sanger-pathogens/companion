@@ -21,7 +21,7 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 telnet \
-                    last-align libboost-iostreams-dev --yes --force-yes
+                    last-align libboost-iostreams-dev libgsl0ldbl --yes --force-yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
     cpanm --force SVG Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
