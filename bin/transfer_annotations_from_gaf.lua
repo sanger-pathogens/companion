@@ -93,16 +93,18 @@ end
 -- get annotations from reference(s)
 store = {}
 for l in io.lines(args[2]) do
-  local db,dbid,dbobj,qual,goid,dbref,evidence,withfrom,aspect,dbobjname,
-    dbobjsyn,dbobjtype,taxon,data,assignedby = unpack(split(l, '\t'))
-  if not store[dbid] then
-    store[dbid] = {}
+  if string.sub(l, 1,1) ~= '!' then
+    local db,dbid,dbobj,qual,goid,dbref,evidence,withfrom,aspect,dbobjname,
+      dbobjsyn,dbobjtype,taxon,data,assignedby = unpack(split(l, '\t'))
+    if not store[dbid] then
+      store[dbid] = {}
+    end
+    table.insert(store[dbid], {db=db, dbid=dbid, qual=qual, goid=goid,
+                               dbref=dbref, evidence=evidence, withfrom=withfrom,
+                               aspect=aspect, dbobjname=dbobjname,
+                               dbobjsyn=dbobjsyn, dbobjtype=dbobjtype,
+                               taxon=taxon, data=data, assignedby=assignedby})
   end
-  table.insert(store[dbid], {db=db, dbid=dbid, qual=qual, goid=goid,
-                             dbref=dbref, evidence=evidence, withfrom=withfrom,
-                             aspect=aspect, dbobjname=dbobjname,
-                             dbobjsyn=dbobjsyn, dbobjtype=dbobjtype,
-                             taxon=taxon, data=data, assignedby=assignedby})
 end
 
 visitor_stream = visitor_stream_new(gt.gff3_in_stream_new_sorted(args[1]),
