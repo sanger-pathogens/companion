@@ -1097,7 +1097,7 @@ if (params.use_reference) {
         touch tree.out
         touch tree.aln
         if [ -s tree_selection.fasta ] ; then
-          mafft --auto --anysymbol --memsave --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
+          mafft --auto --anysymbol --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
           FastTree tree.aln > tree.out;
         fi
         """
