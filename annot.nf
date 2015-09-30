@@ -158,7 +158,7 @@ process predict_ncRNA {
     file 'cm_out' into cmtblouts
 
     """
-    cmscan --cpu 1 --tblout cm_out --cut_ga models.cm chunk
+    cmsearch --tblout cm_out --cut_ga models.cm chunk
     """
 }
 
@@ -1087,7 +1087,7 @@ if (params.use_reference) {
 
     process make_tree {
         input:
-        file 'tree_selection.fasta ' from tree_fasta
+        file 'tree_selection.fasta' from tree_fasta
 
         output:
         file "tree.out" into tree_out
@@ -1097,7 +1097,7 @@ if (params.use_reference) {
         touch tree.out
         touch tree.aln
         if [ -s tree_selection.fasta ] ; then
-          mafft --auto --anysymbol --memsave --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
+          mafft --auto --anysymbol --retree 1 --parttree --quiet tree_selection.fasta > tree.aln;
           FastTree tree.aln > tree.out;
         fi
         """

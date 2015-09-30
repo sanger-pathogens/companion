@@ -21,7 +21,8 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 telnet \
-                    last-align --yes --force-yes
+                    last-align libboost-iostreams-dev libgsl0ldbl \
+                    libcolamd2.8.0 libstdc++6 --yes --force-yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
     cpanm --force SVG Carp Storable Bio::SearchIO List::Util \
                     Getopt::Long && \
@@ -30,7 +31,7 @@ RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
 #
 # Install AUGUSTUS (binaries)
 #
-ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.1.tar.gz /opt/augustus-3.1.tar.gz
+ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
