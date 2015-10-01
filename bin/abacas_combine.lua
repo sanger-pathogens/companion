@@ -187,7 +187,7 @@ for _,seqid in ipairs(newkeys) do
       i = i + 1
     end
     scaf_agp_out:write(seqid .. "\t" .. s.start .. "\t"
-                       .. s.stop .. "\t" .. i .. "\tF\t" .. scafname
+                       .. s.stop .. "\t" .. i .. "\tW\t" .. scafname
                        .. "\t1\t" .. string.len(s.seq) .. "\t+\n")
     scaf_i = scaf_i + 1
     local j = 1
