@@ -180,6 +180,7 @@ for _,seqid in ipairs(newkeys) do
     scaf_fasta_out:write(">" .. scafname .. "\n")
     print_max_width(s.seq, scaf_fasta_out, 60)
     if s_last_stop > 0 then
+      -- XXX: use no:na for bin chromosomes, otherwise yes:align_xgenus
       scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
                         .. tonumber(s.start)-1 .. "\t" .. i .. "\tU\t"
                         .. (tonumber(s.start)-1)-(tonumber(s_last_stop)+1) + 1

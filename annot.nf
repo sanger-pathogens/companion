@@ -674,12 +674,12 @@ process add_gap_features {
     """
     set -ev
     make_contig_features_from_agp.lua pseudo.scaffolds.agp "within scaffold" | \
-      gt gff3 -sort -tidy -retainids > contigs.gff3
+      gt gff3 -fixregionboundaries -sort -tidy -retainids > contigs.gff3
 
     transform_gff_with_agp.lua contigs.gff3 \
       pseudo.pseudochr.agp pseudo.scaffolds.fasta \
       pseudo.pseudochr.fasta "between scaffolds" | \
-      gt gff3 -sort -tidy -retainids > contigs2.gff3
+      gt gff3 -fixregionboundaries -sort -tidy -retainids > contigs2.gff3
 
     gt merge -force -o merged_out.gff3 \
       merged_in.gff3 contigs2.gff3
