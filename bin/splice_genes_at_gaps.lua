@@ -67,6 +67,7 @@ function stream:process_current_cluster()
     local cur_gene = n
     local outbuf = {}
     local cur_cds = nil
+    local skip_gene = false
     if n:get_type() ~= "gap" then
       for _,g in ipairs(gaps) do
         local mrna = nil
@@ -80,111 +81,122 @@ function stream:process_current_cluster()
               if not cur_cds then
                 cur_cds = c
               end
-              local new_rng = gt.range_new(c:get_range():get_start(),
-                                           g:get_range():get_start() - 1)
-              local rest_rng = gt.range_new(g:get_range():get_end() + 1,
-                                            c:get_range():get_end())
-              c:set_range(new_rng)
-              new_cds = gt.feature_node_new(c:get_seqid(), "CDS",
-                                                  rest_rng:get_start(),
-                                                  rest_rng:get_end(),
-                                                  c:get_strand())
-              mrna:add_child(new_cds)
-              new_cds:set_source(c:get_source())
-              table.insert(outbuf, cur_cds)
-              table.insert(outbuf, g)
+              if (c:get_range():get_start() > g:get_range():get_start() - 1) or
+                 (g:get_range():get_end() + 1 > c:get_range():get_end()) then
+                io.stderr:write("splitting would create invalid gene model, " ..
+                              "skipping " .. cur_gene:get_attribute("ID") ..
+                              "\n")
+                skip_gene = true
+                break
+              else
+                local new_rng = gt.range_new(c:get_range():get_start(),
+                                             g:get_range():get_start() - 1)
+                local rest_rng = gt.range_new(g:get_range():get_end() + 1,
+                                              c:get_range():get_end())
+                c:set_range(new_rng)
+                new_cds = gt.feature_node_new(c:get_seqid(), "CDS",
+                                                    rest_rng:get_start(),
+                                                    rest_rng:get_end(),
+                                                    c:get_strand())
+                mrna:add_child(new_cds)
+                new_cds:set_source(c:get_source())
+                table.insert(outbuf, cur_cds)
+                table.insert(outbuf, g)
+              end
             end
             cur_cds = new_cds
           end
         end
-        table.insert(outbuf, cur_cds)
-      end
-
-
-
-      -- repair CDS entries in gene models to fix frameshifts
-      local cdslist = {}
-      for _,v in ipairs(outbuf) do
-        for q in v:children() do
-          if q:get_type() == "CDS" or q:get_type() == "gap" then
-            table.insert(cdslist, q)
-          end
+        if not skip_gene then
+          table.insert(outbuf, cur_cds)
         end
       end
 
-      if #cdslist > 0 then
-        n:set_attribute("internalGap", "true")
-
-        -- reverse order for reverse strand features
-        assert(cdslist[1]:get_type() == "CDS")
-        local startphase = cdslist[1]:get_phase()
-        if n:get_strand() == "-" then
-          cdslist = ReverseTable(cdslist)
-          cdslist[1]:set_phase(startphase)
-        end
-
-        -- update phases
-        assert(cdslist[1]:get_type() == "CDS")
-        local gaplen = 0
-        local nofgaps = 0
-        for i = 2,#cdslist do
-          if cdslist[i]:get_type() == "gap" then
-            gaplen = cdslist[i]:get_range():length()
-            nofgaps = nofgaps + 1
-          elseif cdslist[i]:get_type() == "CDS" then
-            -- adjust coords for shift introduced by gap length, if necessary
-            local shift = 0
-            if (gaplen % 3) ~= 0 then
-              shift = 3 - (gaplen % 3)
+      if not skip_gene then
+        -- repair CDS entries in gene models to fix frameshifts
+        local cdslist = {}
+        for _,v in ipairs(outbuf) do
+          for q in v:children() do
+            if q:get_type() == "CDS" or q:get_type() == "gap" then
+              table.insert(cdslist, q)
             end
-            local newrng = nil
-            if cdslist[i]:get_strand() == "-" then
-              newrng = gt.range_new(cdslist[i]:get_range():get_start(),
-                                    cdslist[i]:get_range():get_end() - shift)
-            else
-              newrng = gt.range_new(cdslist[i]:get_range():get_start() + shift,
-                                    cdslist[i]:get_range():get_end())
-            end
-            cdslist[i]:set_range(newrng)
           end
         end
 
-        -- take care of boundary case where after frameshift adjustment, the
-        -- terminal CDS ends up too short to still contain a stop codon on
-        -- its own
-        if #cdslist > 2 and cdslist[#cdslist]:get_range():length() < 3 then
-          local last_cds_range = cdslist[#cdslist-2]:get_range()
-          -- in this case, drop it
-          n:remove_leaf(cdslist[#cdslist])
-          -- if there was only one gap, remove internal gap flag
-          if nofgaps == 1 then
-            n:remove_attribute("internalGap")
-          end
-          -- add appropriate partial flag
+        if #cdslist > 0 then
+          n:set_attribute("internalGap", "true")
+
+          -- reverse order for reverse strand features
+          assert(cdslist[1]:get_type() == "CDS")
+          local startphase = cdslist[1]:get_phase()
           if n:get_strand() == "-" then
-            n:set_attribute("Start_range",".,.")
-          else
-            n:set_attribute("End_range",".,.")
+            cdslist = ReverseTable(cdslist)
+            cdslist[1]:set_phase(startphase)
           end
-          -- readjust gene coordinates across this CC
-          for this_child in n:children() do
-            if this_child:get_range():overlap(last_cds_range) then
-              if last_cds_range:get_start() > this_child:get_range():get_start() then
-                local rng = gt.range_new(last_cds_range:get_start(),
-                                         this_child:get_range():get_end())
-                this_child:set_range(rng)
+
+          -- update phases
+          assert(cdslist[1]:get_type() == "CDS")
+          local gaplen = 0
+          local nofgaps = 0
+          for i = 2,#cdslist do
+            if cdslist[i]:get_type() == "gap" then
+              gaplen = cdslist[i]:get_range():length()
+              nofgaps = nofgaps + 1
+            elseif cdslist[i]:get_type() == "CDS" then
+              -- adjust coords for shift introduced by gap length, if necessary
+              local shift = 0
+              if (gaplen % 3) ~= 0 then
+                shift = 3 - (gaplen % 3)
               end
-              if last_cds_range:get_end() < this_child:get_range():get_end() then
-                local rng = gt.range_new(this_child:get_range():get_start(),
-                                         last_cds_range:get_end())
-                this_child:set_range(rng)
+              local newrng = nil
+              if cdslist[i]:get_strand() == "-" then
+                newrng = gt.range_new(cdslist[i]:get_range():get_start(),
+                                      cdslist[i]:get_range():get_end() - shift)
+              else
+                newrng = gt.range_new(cdslist[i]:get_range():get_start() + shift,
+                                      cdslist[i]:get_range():get_end())
+              end
+              cdslist[i]:set_range(newrng)
+            end
+          end
+
+          -- take care of boundary case where after frameshift adjustment, the
+          -- terminal CDS ends up too short to still contain a stop codon on
+          -- its own
+          if #cdslist > 2 and cdslist[#cdslist]:get_range():length() < 3 then
+            local last_cds_range = cdslist[#cdslist-2]:get_range()
+            -- in this case, drop it
+            n:remove_leaf(cdslist[#cdslist])
+            -- if there was only one gap, remove internal gap flag
+            if nofgaps == 1 then
+              n:remove_attribute("internalGap")
+            end
+            -- add appropriate partial flag
+            if n:get_strand() == "-" then
+              n:set_attribute("Start_range",".,.")
+            else
+              n:set_attribute("End_range",".,.")
+            end
+            -- readjust gene coordinates across this CC
+            for this_child in n:children() do
+              if this_child:get_range():overlap(last_cds_range) then
+                if last_cds_range:get_start() > this_child:get_range():get_start() then
+                  local rng = gt.range_new(last_cds_range:get_start(),
+                                           this_child:get_range():get_end())
+                  this_child:set_range(rng)
+                end
+                if last_cds_range:get_end() < this_child:get_range():get_end() then
+                  local rng = gt.range_new(this_child:get_range():get_start(),
+                                           last_cds_range:get_end())
+                  this_child:set_range(rng)
+                end
               end
             end
           end
         end
       end
+      table.insert(self.outqueue, n)
     end
-    table.insert(self.outqueue, n)
   end
 end
 
