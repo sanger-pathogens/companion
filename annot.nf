@@ -724,7 +724,7 @@ process add_polypeptides {
 
     """
     create_polypeptides.lua input.gff3 ${params.GENOME_PREFIX} \
-        "${params.CHR_PATTERN}" > output.gff3
+        "${params.CHR_PATTERN}" | gt gff3 -sort -retainids -tidy > output.gff3
     """
 }
 
