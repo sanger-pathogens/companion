@@ -22,12 +22,12 @@ function precedes(a,b)
   return a:get_range():get_end() < b:get_range():get_start()
 end
 
-function SimpleChainer.new(arr, weight_func)
+function SimpleChainer.new(arr, weight_func, data)
 	local sc = {}
 	local mc = {}
 	setmetatable(sc, SimpleChainer)
 	for _,v in ipairs(arr) do
-		local nval = {item = v, weight = get_weight(v)}
+		local nval = {item = v, weight = weight_func(v, data)}
 		table.insert(mc, nval)
 	end
 	sc.mc = mc
