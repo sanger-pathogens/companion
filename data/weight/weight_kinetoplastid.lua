@@ -1,4 +1,4 @@
-function get_weight(gene)
+function get_weight(gene, regionmapping)
   local fac = 1
   local nof_cds = 0
   -- count the number of CDS/exons
