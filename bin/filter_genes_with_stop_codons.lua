@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -37,8 +37,17 @@ function visitor:visit_feature(fn)
   local protseq = nil
   for node in fn:children() do
     if node:get_type() == "mRNA" then
-      protseq = node:extract_and_translate_sequence("CDS", true,
-                                                          region_mapping)
+      -- catch invalid sequence accesses here to make sure we don't fail hard
+      -- this should be sorted out later -- how do we end up with these
+      -- coordinates?
+      val, protseq = pcall(GenomeTools_genome_node.extract_and_translate_sequence,
+                           node, "CDS", true, region_mapping)
+      if not val then
+        io.stderr:write(protseq .. "\n")
+        io.stderr:write("gene accessing invalid sequence region :" ..
+                        fn:get_attribute("ID") .. ", skipped\n")
+        return
+      end
       if protseq:sub(1, -2):match("[*+#]") then
         has_stop = true
         break
@@ -62,7 +71,8 @@ function visitor:visit_feature(fn)
         npseudogene:set_attribute("has_internal_stop", "true")
         local rorth = npseudogene:get_attribute("ratt_ortholog")
         if rorth and protseq then
-          npseudogene:set_attribute("Target", rorth .. " 1 " .. string.len(protseq))
+          npseudogene:set_attribute("Target", rorth .. " 1 " ..
+                                    string.len(protseq))
         end
       elseif node:get_type() == "mRNA" then
         assert(npseudogene)
@@ -82,7 +92,10 @@ function visitor:visit_feature(fn)
                                      node:get_strand())
         nptranscript:add_child(npexon)
         for k,v in node:attribute_pairs() do
-          npexon:set_attribute(k, v)
+          -- do not clone IDs
+          if k ~= 'ID' then
+            npexon:set_attribute(k, v)
+          end
         end
       end
     end

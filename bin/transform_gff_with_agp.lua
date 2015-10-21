@@ -69,7 +69,6 @@ for l in io.lines(arg[2]) do
       end
     elseif type == 'U' then
       fn = gt.feature_node_new(obj, "gap", obj_s, obj_e, ".")
---      fn:add_attribute("gap_type", type)
       if gaps then
         fn:add_attribute("gap_type", gaps)
         table.insert(gapqueue, fn)
@@ -143,14 +142,22 @@ visitor_stream = gt.custom_stream_new_unsorted()
 visitor_stream.instream = gt.gff3_in_stream_new_sorted(gff)
 visitor_stream.vis = visitor
 visitor_stream.queue = gapqueue
+visitor_stream.gaps = false
 function visitor_stream:next_tree()
   local node = nil
-  if table.getn(self.queue) > 0 then
-    return table.remove(self.queue)
-  else
+  if not self.gaps then
     node = self.instream:next_tree()
     if node then
       node:accept(self.vis)
+    else
+      self.gaps = true
+    end
+  end
+  if self.gaps then
+    if table.getn(self.queue) > 0 then
+      return table.remove(self.queue)
+    else
+      return nil
     end
   end
   return node

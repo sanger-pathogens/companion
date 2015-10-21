@@ -1,4 +1,4 @@
-function get_weight(gene)
+function get_weight(gene, regionmapping)
   local fac = 1
   local nof_cds = 0
   -- count the number of CDS/exons
@@ -15,6 +15,10 @@ function get_weight(gene)
       fac = 3
     else
       fac = .1
+    end
+    -- disregard pseudogenes in reference
+    if gene:get_attribute("is_pseudo_in_ref") == 'true' then
+      fac = 0
     end
   end
   return gene:get_range():length() * fac

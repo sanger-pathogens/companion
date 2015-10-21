@@ -93,6 +93,7 @@ pseudochr_seq.into{ pseudochr_seq_tRNA
                     pseudochr_seq_make_dist_2
                     pseudochr_seq_splitsplice
                     pseudochr_seq_pseudogene
+                    pseudochr_seq_integrate
                     pseudochr_seq_tmhmm
                     pseudochr_seq_orthomcl
                     pseudochr_seq_exonerate }
@@ -530,9 +531,11 @@ process merge_genemodels {
 
 process integrate_genemodels {
     cache 'deep'
+    afterScript 'rm -rf sequence.fasta.*'
 
     input:
     file 'merged.gff3' from merged_gff3
+    file 'sequence.fasta' from pseudochr_seq_integrate
     val params.WEIGHT_FILE
 
     output:
@@ -541,12 +544,12 @@ process integrate_genemodels {
     script:
     if (params.WEIGHT_FILE.length() > 0)
         """
-        integrate_gene_calls.lua -w ${params.WEIGHT_FILE} < merged.gff3 | \
+        integrate_gene_calls.lua -w ${params.WEIGHT_FILE} -s sequence.fasta < merged.gff3 | \
             gt gff3 -sort -tidy -retainids > integrated.gff3
         """
     else
         """
-        integrate_gene_calls.lua < merged.gff3 | \
+        integrate_gene_calls.lua -s sequence.fasta < merged.gff3 | \
             gt gff3 -sort -tidy -retainids > integrated.gff3
         """
 }
@@ -674,12 +677,12 @@ process add_gap_features {
     """
     set -ev
     make_contig_features_from_agp.lua pseudo.scaffolds.agp "within scaffold" | \
-      gt gff3 -sort -tidy -retainids > contigs.gff3
+      gt gff3 -fixregionboundaries -sort -tidy -retainids > contigs.gff3
 
     transform_gff_with_agp.lua contigs.gff3 \
       pseudo.pseudochr.agp pseudo.scaffolds.fasta \
       pseudo.pseudochr.fasta "between scaffolds" | \
-      gt gff3 -sort -tidy -retainids > contigs2.gff3
+      gt gff3 -fixregionboundaries -sort -tidy -retainids > contigs2.gff3
 
     gt merge -force -o merged_out.gff3 \
       merged_in.gff3 contigs2.gff3
@@ -724,7 +727,7 @@ process add_polypeptides {
 
     """
     create_polypeptides.lua input.gff3 ${params.GENOME_PREFIX} \
-        "${params.CHR_PATTERN}" > output.gff3
+        "${params.CHR_PATTERN}" | gt gff3 -sort -retainids -tidy > output.gff3
     """
 }
 

@@ -28,12 +28,19 @@ op = OptionParser:new({usage="%prog <options> < merged.gff3",
                        version="0.1"})
 op:option{"-w", action='store', dest='weight_func',
                 help="Lua script defining the weight function 'get_weight()'"}
-options,args = op:parse({weight_func=nil})
+op:option{"-s", action='store', dest='sequence',
+                help="sequence file for the given annotation"}
+options,args = op:parse({weight_func=nil, sequence=nil})
 
 function usage()
   op:help()
   os.exit(1)
 end
+
+if not options.sequence then
+  usage()
+end
+regmap = gt.region_mapping_new_seqfile_matchdescstart(options.sequence)
 
 -- default weight function: gene length
 -- this should most of the time be overridden by a more specific,
@@ -65,7 +72,7 @@ function stream:process_current_cluster()
   local max = 0
 
   -- keep only non-overlapping chain with highest weight
-  bestset = SimpleChainer.new(self.curr_gene_set):chain()
+  bestset = SimpleChainer.new(self.curr_gene_set, get_weight, regmap):chain()
 
   for _,v in ipairs(bestset) do
     table.insert(self.outqueue, v)
@@ -87,7 +94,6 @@ function stream:next_tree()
     if mygn then
       rval, err = pcall(GenomeTools_genome_node.get_type, mygn)
       if rval then
-        --print(mygn)
         local fn = mygn
         local new_rng = mygn:get_range()
         if fn:get_type() == "gene" then

@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -33,7 +33,6 @@ require("lib")
 gff3v = gt.gff3_visitor_new()
 
 genes = {}
-
 geneno = 1
 cur_gene = nil
 for i = 1,#arg do
@@ -49,6 +48,8 @@ for i = 1,#arg do
       if ltag and cur_gene and not cur_gene:get_attribute("ratt_ortholog") then
         cur_gene:set_attribute("ratt_ortholog", ltag)
       end
+    elseif seqid and cur_gene and l:match("     /pseudo") then
+      cur_gene:set_attribute("is_pseudo_in_ref", "true")
     elseif seqid and l:match("%sCDS%s") then
       cur_gene = nil
       if l:match("complement") then
@@ -68,17 +69,20 @@ for i = 1,#arg do
           else
             totalrange = totalrange:join(thisrng)
           end
-          node = gt.feature_node_new(seqid, "CDS", tonumber(s), tonumber(e), strand)
+          node = gt.feature_node_new(seqid, "CDS", tonumber(s), tonumber(e),
+                                     strand)
           node:set_attribute("ID",  "RATTgene" .. geneno .. ".CDS"..exnr)
           node:set_source("RATT")
           table.insert(cds, node)
-          node = gt.feature_node_new(seqid, "exon", tonumber(s), tonumber(e), strand)
+          node = gt.feature_node_new(seqid, "exon", tonumber(s), tonumber(e),
+                                     strand)
           node:set_attribute("ID", "RATTgene" .. geneno .. ".exon"..exnr)
           node:set_source("RATT")
           table.insert(exons, node)
           exnr = exnr + 1
         else
-          io.stderr:write("error: malformed input range " .. s .. "-" .. e .. ", skipping\n")
+          io.stderr:write("error: malformed input range " .. s .. "-"
+                          .. e .. ", skipping\n")
           --reset totalrange to disable gene output
           totalrange = nil
         end

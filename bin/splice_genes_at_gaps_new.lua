@@ -68,9 +68,13 @@ function stream:process_current_cluster()
   for _,n in ipairs(self.curr_gene_set) do
     local cur_gene = n
     local nof_cds = 0
+    local skip_gene = false
 
     if n:get_type() ~= "gap" then
       for child in cur_gene:children() do
+        if skip_gene then
+          break
+        end
         -- we are at a transcript
         if child:get_type() == "mRNA" then
           local mrna = child
@@ -105,6 +109,9 @@ function stream:process_current_cluster()
 
           -- handle gaps for this transcript
           for _,g in ipairs(relevant_gaps) do
+            if skip_gene then
+              break
+            end
             local gap_rng = g:get_range()
             -- traverse all CDS
             for cds in mrna:children() do
@@ -129,15 +136,33 @@ function stream:process_current_cluster()
                     local new_rng = nil
                     local rest_rng = nil
                     if n:get_strand() == "-" then
-                      new_rng = gt.range_new(cds_rng:get_start(),
-                                                 gap_rng:get_start() - 1 - shift)
-                      rest_rng = gt.range_new(gap_rng:get_end() + 1,
-                                                  cds_rng:get_end())
+                      if (cds_rng:get_start() > gap_rng:get_start() - 1 - shift) or
+                         (gap_rng:get_end() + 1 > cds_rng:get_end()) then
+                        io.stderr:write("splitting would create invalid gene model, " ..
+                              "skipping " .. cur_gene:get_attribute("ID") ..
+                              "\n")
+                        skip_gene = true
+                        break
+                      else
+                        new_rng = gt.range_new(cds_rng:get_start(),
+                                                   gap_rng:get_start() - 1 - shift)
+                        rest_rng = gt.range_new(gap_rng:get_end() + 1,
+                                                    cds_rng:get_end())
+                      end
                     else
-                      new_rng = gt.range_new(cds_rng:get_start(),
-                                                 gap_rng:get_start() - 1)
-                      rest_rng = gt.range_new(gap_rng:get_end() + 1 + shift,
-                                                  cds_rng:get_end())
+                      if (cds_rng:get_start() > gap_rng:get_start() - 1) or
+                         (gap_rng:get_end() + 1 + shift > cds_rng:get_end()) then
+                        io.stderr:write("splitting would create invalid gene model, " ..
+                              "skipping " .. cur_gene:get_attribute("ID") ..
+                              "\n")
+                        skip_gene = true
+                        break
+                      else
+                        new_rng = gt.range_new(cds_rng:get_start(),
+                                                   gap_rng:get_start() - 1)
+                        rest_rng = gt.range_new(gap_rng:get_end() + 1 + shift,
+                                                    cds_rng:get_end())
+                      end
                     end
                     assert(new_rng)
                     assert(rest_rng)

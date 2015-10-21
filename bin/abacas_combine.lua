@@ -180,14 +180,22 @@ for _,seqid in ipairs(newkeys) do
     scaf_fasta_out:write(">" .. scafname .. "\n")
     print_max_width(s.seq, scaf_fasta_out, 60)
     if s_last_stop > 0 then
-      scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
+      -- XXX: use no:na for bin chromosomes, otherwise yes:align_xgenus
+      if seqid == binseqid then
+        scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
                         .. tonumber(s.start)-1 .. "\t" .. i .. "\tU\t"
                         .. (tonumber(s.start)-1)-(tonumber(s_last_stop)+1) + 1
-                        .. "\tcontig\tno\talign_xgenus\n")
+                        .. "\tcontig\tno\tna\n")
+      else
+        scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
+                          .. tonumber(s.start)-1 .. "\t" .. i .. "\tU\t"
+                          .. (tonumber(s.start)-1)-(tonumber(s_last_stop)+1) + 1
+                          .. "\tscaffold\tyes\talign_xgenus\n")
+      end
       i = i + 1
     end
     scaf_agp_out:write(seqid .. "\t" .. s.start .. "\t"
-                       .. s.stop .. "\t" .. i .. "\tF\t" .. scafname
+                       .. s.stop .. "\t" .. i .. "\tW\t" .. scafname
                        .. "\t1\t" .. string.len(s.seq) .. "\t+\n")
     scaf_i = scaf_i + 1
     local j = 1

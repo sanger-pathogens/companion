@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -81,6 +81,7 @@ function stream:process_current_cluster()
   for _,n in ipairs(self.curr_gene_set) do
     local cur_gene = n
     local outbuf = {}
+    local skip_gene = false
     if n:get_type() ~= "gap" then
       for _,g in ipairs(gaps) do
         local rest = clone_cc(cur_gene)
@@ -88,14 +89,21 @@ function stream:process_current_cluster()
           if c:get_range():get_start() > g:get_range():get_end() then
             cur_gene:remove_leaf(c)
           elseif c:get_range():overlap(g:get_range()) then
-            local new_rng = gt.range_new(c:get_range():get_start(),
-                                         g:get_range():get_start() - 1)
-            c:set_range(new_rng)
-            cur_gene:set_attribute("End_range",".,.")
-            if c:get_strand() == "-" then
-              cur_gene:set_attribute("fiveEndPartial", "true")
+            if c:get_range():get_start() > g:get_range():get_start() - 1 then
+              io.stderr:write("splitting would create invalid gene model, " ..
+                              "skipping " .. cur_gene:get_attribute("ID") ..
+                              "\n")
+              skip_gene = true
             else
-              cur_gene:set_attribute("threeEndPartial", "true")
+              local new_rng = gt.range_new(c:get_range():get_start(),
+                                           g:get_range():get_start() - 1)
+              c:set_range(new_rng)
+              cur_gene:set_attribute("End_range",".,.")
+              if c:get_strand() == "-" then
+                cur_gene:set_attribute("fiveEndPartial", "true")
+              else
+                cur_gene:set_attribute("threeEndPartial", "true")
+              end
             end
           end
         end
@@ -103,62 +111,76 @@ function stream:process_current_cluster()
           if c:get_range():get_end() < g:get_range():get_start() then
             rest:remove_leaf(c)
           elseif c:get_range():overlap(g:get_range()) then
-            local rest_rng = gt.range_new(g:get_range():get_end() + 1,
-                                          c:get_range():get_end())
-            c:set_range(rest_rng)
-            rest:set_attribute("Start_range",".,.")
-            if c:get_strand() == "-" then
-              rest:set_attribute("threeEndPartial", "true")
+            -- XXX make sure we don't create invalid genes
+            if g:get_range():get_end() + 1 > c:get_range():get_end() then
+              io.stderr:write("splitting would create invalid gene model, " ..
+                              "skipping " .. cur_gene:get_attribute("ID") ..
+                              "\n")
+              skip_gene = true
             else
-              rest:set_attribute("fiveEndPartial", "true")
+              local rest_rng = gt.range_new(g:get_range():get_end() + 1,
+                                            c:get_range():get_end())
+              c:set_range(rest_rng)
+              rest:set_attribute("Start_range",".,.")
+              if c:get_strand() == "-" then
+                rest:set_attribute("threeEndPartial", "true")
+              else
+                rest:set_attribute("fiveEndPartial", "true")
+              end
             end
           end
         end
-        table.insert(outbuf, cur_gene)
-        table.insert(outbuf, g)
+        if not skip_gene then
+          table.insert(outbuf, cur_gene)
+          table.insert(outbuf, g)
+        end
         cur_gene = rest
       end
-      table.insert(outbuf, cur_gene)
+      if not skip_gene then
+        table.insert(outbuf, cur_gene)
+      end
 
-      -- repair CDS entries in gene models to fix frameshifts
-      -- obtain and order CDS and gap features
-      local cdslist = {}
-      for _,v in ipairs(outbuf) do
-        for q in v:children() do
-          if q:get_type() == "CDS" or q:get_type() == "gap" then
-            table.insert(cdslist, q)
+     if not skip_gene then
+        -- repair CDS entries in gene models to fix frameshifts
+        -- obtain and order CDS and gap features
+        local cdslist = {}
+        for _,v in ipairs(outbuf) do
+          for q in v:children() do
+            if q:get_type() == "CDS" or q:get_type() == "gap" then
+              table.insert(cdslist, q)
+            end
           end
         end
-      end
-      -- reverse order for reverse strand features
-      assert(cdslist[1]:get_type() == "CDS")
-      local startphase = cdslist[1]:get_phase()
-      if n:get_strand() == "-" then
-        cdslist = ReverseTable(cdslist)
-        cdslist[1]:set_phase(startphase)
-      end
-
-      -- assign correct strands
-      assert(cdslist[1]:get_type() == "CDS")
-      local phase = cdslist[1]:get_phase()
-      local gaplen = 0
-      -- determine starting phase (mostly 0, but you never know...)
-      phase = (3 - (cdslist[1]:get_range():length() - phase) % 3) % 3
-      for i = 2,#cdslist do
-        if cdslist[i]:get_type() == "gap" then
-          gaplen = cdslist[i]:get_range():length()
-        elseif cdslist[i]:get_type() == "CDS" then
-          -- adjust phase for shift introduced by gap length
-          phase = (phase - (gaplen % 3)) % 3
-          cdslist[i]:set_phase(phase)
-          -- update running phase
-          phase = (3 - (cdslist[i]:get_range():length() - phase) % 3) % 3
+        -- reverse order for reverse strand features
+        assert(cdslist[1]:get_type() == "CDS")
+        local startphase = cdslist[1]:get_phase()
+        if n:get_strand() == "-" then
+          cdslist = ReverseTable(cdslist)
+          cdslist[1]:set_phase(startphase)
         end
-      end
 
-      -- split finished, pass along split gene models and gaps
-      for _,v in ipairs(outbuf) do
-        table.insert(stream.outqueue, v)
+        -- assign correct strands
+        assert(cdslist[1]:get_type() == "CDS")
+        local phase = cdslist[1]:get_phase()
+        local gaplen = 0
+        -- determine starting phase (mostly 0, but you never know...)
+        phase = (3 - (cdslist[1]:get_range():length() - phase) % 3) % 3
+        for i = 2,#cdslist do
+          if cdslist[i]:get_type() == "gap" then
+            gaplen = cdslist[i]:get_range():length()
+          elseif cdslist[i]:get_type() == "CDS" then
+            -- adjust phase for shift introduced by gap length
+            phase = (phase - (gaplen % 3)) % 3
+            cdslist[i]:set_phase(phase)
+            -- update running phase
+            phase = (3 - (cdslist[i]:get_range():length() - phase) % 3) % 3
+          end
+        end
+
+        -- split finished, pass along split gene models and gaps
+        for _,v in ipairs(outbuf) do
+          table.insert(stream.outqueue, v)
+        end
       end
     end
   end
