@@ -181,10 +181,17 @@ for _,seqid in ipairs(newkeys) do
     print_max_width(s.seq, scaf_fasta_out, 60)
     if s_last_stop > 0 then
       -- XXX: use no:na for bin chromosomes, otherwise yes:align_xgenus
-      scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
+      if seqid == binseqid then
+        scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
                         .. tonumber(s.start)-1 .. "\t" .. i .. "\tU\t"
                         .. (tonumber(s.start)-1)-(tonumber(s_last_stop)+1) + 1
-                        .. "\tcontig\tno\talign_xgenus\n")
+                        .. "\tcontig\tno\tna\n")
+      else
+        scaf_agp_out:write(seqid .. "\t" .. tonumber(s_last_stop)+1 .. "\t"
+                          .. tonumber(s.start)-1 .. "\t" .. i .. "\tU\t"
+                          .. (tonumber(s.start)-1)-(tonumber(s_last_stop)+1) + 1
+                          .. "\tscaffold\tyes\talign_xgenus\n")
+      end
       i = i + 1
     end
     scaf_agp_out:write(seqid .. "\t" .. s.start .. "\t"
