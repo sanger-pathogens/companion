@@ -16,8 +16,8 @@ function get_weight(gene, regionmapping)
         local status, rval = pcall(GenomeTools_genome_node.extract_and_translate_sequence, c, "CDS", true, regionmapping)
         if status then
           prot = rval
-          -- ... unless a RATT gene would be broken or exceeding boundaries, then disregard it
---          io.stderr:write(gene:get_attribute("ID") .. " --- stop codons " .. count_stopcodons(prot) .. " \n")
+          -- ... unless a RATT gene would be broken or exceeding boundaries,
+          -- in which case disregard it
           if count_stopcodons(prot) > 1 then
             fac = 0
           end
@@ -25,6 +25,10 @@ function get_weight(gene, regionmapping)
           fac = 0
         end
       end
+    end
+    -- disregard pseudogenes in reference
+    if gene:get_attribute("is_pseudo_in_ref") == 'true' then
+      fac = 0
     end
   end
   --io.stderr:write(gene:get_attribute("ID") .. " --- weight " .. gene:get_range():length() * fac .. " \n")

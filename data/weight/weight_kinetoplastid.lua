@@ -16,6 +16,10 @@ function get_weight(gene, regionmapping)
     else
       fac = .1
     end
+    -- disregard pseudogenes in reference
+    if gene:get_attribute("is_pseudo_in_ref") == 'true' then
+      fac = 0
+    end
   end
   return gene:get_range():length() * fac
 end
