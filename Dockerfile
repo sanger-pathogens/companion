@@ -31,7 +31,7 @@ RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
 #
 # Install AUGUSTUS (binaries)
 #
-ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
+ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
