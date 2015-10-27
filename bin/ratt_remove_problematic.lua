@@ -110,7 +110,9 @@ function flt_stream:next_tree()
   end
   while gn and not self.vis.ok do
     gn = self.instream:next_tree()
-    gn:accept(self.vis)
+    if gn then
+      gn:accept(self.vis)
+    end
   end
   return gn
 end
