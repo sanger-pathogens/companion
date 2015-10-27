@@ -244,6 +244,7 @@ function stream:process_current_cluster()
             io.stderr:write("partial alignment ".. tostring(best) ..
                             " ignored as it is not degenerated\n")
           end
+          table.insert(self.outqueue, deep_copy(best, nil, to_gene))
         end
       end
     elseif #genes == 1 then

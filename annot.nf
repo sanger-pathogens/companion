@@ -1307,9 +1307,15 @@ if (params.make_embl) {
         output:
         file '*.embl' into embl_out
 
-        """
-        zcat ${embl_full_seq} > 1 && gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1
-        """
+        script:
+        if (params.embl_ena_submission)
+            """
+            zcat ${embl_full_seq} > 1 && gff3_to_embl.lua -e -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1
+            """
+        else
+            """
+            zcat ${embl_full_seq} > 1 && gff3_to_embl.lua -o embl_in.gff3 ${go_obo} '${params.EMBL_ORGANISM}' 1
+            """
     }
 
     embl_out.flatMap().subscribe {
