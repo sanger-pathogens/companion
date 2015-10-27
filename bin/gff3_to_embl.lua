@@ -296,8 +296,8 @@ function embl_vis:visit_feature(fn)
         end
         -- assign colours
         if node:get_type() == "mRNA" and not embl_compliant then
-          local prod = pp:get_attribute("product")
-          if prod then
+          if pp and pp:get_attribute("product") then
+            local prod = pp:get_attribute("product")
             if  prod ~= "term%3Dhypothetical protein" then
               if nof_orths > 0 or prod:match("conserved") then
                 io.write("FT                   /colour=10\n")   -- orange: conserved
