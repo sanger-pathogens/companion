@@ -105,8 +105,7 @@ gff3vis = gt.gff3_visitor_new()
 -- visitor for feature transformation
 visitor = gt.custom_visitor_new()
 function visitor:visit_feature(fn)
-  -- split off potential accession versions
-  local seqid = fn:get_seqid() -- :gsub("%.%d+$","")
+  local seqid = fn:get_seqid()
   -- is this sequence/fragment part of a layout?
   if components[seqid] then
     --print("have components for seqid " .. seqid)

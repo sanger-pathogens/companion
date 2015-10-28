@@ -85,6 +85,7 @@ for i = 1,#arg do
                           .. e .. ", skipping\n")
           --reset totalrange to disable gene output
           totalrange = nil
+          break
         end
       end
       if totalrange then

@@ -1,4 +1,4 @@
-# annot-nf
+# Companion
 
 A portable, scalable eukaryotic genome annotation pipeline implemented in Nextflow.
 
@@ -44,11 +44,12 @@ For your own runs, provide your own file names, paths, parameters, etc. as defin
 ### [Preparing reference annotations](#reference)
 
 The reference annotations used in the pipeline need to be pre-processed before they can be used.
-TODO: add documentation on how to prepare references.
+See [the HOWTO on the GitHub wiki](https://github.com/sanger-pathogens/annot-nf/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families. Please contact the authors via the email address below to obtain them.
 
 ### [Contact](#contact)
 
 Sascha Steinbiss (ss34@sanger.ac.uk)
 
 ###[Build status](#build)
+
 ![Travis status](https://api.travis-ci.org/sanger-pathogens/annot-nf.svg)
