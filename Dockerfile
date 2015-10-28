@@ -20,7 +20,7 @@ RUN apt-get update -qq
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
-                    libc6-i386 lib32stdc++6 lib32gcc1 telnet \
+                    libc6-i386 lib32stdc++6 lib32gcc1 netcat \
                     last-align libboost-iostreams-dev libgsl0ldbl \
                     libcolamd2.8.0 libstdc++6 --yes --force-yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
