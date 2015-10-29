@@ -290,7 +290,6 @@ function stream:process_current_cluster()
         local nof_pexons = 0
         for c in best:children() do
           if c:get_type() == 'pseudogenic_exon' then
-
             nof_pexons = nof_pexons + 1
           end
         end
