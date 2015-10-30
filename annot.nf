@@ -17,8 +17,6 @@
     OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-// TODO check for required parameters!
-
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
@@ -31,6 +29,19 @@ omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
 augustus_modeldir = file(params.ref_dir + "/" + params.ref_species)
+
+log.info ""
+log.info "C O M P A N I O N  ~  version 1.0.0"
+log.info "query               : ${params.inseq}"
+log.info "reference           : ${params.ref_species}"
+if (params.dist_dir) {
+    distDir = new File(params.dist_dir)
+    if(!distDir.exists() && !distDir.mkdirs() ) {
+        exit 1, "Cannot create output path: $dbPath -- check file system permissions"
+    }
+    log.info "output directory    : ${params.dist_dir}"
+}
+log.info ""
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
