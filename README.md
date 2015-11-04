@@ -36,7 +36,7 @@ docker pull satta/annot-nf
 
 Here's how to start an example run using Docker (using the example dataset and parameterization included in the distribution):
 ```
-$ nextflow run sanger-pathogens/annot-nf -profile docker
+$ nextflow run sanger-pathogens/companion -profile docker
 ```
 
 For your own runs, provide your own file names, paths, parameters, etc. as defined in the `nextflow.config` file.
@@ -44,7 +44,7 @@ For your own runs, provide your own file names, paths, parameters, etc. as defin
 ### [Preparing reference annotations](#reference)
 
 The reference annotations used in the pipeline need to be pre-processed before they can be used.
-See [the HOWTO on the GitHub wiki](https://github.com/sanger-pathogens/annot-nf/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families. Please contact the authors via the email address below to obtain them.
+See [the HOWTO on the GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families. Please contact the authors via the email address below to obtain them.
 
 ### [Contact](#contact)
 
@@ -52,4 +52,4 @@ Sascha Steinbiss (ss34@sanger.ac.uk)
 
 ###[Build status](#build)
 
-![Travis status](https://api.travis-ci.org/sanger-pathogens/annot-nf.svg)
+![Travis status](https://travis-ci.org/sanger-pathogens/companion.svg)

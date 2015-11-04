@@ -185,12 +185,12 @@ function embl_vis:visit_feature(fn)
       io.write("RT   Title;\n")
       io.write("RL   Unpublished.\n")
       io.write("XX   \n")
-      io.write("OS   " .. arg[3] .. "\n")
+      io.write("OS   " .. organismname .. "\n")
       io.write("XX   \n")
       io.write("FH   Key             Location/Qualifiers\n")
       io.write("FH   \n")
       io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
-      io.write("FT                   /organism=\"" .. arg[3] .. "\"\n")
+      io.write("FT                   /organism=\"" .. organismname .. "\"\n")
       io.write("FT                   /mol_type=\"genomic DNA\"\n")
     end
 
@@ -240,7 +240,6 @@ function embl_vis:visit_feature(fn)
         format_embl_attrib(node , "ID", "locus_tag", nil)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
-          --io.write("FT                   /pseudogene=\"unknown\"\n")
           format_embl_attrib(pp, "product", "note",
             function (s)
               local pr_a = gff3_extract_structure(s)

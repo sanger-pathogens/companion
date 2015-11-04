@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+VERSION = "1.0.0"
+
 /*
     Author: Sascha Steinbiss <ss34@sanger.ac.uk>
     Copyright (c) 2014-2015 Genome Research Ltd
@@ -17,8 +19,6 @@
     OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-// TODO check for required parameters!
-
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
@@ -31,6 +31,26 @@ omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff
 omcl_gaffile = file(params.ref_dir + "/" + params.ref_species + "/go.gaf")
 omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta")
 augustus_modeldir = file(params.ref_dir + "/" + params.ref_species)
+
+log.info ""
+log.info "C O M P A N I O N  ~  version " + VERSION
+log.info "query               : ${params.inseq}"
+log.info "reference           : ${params.ref_species}"
+log.info "reference directory : ${params.ref_dir}"
+if (params.dist_dir) {
+    distDir = new File(params.dist_dir)
+    if(distDir.exists() && distDir.isFile()) {
+        exit 1, "cannot create output path: ${params.dist_dir} -- already exists as file"
+    }
+    if(!distDir.exists() && !distDir.mkdirs()) {
+        exit 1, "cannot create output path: ${params.dist_dir} -- check file system permissions"
+    }
+    if(!distDir.isDirectory()) {
+        exit 1, "cannot prepare output path: ${params.dist_dir} -- aborting"
+    }
+    log.info "output directory    : ${params.dist_dir}"
+}
+log.info ""
 
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
