@@ -240,7 +240,6 @@ function embl_vis:visit_feature(fn)
         format_embl_attrib(node , "ID", "locus_tag", nil)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
-          --io.write("FT                   /pseudogene=\"unknown\"\n")
           format_embl_attrib(pp, "product", "note",
             function (s)
               local pr_a = gff3_extract_structure(s)

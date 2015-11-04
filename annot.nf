@@ -1,5 +1,7 @@
 #!/usr/bin/env nextflow
 
+VERSION = "1.0.0"
+
 /*
     Author: Sascha Steinbiss <ss34@sanger.ac.uk>
     Copyright (c) 2014-2015 Genome Research Ltd
@@ -31,13 +33,14 @@ omcl_pepfile = file(params.ref_dir + "/" + params.ref_species + "/proteins.fasta
 augustus_modeldir = file(params.ref_dir + "/" + params.ref_species)
 
 log.info ""
-log.info "C O M P A N I O N  ~  version 1.0.0"
+log.info "C O M P A N I O N  ~  version " + VERSION
 log.info "query               : ${params.inseq}"
 log.info "reference           : ${params.ref_species}"
+log.info "reference directory : ${params.ref_dir}"
 if (params.dist_dir) {
     distDir = new File(params.dist_dir)
     if(!distDir.exists() && !distDir.mkdirs() ) {
-        exit 1, "Cannot create output path: $dbPath -- check file system permissions"
+        exit 1, "cannot create output path: $dbPath -- check file system permissions"
     }
     log.info "output directory    : ${params.dist_dir}"
 }
