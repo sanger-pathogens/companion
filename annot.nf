@@ -39,8 +39,14 @@ log.info "reference           : ${params.ref_species}"
 log.info "reference directory : ${params.ref_dir}"
 if (params.dist_dir) {
     distDir = new File(params.dist_dir)
-    if(!distDir.exists() && !distDir.mkdirs() ) {
-        exit 1, "cannot create output path: $dbPath -- check file system permissions"
+    if(distDir.exists() && distDir.isFile()) {
+        exit 1, "cannot create output path: ${params.dist_dir} -- already exists as file"
+    }
+    if(!distDir.exists() && !distDir.mkdirs()) {
+        exit 1, "cannot create output path: ${params.dist_dir} -- check file system permissions"
+    }
+    if(!distDir.isDirectory()) {
+        exit 1, "cannot prepare output path: ${params.dist_dir} -- aborting"
     }
     log.info "output directory    : ${params.dist_dir}"
 }
