@@ -20,7 +20,7 @@
 -- TODO: make this dynamic
 models = {}
 models.rRNA = {"SSU_rRNA_eukarya","5S_rRNA", "5_8S_rRNA"}
-models.snRNA = {"U1", "U2", "U4", "U5" "U6"}
+models.snRNA = {"U1", "U2", "U4", "U5", "U6"}
 models.snoRNA = {"snoTBR5", "snoTBR17", "snoTBR7"}
 
 package.path = gt.script_dir .. "/?.lua;" .. package.path
