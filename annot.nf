@@ -1356,6 +1356,7 @@ process make_report {
     input:
     set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from report_inseq
     set file('pseudo.gff3'), file('scaf.gff3') from report_gff3
+    val params.SPECK_TEMPLATE
     val specfile
 
     output:
@@ -1363,9 +1364,9 @@ process make_report {
 
     """
     gt speck -specfile ${specfile} -matchdescstart -seqfile pseudo.fasta.gz \
-      -provideindex -typecheck so -output html pseudo.gff3 > pseudo.report.html
+      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" pseudo.gff3 > pseudo.report.html
     gt speck -specfile ${specfile} -matchdescstart -seqfile scaf.fasta.gz \
-      -provideindex -typecheck so -output html scaf.gff3 > scaf.report.html
+      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" scaf.gff3 > scaf.report.html
     """
 }
 
