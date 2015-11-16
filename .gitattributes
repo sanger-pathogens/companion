@@ -1,3 +1,5 @@
 data/** linguist-vendored
+RATT/** linguist-vendored
+ABACAS2/** linguist-vendored
 example-data/** linguist-vendored
 *.nf linguist-language=Groovy
