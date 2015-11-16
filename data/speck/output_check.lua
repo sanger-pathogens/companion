@@ -33,14 +33,26 @@ end
       ====  ]]
 
 describe.feature("gene", function(gene)
+  local valid_child_types = {"mRNA","tRNA","rRNA","snoRNA","snRNA", "scRNA",
+                             "lncRNA", "ncRNA", "promoter"}
 
   does_not_cross_a_contig_boundary(gene)
 
   it("has only allowed child types", function()
     for f in gene:direct_children() do
-      expect({"mRNA","tRNA","rRNA","snoRNA","snRNA", "scRNA",
-              "lncRNA", "ncRNA", "promoter"}).should_contain(f:get_type())
+      expect(valid_child_types).should_contain(f:get_type())
     end
+  end)
+
+  it("has at least one valid child", function()
+    local has_child = false
+    for f in gene:direct_children() do
+      if not has_child and table.contains(valid_child_types, f:get_type()) then
+        has_child = true
+        break
+      end
+    end
+    expect(has_child).should_be(true)
   end)
 
   it("only contains allowed attributes", function()
@@ -49,7 +61,8 @@ describe.feature("gene", function(gene)
               "Start_range", "Dbxref", "controlled_curation",
               "previous_systematic_id", "fiveEndPartial", "threeEndPartial",
               "literature", "synonym", "eupathdb_uc",
-              "internalGap", "ratt_ortholog"}).should_contain(k)
+              "internalGap", "ratt_ortholog", "original_prot_length",
+              "Target", "has_internal_stop", "has_frameshift"}).should_contain(k)
     end
   end)
 

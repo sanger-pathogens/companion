@@ -1,0 +1,104 @@
+--[[
+  This is an output template for Companion web HTML output.
+]]
+
+function valorzero(val)
+  if val > 0 then
+    return val
+  else
+    return ''
+  end
+end
+
+-- XXX improve performance
+function make_popover_content(aspect_details)
+  local rval = ""
+  for n, node in ipairs(aspect_details.nodes) do
+    rval = rval .. ' ' .. node.ID
+  end
+  return rval
+end
+
+function print_aspects(ftype, aspects)
+  local str = ""
+  local first = true
+  local aspcnt = 0
+  local i = 0
+  for aspect, aspect_details in pairs(aspects) do
+    aspcnt = aspcnt + 1
+  end
+  for aspect, aspect_details in pairs(aspects) do
+    if aspect_details.failures > 0 or  aspect_details.runtime_errors > 0 then
+      str = "fail"
+    else
+      str = "ok"
+    end
+
+    template_print('<tr>')
+    if first then
+      template_print('<td rowspan=' .. aspcnt .. '><i>' .. ftype .. '</i></td>')
+      first = false
+    end
+
+    template_print('<td>' .. aspect .. '</td><td class="text-success">')
+    template_print(valorzero(aspect_details.successes))
+    template_print('</td><td>')
+    if aspect_details.failures > 0 then
+      template_print('<a class="label label-danger" data-toggle="popover" title="Failed items" data-placement="left" data-content="' .. make_popover_content(aspect_details)  .. '">')
+    end
+    template_print(valorzero(aspect_details.failures))
+    if aspect_details.failures > 0 then
+      template_print('</a>')
+    end
+    template_print('</td><td>')
+    if aspect_details.runtime_errors > 0 then
+      template_print('<a class="label label-danger" data-toggle="popover" title="Errored items" data-placement="left" data-content="' .. make_popover_content(aspect_details)  .. '">')
+    end
+    template_print(valorzero(aspect_details.runtime_errors))
+    if aspect_details.runtime_errors > 0 then
+      template_print('</a>')
+    end
+    template_print('</td></tr>')
+    i = i + 1
+  end
+end
+
+template_print([[<i class="glyphicon glyphicon-ok" aria-hidden="true"></i> = confirmed aspects &emsp; <i class="glyphicon glyphicon-warning-sign" aria-hidden="true"></i> = aspect violations &emsp; <i class="glyphicon glyphicon-fire" aria-hidden="true"></i> = runtime errors while checking]])
+
+template_print("<h3>Features</h3>")
+template_print([[<table class="table table-striped table-condensed" style="border-collapse:collapse;">
+    <thead>
+        <tr>
+            <th>type</td>
+            <th>aspect</th>
+            <th><i class="glyphicon glyphicon-ok" aria-hidden="true"></i></th>
+            <th><i class="glyphicon glyphicon-warning-sign" aria-hidden="true"></i></th>
+            <th><i class="glyphicon glyphicon-fire" aria-hidden="true"></i></th>
+        </tr>
+    </thead>
+    <tbody>]])
+for feature, aspects in pairs(features) do
+  local str
+  for aspect, aspect_details in pairs(aspects) do
+    if aspect_details.failures > 0 or  aspect_details.runtime_errors > 0 then
+      str = "fail"
+      break
+    else
+      str = "ok"
+    end
+  end
+  print_aspects(feature, aspects)
+end
+template_print("</tbody></table>\n")
+
+if #warnings > 0 then
+  template_print("<h3>Warnings</h3>")
+  template_print("<ul>\n")
+  for _, msg in ipairs(warnings) do
+    template_print("<li>" .. msg .. "</li>\n")
+  end
+  template_print("</ul>\n")
+  template_print("</div></li>\n")
+
+  template_print("</ul>\n")
+end
