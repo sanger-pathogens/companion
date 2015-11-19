@@ -158,15 +158,16 @@ function process_set_for_query(qry, set)
               if last_pe:get_range():overlap(pe:get_range()) then
                 if pt:get_strand() == '-' then
                   local newend = pe:get_range():get_end() - 3
-                  local new_range = gt.range_new(pe:get_range():get_start(), newend)
-                  pe:set_range(new_range)
+                  if pe:get_range():get_start() <= newend then
+                    local new_range = gt.range_new(pe:get_range():get_start(), newend)
+                    pe:set_range(new_range)
+                  end
                 else
                   local newstart = pe:get_range():get_start() + 3
-                  local new_range = gt.range_new(newstart, pe:get_range():get_end())
-                  pe:set_range(new_range)
-                end
-                if last_pe:get_range():overlap(pe:get_range()) then
-                  io.stderr:write(i .. " " .. pt:get_seqid() .. " >>>>>>>>>>>>>>> overlap " .. tostring(last_pe:get_range()) .. "  " .. tostring(pe:get_range())  .. "\n")
+                  if newstart <= pe:get_range():get_end() then
+                    local new_range = gt.range_new(newstart, pe:get_range():get_end())
+                    pe:set_range(new_range)
+                  end
                 end
               end
             end
