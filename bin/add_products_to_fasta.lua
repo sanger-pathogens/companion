@@ -157,7 +157,7 @@ keys, seqs = get_fasta_nosep(arg[2])
 for i,k in ipairs(keys) do
   local rid = split(k, "%s+")[1]
   if products[rid] then
-    print(">".. rid .. "\t" .. products[rid])
+    print(">".. rid .. " " .. products[rid])
   else
     print(">".. rid)
   end
