@@ -23,30 +23,27 @@ require("lfs")
 require("optparse")
 local json = require ("dkjson")
 
-op = OptionParser:new({usage="%prog [options] <ABACAS directory> <outfileprefix> "
+op = OptionParser:new({usage="%prog <ABACAS directory> <outfileprefix> "
                                 .. "<reference directory> <reference name> <chr prefix> "
                                 .. "<bin seqid> <seq prefix>",
                        oneliner="Converts ABACAS2 output file into Companion "
                                   .. "specific formats.",
                        version="0.1"})
-op:option{"-n", action='store_false', dest='check_file',
-                help="do not check whether chromosome pattern string exists as "
-                     .. "a mapping file name before using it directly "}
-options,args = op:parse({check_file=true})
+options,args = op:parse()
 
 function usage()
   op:help()
   os.exit(1)
 end
 
-if #arg ~= 7 then
+if #args ~= 7 then
   usage()
 end
 
-abacas_dir = arg[1]
-outfileprefix = arg[2]
-refdir = arg[3]
-refname = arg[4]
+abacas_dir = args[1]
+outfileprefix = args[2]
+refdir = args[3]
+refname = args[4]
 local reffile = io.open(refdir .. '/' .. "references.json", "rb")
 if not reffile then
   error("could not open references.json in " .. refdir)
@@ -57,9 +54,9 @@ refs = json.decode(refcontent)
 if not refs.species[refname] then
   error("reference " .. refname .. " not found in JSON definition")
 end
-chrprefix = arg[5]
-binseqid = arg[6]
-seqprefix = arg[7]
+chrprefix = args[5]
+binseqid = args[6]
+seqprefix = args[7]
 
 -- scaffold datastructures
 scafs = {}
