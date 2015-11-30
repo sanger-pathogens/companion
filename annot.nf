@@ -22,7 +22,6 @@ VERSION = "1.0.0"
 genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
-ref_chr = file(params.ref_dir + "/" + params.ref_species + "/chromosomes.fasta")
 ref_dir = file(params.ref_dir)
 go_obo = file(params.GO_OBO)
 ncrna_models = file(params.NCRNA_MODELS)
@@ -56,16 +55,17 @@ log.info ""
 // =============================
 
 if (params.do_contiguation) {
+    ref_chr = file(params.ref_dir + "/" + params.ref_species + "/chromosomes.fasta")
     process contiguate_pseudochromosomes {
         afterScript 'rm -rf Ref.* Res.*'
 
         input:
         file genome_file
         file ref_chr
-        val params.ABACAS_CHR_PATTERN
-        val params.ABACAS_CHR_PREFIX
+        file ref_dir
+        val params.ref_species
+        val params.GENOME_PREFIX
         val params.ABACAS_BIN_CHR
-        val params.ABACAS_SEQ_PREFIX
 
         output:
         file 'pseudo.pseudochr.fasta' into pseudochr_seq
@@ -78,9 +78,9 @@ if (params.do_contiguation) {
         """
         abacas2.nonparallel.sh \
           ${ref_chr} ${genome_file} 500 85 0 3000
-        abacas_combine.lua . pseudo "${params.ABACAS_CHR_PATTERN}" \
-          "${params.ABACAS_CHR_PREFIX}" "${params.ABACAS_BIN_CHR}" \
-          "${params.ABACAS_SEQ_PREFIX}"
+        abacas_combine.lua . pseudo "${ref_dir}" "${params.ref_species}" \
+          "${params.GENOME_PREFIX}" "${params.ABACAS_BIN_CHR}" \
+          "${params.GENOME_PREFIX}"
         """
     }
 } else {
@@ -168,7 +168,7 @@ process press_ncRNA_cms {
     """
 }
 
-pseudochr_seq_ncRNA.splitFasta( by: 3, file: true).set { ncrna_genome_chunk }
+pseudochr_seq_ncRNA.splitFasta( by: 5, file: true).set { ncrna_genome_chunk }
 
 process predict_ncRNA {
     input:
@@ -1197,9 +1197,10 @@ if (params.do_contiguation && params.do_circos) {
         set file('pseudo.gff3'), file('scaf.gff3') from circos_gff3
         file 'refannot.gff3' from ref_annot
         file 'blast.in' from circos_blastout
+        file ref_dir
+        val params.ref_species
         val params.CHR_PATTERN
         val params.ABACAS_BIN_CHR
-        val params.ABACAS_CHR_PATTERN
 
         output:
         file 'links.txt' into circos_input_links
@@ -1211,7 +1212,8 @@ if (params.do_contiguation && params.do_circos) {
 
         """
         prepare_circos_inputs.lua refannot.gff3 pseudo.gff3 blast.in . \
-           "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}" "${params.ABACAS_CHR_PATTERN}"
+           "${params.CHR_PATTERN}" "${params.ABACAS_BIN_CHR}" "${ref_dir}" \
+           "${params.ref_species}"
         """
     }
 

@@ -260,7 +260,9 @@ function stat_visitor:visit_region(rn)
   local seqid = rn:get_seqid()
   self.stats.nof_regions = self.stats.nof_regions + 1
   -- how many sequences are full chromosomes?
-  if string.match(seqid, self.chromosome_pattern) then
+  if self.chromosome_pattern and string.match(seqid, self.chromosome_pattern) then
+    self.stats.nof_chromosomes = self.stats.nof_chromosomes + 1
+  elseif self.chromosome_mapping and self.chromosome_mapping[seqid] then
     self.stats.nof_chromosomes = self.stats.nof_chromosomes + 1
   end
   return 0
@@ -281,6 +283,10 @@ refs = json.decode(refcontent)
 -- import all defined references
 for name, values in pairs(refs.species) do
   print("Importing ".. name .. "...")
+  local has_chr_mapping = false
+  if values.chr_mapping then
+    has_chr_mapping = true
+  end
 
   -- make clean organism directory
   os.execute("rm -rf " .. name)
@@ -298,6 +304,7 @@ for name, values in pairs(refs.species) do
   stat_visitor.stats.nof_regions = 0
   stat_visitor.stats.nof_chromosomes = 0
   stat_visitor.chromosome_pattern = values.chromosome_pattern
+  stat_visitor.chromosome_mapping = values.chr_mapping
   stat_visitor.name = values.name
   fixup_stream = gt.custom_stream_new_unsorted()
   fixup_stream.instream = gt.gff3_in_stream_new_sorted(name .. "/annotation_preclean.gff3")
@@ -325,30 +332,58 @@ for name, values in pairs(refs.species) do
   if file_exists(name .. "/annotation_preclean.gff3") then
     os.remove(name .. "/annotation_preclean.gff3")
   end
-  values.gff = nil -- lfs.currentdir() .. "/" .. name .. "/annotation.gff3"
-  out_stream = nil -- trigger GC -> trigger finishing of output file
+  values.gff = nil
+  out_stream = nil
+  collectgarbage() -- hack, forces close of streamed file
+  io.flush()
 
   -- prepare genome FASTA
   if file_exists(values.genome) then
     if values.genome:match("%.gz$") then
-      os.execute("zcat " .. values.genome .. " > " .. name .. "/genome.fasta")
+      os.execute("zcat " .. values.genome .. "  | > " .. name .. "/genome.fasta.in")
     else
-      os.execute("cp " .. values.genome .. " " .. name .. "/genome.fasta")
+      os.execute("cp " .. values.genome .. " " .. name .. "/genome.fasta.in")
     end
   end
+
   -- filter out chromosomes
-  if file_exists(name .. "/genome.fasta") then
-    local keys, seqs = get_fasta_nosep(name .. "/genome.fasta")
-    local outfile = io.open(name .. "/chromosomes.fasta", "w+")
-    for hdr, seq in pairs(seqs) do
-      if hdr:match(values.chromosome_pattern) then
-        outfile:write(">" .. hdr .. "\n")
-        print_max_width(seq, outfile, 60)
+  if file_exists(name .. "/genome.fasta.in") then
+    -- realize mapping as hash if not given before
+    if not has_chr_mapping then
+      values.chr_mapping = {}
+    end
+    local keys, seqs = get_fasta_nosep(name .. "/genome.fasta.in")
+    if values.chromosome_pattern or has_chr_mapping then
+      local outfile = io.open(name .. "/chromosomes.fasta", "w+")
+      for hdr, seq in pairs(seqs) do
+        local trans_id = hdr:split(' ')[1]
+        local m = nil
+        if values.chr_mapping[trans_id] then
+          m = trans_id
+        elseif values.chromosome_pattern then
+          m = hdr:match(values.chromosome_pattern)
+        end
+        if m then
+          outfile:write(">" .. trans_id .. "\n")
+          print_max_width(seq, outfile, 60)
+          if not has_chr_mapping then
+            values.chr_mapping[trans_id] = m
+          end
+        end
       end
     end
+    local genomeoutfile = io.open(name .. "/genome.fasta", "w+")
+    for hdr, seq in pairs(seqs) do
+      local trans_id = hdr:split(' ')[1]
+      genomeoutfile:write(">" .. trans_id .. "\n")
+      print_max_width(seq, genomeoutfile, 60)
+    end
   end
-  values.genome = nil -- lfs.currentdir() .. "/" .. name .. "/genome.fasta"
-  values.chromosomes = nil -- lfs.currentdir() .. "/" .. name .. "/chromosomes.fasta"
+  values.genome = nil
+  values.chromosomes = nil
+  os.remove(name .. "/genome.fasta.in")
+  collectgarbage() -- hack, forces close of streamed file
+  io.flush()
 
   -- prepare GAF
   if file_exists(values.gaf) then
@@ -356,13 +391,13 @@ for name, values in pairs(refs.species) do
   else
     io.stderr:write("warning: GAF for " .. name .. " does not exist in " .. values.gaf .. "\n")
   end
-  values.gaf = nil -- lfs.currentdir() .. "/" .. name .. "/go.gaf"
+  values.gaf = nil
 
   -- prepare models
   -- SNAP
   if values.snap_model and file_exists(values.snap_model) then
     os.execute("cp " .. values.snap_model .. " " .. name .. "/snap.hmm")
-    values.snap_model = true -- lfs.currentdir() .. "/" .. name .. "/snap.hmm"
+    values.snap_model = true
   else
     values.snap_model = nil
   end

@@ -1,4 +1,7 @@
 {
+  "chr_mapping":{
+    "LbrM.01":"01"
+  },
   "augustus_model":true,
   "name":"Leishmania braziliensis chromosome 1",
   "nof_chromosomes":1,

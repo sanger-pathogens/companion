@@ -20,7 +20,8 @@
 function usage()
   io.stderr:write(string.format("Usage: %s <ref GFF annotation> " ..
                                 "<target GFF annotation> <blast output> " ..
-                                "<outpath> <chr_prefix> <bin_chr> <ref_prefix>\n" , arg[0]))
+                                "<outpath> <chr_pattern> <bin_chr> <ref_dir> " ..
+                                "<ref_name>\n" , arg[0]))
   os.exit(1)
 end
 
@@ -30,6 +31,7 @@ end
 
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
+local json = require ("dkjson")
 
 genes_out = io.open(arg[4] .. "/genes.txt", "w+")
 gaps_out = io.open(arg[4] .. "/gaps.txt", "w+")
@@ -38,9 +40,20 @@ chr_out = io.open(arg[4] .. "/chromosomes.txt", "w+")
 karyotype_out = io.open(arg[4] .. "/karyotype.txt", "w+")
 bin_out = io.open(arg[4] .. "/bin.txt", "w+")
 
-chr_prefix = arg[5]
+chr_pattern = arg[5]
 bin_chr = arg[6]
-ref_prefix = arg[7]
+ref_dir = arg[7]
+ref_name = arg[8]
+local reffile = io.open(ref_dir .. '/' .. "references.json", "rb")
+if not reffile then
+  error("could not open references.json in " .. ref_dir)
+end
+local refcontent = reffile:read("*all")
+reffile:close()
+refs = json.decode(refcontent)
+if not refs.species[ref_name] then
+  error("reference " .. ref_name .. " not found in JSON definition")
+end
 
 has_bin = false
 
@@ -79,13 +92,22 @@ function visitor:visit_region(rn)
     has_bin = true
   end
   if self.print_chr then
-    m = rn:get_seqid():match(chr_prefix)
+    m = rn:get_seqid():match(chr_pattern)
     if m and rn:get_seqid() ~= bin_chr then
       chr_out:write(m .. "\n")
     end
   end
-  if self.is_ref and rn:get_seqid():match(ref_prefix) then
-    table.insert(ref_chr, rn:get_seqid())
+  if self.is_ref then
+    local chr = nil
+    if refs.species[ref_name].chromosome_pattern then
+      chr = rn:get_seqid():match(refs.species[ref_name].chromosome_pattern)
+    end
+    if refs.species[ref_name].chr_mapping then
+      chr = refs.species[ref_name].chr_mapping[rn:get_seqid()]
+    end
+    if chr then
+      table.insert(ref_chr, rn:get_seqid())
+    end
   end
 end
 

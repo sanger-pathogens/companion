@@ -1,4 +1,7 @@
 {
+  "chr_mapping":{
+    "Tb927_01_v5.1":"01"
+  },
   "augustus_model":true,
   "name":"Trypanosoma brucei TREU927 chromosome 1",
   "nof_chromosomes":1,

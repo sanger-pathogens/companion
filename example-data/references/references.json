@@ -5,6 +5,9 @@
   },
   "species":{
     "LbrM.1":{
+      "chr_mapping":{
+        "LbrM.01":"01"
+      },
       "augustus_model":true,
       "name":"Leishmania braziliensis chromosome 1",
       "nof_chromosomes":1,
@@ -14,16 +17,22 @@
       "chromosome_pattern":"LbrM.([0-9.]+)$"
     },
     "LmjF.1":{
-      "nof_chromosomes":1,
-      "chromosome_pattern":"LmjF.(%d+)",
-      "name":"Leishmania major Friedlin chromosome 1",
-      "snap_model":true,
+      "chr_mapping":{
+        "LmjF.01":"01"
+      },
+      "nof_genes":85,
       "nof_coding_genes":85,
       "augustus_model":true,
+      "name":"Leishmania major Friedlin chromosome 1",
+      "snap_model":true,
+      "nof_chromosomes":1,
       "nof_regions":1,
-      "nof_genes":85
+      "chromosome_pattern":"LmjF.(%d+)"
     },
     "Tb927.1":{
+      "chr_mapping":{
+        "Tb927_01_v5.1":"01"
+      },
       "augustus_model":true,
       "name":"Trypanosoma brucei TREU927 chromosome 1",
       "nof_chromosomes":1,
