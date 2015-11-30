@@ -340,7 +340,7 @@ for name, values in pairs(refs.species) do
   -- prepare genome FASTA
   if file_exists(values.genome) then
     if values.genome:match("%.gz$") then
-      os.execute("zcat " .. values.genome .. "  | > " .. name .. "/genome.fasta.in")
+      os.execute("zcat " .. values.genome .. " > " .. name .. "/genome.fasta.in")
     else
       os.execute("cp " .. values.genome .. " " .. name .. "/genome.fasta.in")
     end
