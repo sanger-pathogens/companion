@@ -115,10 +115,13 @@ function process_set_for_query(qry, set)
                 cur_length = cur_length + tonumber(ddis)
               else
                 -- frameshift: start a new pseudogenic exon
-                local nnode = gt.feature_node_new(k, "pseudogenic_exon",
-                                                  start, start + cur_length - 1,
-                                                  hit.cstrand)
-                pt:add_child(nnode)
+                if cur_length > 3 then
+                  local nnode = gt.feature_node_new(k, "pseudogenic_exon",
+                                                    start,
+                                                    start + cur_length - 1,
+                                                    hit.cstrand)
+                  pt:add_child(nnode)
+                end
                 start = start + cur_length + tonumber(ddis)
                 cur_length = 0
                 frameshift = true
@@ -145,6 +148,34 @@ function process_set_for_query(qry, set)
             end
           end
         end
+
+        -- adjust overlapping pseudogenic exons
+        local last_pe = nil
+        local i = 0
+        for pe in pt:children() do
+          if pe:get_type() == 'pseudogenic_exon' then
+            if last_pe then
+              if last_pe:get_range():overlap(pe:get_range()) then
+                if pt:get_strand() == '-' then
+                  local newend = pe:get_range():get_end() - 3
+                  if pe:get_range():get_start() <= newend then
+                    local new_range = gt.range_new(pe:get_range():get_start(), newend)
+                    pe:set_range(new_range)
+                  end
+                else
+                  local newstart = pe:get_range():get_start() + 3
+                  if newstart <= pe:get_range():get_end() then
+                    local new_range = gt.range_new(newstart, pe:get_range():get_end())
+                    pe:set_range(new_range)
+                  end
+                end
+              end
+            end
+            last_pe = pe
+            i = i + 1
+          end
+        end
+
         -- determine internal stop
         local aaseq = pt:extract_and_translate_sequence("pseudogenic_exon",
                                                         true, rm)

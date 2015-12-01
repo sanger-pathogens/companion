@@ -28,7 +28,7 @@ op = OptionParser:new({usage="%prog <options> < merged.gtf",
                          .. "cufflinks/cuffmerge transcripts.",
                        version="0.1"})
 op:option{"-t", action='store', dest='hint_type',
-                help="hints type to use (default: E"}
+                help="hints type to use (default: E)"}
 options,args = op:parse({hint_type='E'})
 
 function usage()

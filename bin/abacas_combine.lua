@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2015 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -17,27 +17,46 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
-function usage()
-  io.stderr:write(string.format("Usage: %s <ABACAS directory> <outfileprefix> "
-                                .. "<chromosome pattern> <chr prefix> "
-                                .. "<bin seqid> <seq prefix>\n" , arg[0]))
-  os.exit(1)
-end
-
-if #arg ~= 6 then
-  usage()
-end
-
-abacas_dir = arg[1]
-outfileprefix = arg[2]
-refpat = arg[3]
-chrprefix = arg[4]
-binseqid = arg[5]
-seqprefix = arg[6]
-
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
 require("lfs")
+require("optparse")
+local json = require ("dkjson")
+
+op = OptionParser:new({usage="%prog <ABACAS directory> <outfileprefix> "
+                                .. "<reference directory> <reference name> <chr prefix> "
+                                .. "<bin seqid> <seq prefix>",
+                       oneliner="Converts ABACAS2 output file into Companion "
+                                  .. "specific formats.",
+                       version="0.1"})
+options,args = op:parse()
+
+function usage()
+  op:help()
+  os.exit(1)
+end
+
+if #args ~= 7 then
+  usage()
+end
+
+abacas_dir = args[1]
+outfileprefix = args[2]
+refdir = args[3]
+refname = args[4]
+local reffile = io.open(refdir .. '/' .. "references.json", "rb")
+if not reffile then
+  error("could not open references.json in " .. refdir)
+end
+local refcontent = reffile:read("*all")
+reffile:close()
+refs = json.decode(refcontent)
+if not refs.species[refname] then
+  error("reference " .. refname .. " not found in JSON definition")
+end
+chrprefix = args[5]
+binseqid = args[6]
+seqprefix = args[7]
 
 -- scaffold datastructures
 scafs = {}
@@ -45,10 +64,10 @@ scafs = {}
 pseudochr_seq = {}
 
 -- parse contigs and gaps
-for file in lfs.dir(arg[1]) do
+for file in lfs.dir(abacas_dir) do
   if file:match("^Res\.(.+)\.gff") then
     local seqid = file:match("^Res\.(.+).contigs\.gff")
-    local keys, seqs = get_fasta_nosep(arg[1] .. "/Res." .. seqid .. ".fna")
+    local keys, seqs = get_fasta_nosep(abacas_dir .. "/Res." .. seqid .. ".fna")
     pseudochr_seq[seqid] = seqs[seqid]
     scafs[seqid] = {}
     for l in io.lines(file) do
@@ -104,12 +123,20 @@ newscafs = {}
 newkeys = {}
 newpseudochr_seq = {}
 for k,v in pairs(scafs) do
-  local chr = k:match(refpat)
-  local newid =  chrprefix .. "_" .. chr
+  local chr = nil
+  if refs.species[refname].chr_mapping then
+    chr = refs.species[refname].chr_mapping[k]
+  end
+  if refs.species[refname].chromosome_pattern then
+    chr = k:match(refs.species[refname].chromosome_pattern)
+  end
+  if not chr then
+    error("chromosome without mapping encountered: " .. k)
+  end
+  local newid = chrprefix .. "_" .. chr
   if newscafs[newid] then
-    io.stderr:write("new ID " .. newid .. " assigned more than once, "
-                     .. "check your refpattern\n")
-    os.exit(1)
+    error("new ID " .. newid .. " assigned more than once, "
+                     .. "check your refpattern")
   end
   newscafs[newid] = v
   newpseudochr_seq[newid] = pseudochr_seq[k]
@@ -124,7 +151,7 @@ pseudochr_seq = newpseudochr_seq
 scafs[binseqid] = {}
 start = 1
 stop = 1
-binkeys, binseqs = get_fasta_nosep(arg[1] .. "/Res.abacasBin.fna")
+binkeys, binseqs = get_fasta_nosep(abacas_dir .. "/Res.abacasBin.fna")
 tmp = {}
 if #binkeys > 0 then
   table.insert(newkeys, binseqid)

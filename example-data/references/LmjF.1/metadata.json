@@ -1,10 +1,13 @@
 {
-  "nof_chromosomes":1,
-  "chromosome_pattern":"LmjF.(%d+)",
-  "name":"Leishmania major Friedlin chromosome 1",
-  "snap_model":true,
+  "chr_mapping":{
+    "LmjF.01":"01"
+  },
+  "nof_genes":85,
   "nof_coding_genes":85,
   "augustus_model":true,
+  "name":"Leishmania major Friedlin chromosome 1",
+  "snap_model":true,
+  "nof_chromosomes":1,
   "nof_regions":1,
-  "nof_genes":85
+  "chromosome_pattern":"LmjF.(%d+)"
 }
