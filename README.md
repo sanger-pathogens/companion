@@ -27,9 +27,9 @@ The pipeline is built on [Nextflow](http://nextflow.io) as a workflow engine, so
 curl -fsSL get.nextflow.io | bash
 ```
 
-With Nextflow installed, the easiest way to use the pipeline is to use the prepared Docker container (https://registry.hub.docker.com/u/satta/annot-nf) which contains all external dependencies.
+With Nextflow installed, the easiest way to use the pipeline is to use the prepared Docker container (https://hub.docker.com/r/satta/companion/) which contains all external dependencies.
 ```
-docker pull satta/annot-nf
+docker pull satta/companion
 ```
 
 ### [Running the pipeline](#running)
