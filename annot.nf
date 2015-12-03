@@ -299,14 +299,14 @@ if (params.run_ratt) {
     process ratt_make_ref_embl {
         input:
         file ref_annot
-        file ref_chr
+        file ref_seq
         val go_obo
 
         output:
         file '*.embl' into ref_embl
 
         """
-        gff3_to_embl.lua -o ${ref_annot} ${go_obo} Foo ${ref_chr}
+        gff3_to_embl.lua -o ${ref_annot} ${go_obo} Foo ${ref_seq}
         """
     }
 
