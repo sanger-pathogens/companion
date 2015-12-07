@@ -57,6 +57,13 @@ end
 
 has_bin = false
 
+-- gather real lengths of reference chromsomes
+refsizes = {}
+refhdr, refseqs = get_fasta_nosep(ref_dir .. '/' .. ref_name .. '/chromosomes.fasta')
+for k, v in pairs(refseqs) do
+  refsizes[k] = v:len()
+end
+
 -- holds reference chromosomes
 ref_chr = {}
 
@@ -79,9 +86,15 @@ function visitor:visit_feature(fn)
   return 0
 end
 function visitor:visit_region(rn)
+  local endrng = rn:get_range():get_end()
+  if self.is_ref and refsizes[rn:get_seqid()] then
+    endrng = refsizes[rn:get_seqid()]
+  end
+  if tonumber(endrng) == nil then
+   error("non-numeric end range encountered for chromosome " .. rn:get_seqid() .. ": " .. endrng)
+  end
   karyotype_out:write("chr - " .. rn:get_seqid() .. " " .. rn:get_seqid()
-                        .. " " .. rn:get_range():get_start() .. " "
-                        .. rn:get_range():get_end() .. " ")
+                        .. " 1 " .. endrng .. " ")
   if rn:get_seqid() == bin_chr then
     karyotype_out:write("black")
   else
