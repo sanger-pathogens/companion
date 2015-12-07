@@ -191,7 +191,7 @@ function get_fasta(filename, sep)
   local cur_hdr = nil
   local cur_seqs = {}
   if not file_exists(filename) then
-    error("file " .. filename .. " can not be loaded")
+    error("file " .. filename .. " does not exist")
   end
   for l in io.lines(filename) do
     hdr = l:match(">(.*)")
