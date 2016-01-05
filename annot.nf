@@ -51,6 +51,21 @@ if (params.dist_dir) {
 }
 log.info ""
 
+// INPUT SANITIZATION
+// ==================
+
+process sanitize_input {
+    input:
+    file genome_file
+
+    output:
+    file 'sanitized.fasta' into sanitized_genome_file
+
+    """
+    sed 's/['\\''+ &]/_/g' ${genome_file} > sanitized.fasta
+    """
+}
+
 // PSEUDOCHROMOSOME CONTIGUATION
 // =============================
 
@@ -60,7 +75,7 @@ if (params.do_contiguation) {
         afterScript 'rm -rf Ref.* Res.*'
 
         input:
-        file genome_file
+        file sanitized_genome_file
         file ref_chr
         file ref_dir
         val params.ref_species
@@ -77,7 +92,7 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          ${ref_chr} ${genome_file} 500 85 0 3000
+          ${ref_chr} ${sanitized_genome_file} 500 85 0 3000
         abacas_combine.lua . pseudo "${ref_dir}" "${params.ref_species}" \
           "${params.GENOME_PREFIX}" "${params.ABACAS_BIN_CHR}" \
           "${params.GENOME_PREFIX}"
@@ -86,7 +101,7 @@ if (params.do_contiguation) {
 } else {
     process prepare_noncontiguated_input {
         input:
-        file genome_file
+        file sanitized_genome_file
 
         output:
         file 'pseudo.pseudochr.fasta' into pseudochr_seq
@@ -96,7 +111,7 @@ if (params.do_contiguation) {
         file 'pseudo.contigs.fasta' into contigs_seq
 
         """
-        no_abacas_prepare.lua ${genome_file} pseudo
+        no_abacas_prepare.lua ${sanitized_genome_file} pseudo
         """
     }
 }
