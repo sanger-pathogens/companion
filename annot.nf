@@ -89,7 +89,8 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          ${ref_chr} ${sanitized_genome_file} 500 85 0 3000
+          "${ref_chr}" "${sanitized_genome_file}" "${params.ABACAS_MATCH_SIZE}" \
+          "${params.ABACAS_MATCH_SIM}" 0 3000
         abacas_combine.lua . pseudo "${ref_dir}" "${params.ref_species}" \
           "${params.GENOME_PREFIX}" "${params.ABACAS_BIN_CHR}" \
           "${params.GENOME_PREFIX}"
