@@ -15,17 +15,20 @@ is_a_lone_feature = function (n)
     expect(count(n:direct_children())).should_be(0)
   end)
 end
-does_not_cross_a_contig_boundary = function(n)
-  it("does not span more than one contig", function()
+does_not_cross_a_contig_boundary = function(n, childtype)
+  it("does not have a CDS overlapping a gap", function()
     local ovl = feature_index:get_features_for_range(n:get_seqid(),
                                                      n:get_range())
     local contigs = {}
     for _,v in ipairs(ovl) do
-      if v:get_type() == "contig" or v:get_type() == "region" then
-        table.insert(contigs, v)
+      if v:get_type() == "gap" then
+        for c in n:children() do
+          if c:get_type() == childtype then
+            expect(c:get_range():overlap(v:get_range())).should_be_falsy()
+          end
+        end
       end
     end
-    expect(#contigs).should_be_smaller_than(2)
   end)
 end
 
@@ -36,7 +39,7 @@ describe.feature("gene", function(gene)
   local valid_child_types = {"mRNA","tRNA","rRNA","snoRNA","snRNA", "scRNA",
                              "lncRNA", "ncRNA", "promoter"}
 
-  does_not_cross_a_contig_boundary(gene)
+  does_not_cross_a_contig_boundary(gene,  "CDS")
 
   it("has only allowed child types", function()
     for f in gene:direct_children() do
@@ -102,7 +105,7 @@ end)
 
 describe.feature("pseudogene", function(pseudogene)
 
-  does_not_cross_a_contig_boundary(pseudogene)
+  does_not_cross_a_contig_boundary(pseudogene, "pseudogenic_exon")
 
   it("contains a pseudogenic_transcript", function()
     expect(pseudogene:has_child_of_type("pseudogenic_transcript")).should_be(true)
@@ -126,7 +129,8 @@ describe.feature("pseudogene", function(pseudogene)
               "synonym", "eupathdb_uc", "has_internal_stop",
               "has_frameshift", "has_start", "has_stop",
               "original_prot_length", "Target",
-              "ratt_ortholog"}).should_contain(k)
+              "ratt_ortholog", "threeEndPartial",
+              "fiveEndPartial"}).should_contain(k)
     end
   end)
 
@@ -368,8 +372,6 @@ end)
 
 derives_from = {}
 describe.feature("polypeptide", function(pp)
-
-  does_not_cross_a_contig_boundary(pp)
 
   it("must be derived_from a unique mRNA", function()
     local dfrom = pp:get_attribute("Derives_from")

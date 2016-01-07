@@ -209,7 +209,9 @@ function stream:process_current_cluster()
 
       end -- for gene children
     end
-    table.insert(self.outqueue, n)
+    if not skip_gene then
+      table.insert(self.outqueue, n)
+    end
   end
 end
 
