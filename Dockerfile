@@ -20,23 +20,24 @@ RUN apt-get update -qq
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip cpanminus mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
-                    libc6-i386 lib32stdc++6 lib32gcc1 netcat \
-                    last-align libboost-iostreams-dev libgsl0ldbl \
-                    libcolamd2.8.0 libstdc++6 --yes --force-yes
-RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree && \
-    cpanm --force SVG Carp Storable Bio::SearchIO List::Util \
-                    Getopt::Long && \
-    rm -rf /root/.cpanm/work/
+                    libc6-i386 lib32stdc++6 lib32gcc1 netcat genometools \
+                    last-align libboost-iostreams-dev libgsl0ldbl libgsl0-dev \
+                    libcolamd2.9.1 liblpsolve55-dev libstdc++6 aragorn tantan \
+                    libstorable-perl libbio-perl-perl libsqlite3-dev \
+                     --yes --force-yes
+RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
 
 #
-# Install AUGUSTUS (binaries)
+# Install AUGUSTUS
 #
 ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
     mv augustus* augustus && \
-    rm -rf augustus/docs
+    rm -rf augustus/docs && \
+    cd augustus && \
+    make -j2
 
 #
 # Install GenomeTools (most recent git master)
@@ -51,17 +52,6 @@ RUN cd /opt && \
     python setup.py install && \
     cd / && \
     rm -rf /opt/genometools-master*
-
-#
-# Install ARAGORN
-# (this is done from source instead of Debian b/c Debian-built version hangs)
-#
-ADD http://mbio-serv2.mbioekol.lu.se/ARAGORN/Downloads/aragorn1.2.36.tgz /opt/aragorn.tgz
-RUN cd /opt && \
-    tar -xvf aragorn.tgz && \
-    mv aragorn1* aragorn && \
-    cd aragorn && \
-    gcc -o aragorn aragorn*.c
 
 #
 # Install and configure OrthoMCL
@@ -91,19 +81,6 @@ RUN cd /opt && \
     rm -rf gblocks64.tar.Z && \
     cp Gblocks_0.91b/Gblocks /usr/bin/Gblocks && \
     chmod 755 /usr/bin/Gblocks
-
-#
-# Install tantan
-#
-ADD http://cbrc3.cbrc.jp/~martin/tantan/tantan-13.zip /opt/tantan-13.zip
-RUN cd /opt && \
-    unzip tantan-13.zip && \
-    rm -rf tantan-13.zip && \
-    cd tantan-13 && \
-    make -j2 && \
-    make install && \
-    cd .. && \
-    rm -rf tantan-13
 
 #
 # get GO OBO file
@@ -136,17 +113,8 @@ ADD ./RATT /opt/RATT
 #
 ADD ./ABACAS2 /opt/ABACAS2
 
-#
-# install gff3 to EMBL converter
-#
-ADD https://github.com/sanger-pathogens/gff3toembl/archive/master.zip /opt/gff3toembl-master.zip
-RUN cd /opt && \
-    unzip gff3toembl-master.zip && \
-    cd /opt/gff3toembl-master && \
-    python setup.py install
-
 ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
 ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
 ENV PERL5LIB /opt/ORTHOMCLV1.4/:/opt/RATT/:/opt/ABACAS2/:$PERL5LIB
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2:/opt/aragorn:$PATH
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2:$PATH
