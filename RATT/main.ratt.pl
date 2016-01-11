@@ -241,7 +241,7 @@ elsif ($ARGV[0] eq "Transfer") {
 	  ($ref_results,$ref_Counting)=adaptAnnotationEMBL($emblDir,$_,$ref_shift2,$ref_results,$ref_Counting);
 	  
 	  ### cleaning step
-	  if (defined(@{$$ref_shift{$refName}})) {
+	  if (@{$$ref_shift{$refName}}) {
 		foreach (0..(scalar(@{$$ref_shift{$refName}}))-1) {
 		  undef(@{ $$ref_shift{$refName}[$_]});
 		}
