@@ -351,12 +351,14 @@ if (params.run_ratt) {
         file 'ratt.gff3' into ratt_gff3
 
         """
+        echo '##gff-version 3' > ratt.gff3
         ratt_embl_to_gff3.lua in*.embl | \
           gt gff3 -sort -retainids -tidy > \
           ratt.tmp.gff3
-        ratt_remove_problematic.lua ratt.tmp.gff3 in*report | \
-          gt gff3 -sort -retainids -tidy > \
-          ratt.gff3
+        if [ -s ratt.tmp.gff3 ]; then
+          ratt_remove_problematic.lua ratt.tmp.gff3 in*report | \
+          gt gff3 -sort -retainids -tidy > ratt.gff3;
+        fi
         """
     }
 } else {
@@ -452,6 +454,7 @@ process run_augustus_pseudo {
     file 'augustus.gff3' into augustus_pseudo_gff3
 
     """
+    echo "##gff-version 3\n" > augustus.full.tmp.2;
     AUGUSTUS_CONFIG_PATH=${augustus_modeldir} \
         augustus \
             --species=augustus_species \
@@ -463,9 +466,11 @@ process run_augustus_pseudo {
             --extrinsicCfgFile=${extrinsic_cfg} \
             pseudo.pseudochr.fasta > augustus.full.tmp
     augustus_to_gff3.lua < augustus.full.tmp \
-        | gt gff3 -sort -tidy -retainids \
-        | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
-        > augustus.full.tmp.2
+        | gt gff3 -sort -tidy -retainids > 1
+    if [ -s 1 ]; then
+        gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} 1 \
+        > augustus.full.tmp.2;
+    fi
     augustus_mark_partial.lua augustus.full.tmp.2 > augustus.gff3
     """
 }
@@ -483,6 +488,7 @@ process run_augustus_contigs {
     file 'augustus.scaf.pseudo.mapped.gff3' into augustus_ctg_gff3
 
     """
+    echo "##gff-version 3\n" > augustus.ctg.tmp.2;
     AUGUSTUS_CONFIG_PATH=${augustus_modeldir} \
         augustus --species=augustus_species \
             --stopCodonExcludedFromCDS=false \
@@ -491,9 +497,11 @@ process run_augustus_contigs {
             --noInFrameStop=true \
             pseudo.contigs.fasta > augustus.ctg.tmp
     augustus_to_gff3.lua < augustus.ctg.tmp \
-        | gt gff3 -sort -tidy -retainids \
-        | gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} \
-        > augustus.ctg.tmp.2 && \
+        | gt gff3 -sort -tidy -retainids > 1
+    if [ -s 1 ]; then
+        gt select -mingenescore ${params.AUGUSTUS_SCORE_THRESHOLD} 1 \
+        > augustus.ctg.tmp.2;
+    fi
     augustus_mark_partial.lua augustus.ctg.tmp.2 > augustus.ctg.gff3
 
     transform_gff_with_agp.lua \
@@ -510,6 +518,10 @@ process run_augustus_contigs {
         pseudo.pseudochr.fasta | \
         gt gff3 -sort -tidy -retainids > \
         augustus.scaf.pseudo.mapped.gff3
+
+    if [ ! -s augustus.scaf.pseudo.mapped.gff3 ]; then
+      echo '##gff-version 3' > augustus.scaf.pseudo.mapped.gff3
+    fi
     """
 }
 
@@ -524,9 +536,12 @@ if (params.run_snap) {
         file 'snap.gff3' into snap_gff3
 
         """
+        echo '##gff-version 3' > snap.gff3
         snap -gff -quiet snap.hmm pseudo.pseudochr.fasta > snap.tmp
         snap_gff_to_gff3.lua snap.tmp > snap.tmp.2
-        gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3
+        if [ -s 1 ]; then
+            gt gff3 -sort -tidy -retainids snap.tmp.2 > snap.gff3;
+        fi
         """
     }
 } else {
@@ -558,6 +573,9 @@ process merge_genemodels {
         augustus.full.gff3 augustus.ctg.gff3 snap.full.gff3 ratt.full.gff3 \
         > merged.pre.gff3 && \
     export GT_RETAINIDS=yes
+    if [ ! -s merged.pre.gff3 ]; then
+        echo '##gff-version 3' > merged.pre.gff3
+    fi
 
     # avoid huge gene clusters
     gt select -maxgenelength ${params.MAX_GENE_LENGTH} merged.pre.gff3 > merged.gff3
@@ -598,6 +616,10 @@ if (params.fix_polycistrons) {
         file 'integrated.fixed.sorted.gff3' into integrated_gff3_processed
 
         """
+        if [ ! -s integrated.gff3 ]; then
+          echo '##gff-version 3' > integrated.gff3
+        fi
+
         fix_polycistrons.lua integrated.gff3 > integrated.fixed.gff3
 
         # make sure final output is sorted
@@ -617,6 +639,9 @@ process remove_exons {
     file 'integrated_clean.gff3' into integrated_gff3_clean
 
     """
+    if [ ! -s integrated.gff3 ]; then
+      echo '##gff-version 3' > integrated.gff3
+    fi
     remove_exons.lua integrated.gff3 > integrated_clean.gff3
     """
 }
@@ -667,6 +692,9 @@ if (params.do_pseudo) {
 
         # merge with gene models
         gt gff3 -sort -tidy -retainids last_gff.gff3 genes.gff3 > last_and_genes.gff3
+        if [ ! -s last_and_genes.gff3 ]; then
+          echo '##gff-version 3' > last_and_genes.gff3
+        fi
         pseudo_merge_with_genes.lua last_and_genes.gff3 pseudochr.fasta > out_tmp.gff3
         gt gff3 -sort -retainids -tidy out_tmp.gff3 > genes_and_pseudo.gff3
         """
@@ -718,6 +746,10 @@ process add_gap_features {
       pseudo.pseudochr.agp pseudo.scaffolds.fasta \
       pseudo.pseudochr.fasta "between scaffolds" | \
       gt gff3 -fixregionboundaries -sort -tidy -retainids > contigs2.gff3
+
+    if [ ! -s merged_in.gff3 ]; then
+      echo '##gff-version 3' > merged_in.gff3
+    fi
 
     gt merge -force -o merged_out.gff3 \
       merged_in.gff3 contigs2.gff3
