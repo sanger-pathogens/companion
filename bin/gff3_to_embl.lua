@@ -240,28 +240,17 @@ function embl_vis:visit_feature(fn)
         format_embl_attrib(node , "ID", "locus_tag", nil)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
-          format_embl_attrib(pp, "product", "note",
-            function (s)
-              local pr_a = gff3_extract_structure(s)
-              local gprod = pr_a[1].term
-              if gprod then
-                return "product: " .. gprod
-              else
-                return nil
-              end
-            end)
-        else
-          format_embl_attrib(pp, "product", "product",
-            function (s)
-              local pr_a = gff3_extract_structure(s)
-              local gprod = pr_a[1].term
-              if gprod then
-                return gprod
-              else
-                return nil
-              end
-            end)
         end
+        format_embl_attrib(pp, "product", "product",
+          function (s)
+            local pr_a = gff3_extract_structure(s)
+            local gprod = pr_a[1].term
+            if gprod then
+              return gprod
+            else
+              return nil
+            end
+        end)
         format_embl_attrib(pp, "Dbxref", "EC_number",
             function (s)
               m = string.match(s, "EC:([0-9.-]+)")
@@ -281,7 +270,10 @@ function embl_vis:visit_feature(fn)
         if node:get_type() == "mRNA" then
           protseq = node:extract_and_translate_sequence("CDS", true,
                                                         region_mapping)
-          io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
+          if protseq:sub(-1,-1) == "*" then
+            protseq = protseq:sub(1,-2)
+          end
+          io.write("FT                   /translation=\"" .. protseq .."\"\n")
         end
         io.write("FT                   /transl_table=1\n")
         -- orthologs
@@ -348,6 +340,7 @@ function embl_vis:visit_feature(fn)
             io.write(" (" .. node:get_attribute("anticodon") .. ")")
           end
           io.write("\"\n")
+          io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         end
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
@@ -361,6 +354,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\n")
         io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
+        io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "rRNA") then
         io.write("FT   rRNA            ")
@@ -373,6 +367,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\n")
         io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
+        io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "gap") then
         io.write("FT   gap             ")
