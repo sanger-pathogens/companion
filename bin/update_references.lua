@@ -22,11 +22,6 @@ require("lib")
 require("table_save")
 local json = require ("dkjson")
 
-function file_exists(name)
-   local f=io.open(name,"r")
-   if f~=nil then io.close(f) return true else return false end
-end
-
 ncrna_visitor = gt.custom_visitor_new()
 function ncrna_visitor:visit_feature(fn)
   for fn2 in fn:get_children() do
@@ -76,17 +71,6 @@ function ncrna_visitor:visit_feature(fn)
       if fn2:get_attribute("aa") then
         fn2:remove_attribute("aa")
       end
-    end
-  end
-  return 0
-end
-
-gg_visitor = gt.custom_visitor_new()
-function gg_visitor:visit_feature(fn)
-  for fn2 in fn:get_children() do
-    local idv = fn2:get_attribute("ID")
-    if idv and self.transcript_ids[idv] then
-      -- pass
     end
   end
   return 0
@@ -298,6 +282,7 @@ for name, values in pairs(refs.species) do
                   .. values.gff .. " > " .. name .. "/annotation_preclean.gff3")
   end
 
+  -- fix up annotation
   stat_visitor.stats = {}
   stat_visitor.stats.nof_genes = 0
   stat_visitor.stats.nof_coding_genes = 0
@@ -322,8 +307,6 @@ for name, values in pairs(refs.species) do
     end
     return node
   end
-
-  -- fix up annotations
   out_stream = gt.gff3_out_stream_new_retainids(fixup_stream, name .. "/annotation.gff3")
   local gn = out_stream:next_tree()
   while (gn) do
