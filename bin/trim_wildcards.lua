@@ -34,18 +34,13 @@ local i, j = 0, 0
 hdr = ""
 seq = {}
 
-function replace(inseq)
-  inseq = inseq:gsub("^[Nn]+", ""):gsub("[Nn]+$", "")
-  return inseq
-end
-
 for l in io.lines() do
   if string.sub(l,1,1) == '>' then
     if i > 0 then
       j = j + 1
       i = 0
       print(">"..hdr)
-      thisseq = replace(table.concat(seq,""))
+      thisseq = trim_ns(table.concat(seq,""))
       print_max_width(thisseq, io.stdout, 60)
     end
     hdr = string.sub(l, 2)
@@ -57,6 +52,6 @@ for l in io.lines() do
 end
 if #seq > 0 then
   print(">"..hdr)
-  thisseq = replace(table.concat(seq,""))
+  thisseq = trim_ns(table.concat(seq,""))
   print_max_width(thisseq, io.stdout, 60)
 end
