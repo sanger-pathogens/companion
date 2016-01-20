@@ -278,6 +278,11 @@ function deep_copy(root, copy, table)
   return copy
 end
 
+function trim_ns(inseq)
+  inseq = inseq:gsub("^[Nn]+", ""):gsub("[Nn]+$", "")
+  return inseq
+end
+
 function print_max_width(str, ioo, width)
   local i = 1
   while (i + width - 1) < str:len() do

@@ -198,7 +198,7 @@ table.sort(newkeys)
 -- for all toplevel seqs...
 for _,seqid in ipairs(newkeys) do
   pseudochr_fasta_out:write(">" .. seqid .. "\n")
-  print_max_width(pseudochr_seq[seqid], pseudochr_fasta_out, 60)
+  print_max_width(trim_ns(pseudochr_seq[seqid]), pseudochr_fasta_out, 60)
   print(seqid .. ":  " .. #scafs[seqid])
   local i = 1
   local s_last_stop = 0

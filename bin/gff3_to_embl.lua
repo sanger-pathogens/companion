@@ -166,6 +166,8 @@ function embl_vis:visit_feature(fn)
         io.write("XX   \n")
         io.write("AC   XXX;\n")
         io.write("XX   \n")
+        io.write("AC * _" .. fn:get_seqid() .. ";\n")
+        io.write("XX   \n")
       else
         io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
                    .. "genomic DNA; STD; UNC; "
@@ -202,6 +204,9 @@ function embl_vis:visit_feature(fn)
             cnt = cnt + 1
           end
         end
+        if cnt == 0 then
+          break
+        end
         io.write("FT   CDS             ")
         if node:get_strand() == "-" then
           io.write("complement(")
@@ -211,14 +216,26 @@ function embl_vis:visit_feature(fn)
         end
         local i = 1
         local coding_length = 0
+        local start_phase = 0
+        local end_phase = 0
         for cds in node:get_children() do
           if cds:get_type() == "CDS" or cds:get_type() == "pseudogenic_exon" then
             if i == 1 and fn:get_attribute("Start_range") then
+              if fn:get_strand() == '-' then
+                end_phase = tonumber(cds:get_phase())
+              else
+                start_phase = tonumber(cds:get_phase())
+              end
               io.write("<")
             end
             io.write(cds:get_range():get_start())
             io.write("..")
             if i == cnt and fn:get_attribute("End_range") then
+              if fn:get_strand() == '-' then
+                start_phase = tonumber(cds:get_phase())
+              else
+                end_phase = tonumber(cds:get_phase())
+              end
               io.write(">")
             end
             io.write(cds:get_range():get_end())
@@ -240,28 +257,17 @@ function embl_vis:visit_feature(fn)
         format_embl_attrib(node , "ID", "locus_tag", nil)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
-          format_embl_attrib(pp, "product", "note",
-            function (s)
-              local pr_a = gff3_extract_structure(s)
-              local gprod = pr_a[1].term
-              if gprod then
-                return "product: " .. gprod
-              else
-                return nil
-              end
-            end)
-        else
-          format_embl_attrib(pp, "product", "product",
-            function (s)
-              local pr_a = gff3_extract_structure(s)
-              local gprod = pr_a[1].term
-              if gprod then
-                return gprod
-              else
-                return nil
-              end
-            end)
         end
+        format_embl_attrib(pp, "product", "product",
+          function (s)
+            local pr_a = gff3_extract_structure(s)
+            local gprod = pr_a[1].term
+            if gprod then
+              return gprod
+            else
+              return nil
+            end
+        end)
         format_embl_attrib(pp, "Dbxref", "EC_number",
             function (s)
               m = string.match(s, "EC:([0-9.-]+)")
@@ -279,9 +285,31 @@ function embl_vis:visit_feature(fn)
         -- translation
         local protseq = nil
         if node:get_type() == "mRNA" then
+          cdnaseq = node:extract_sequence("CDS", true, region_mapping)
           protseq = node:extract_and_translate_sequence("CDS", true,
                                                         region_mapping)
-          io.write("FT                   /translation=\"" .. protseq:sub(1,-2) .."\"\n")
+          if embl_compliant and cdnaseq:len() % 3 > 0 then
+            -- The ENA expects translations for DNA sequences with a length
+            -- which is not a multiple of three in a different way from the one
+            -- produced by GenomeTools. While GenomeTools cuts off the
+            -- remainder and does not translate the partial codon, the ENA
+            -- validator fills it up with Ns and translates it. This behaviour
+            -- is emulated here to make the \translation value validate
+            -- properly.
+            cdnaseq = cdnaseq .. string.rep('n', 3 - (cdnaseq:len() % 3))
+            if start_phase > 0 then
+              cdnaseq = cdnaseq:sub(start_phase + 1)
+            end
+--            print(">"..geneid .."\n"..protseq)
+            protseq = gt.translate_dna(cdnaseq)
+          end
+
+          -- clip off stop codon
+          if protseq:sub(-1,-1) == "*" then
+            protseq = protseq:sub(1,-2)
+          end
+          io.write("FT                   /translation=\"" .. protseq .."\"\n")
+          io.write("FT                   /codon_start=" .. start_phase + 1 .. "\n")
         end
         io.write("FT                   /transl_table=1\n")
         -- orthologs
@@ -348,6 +376,7 @@ function embl_vis:visit_feature(fn)
             io.write(" (" .. node:get_attribute("anticodon") .. ")")
           end
           io.write("\"\n")
+          io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         end
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
@@ -361,6 +390,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\n")
         io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
+        io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "rRNA") then
         io.write("FT   rRNA            ")
@@ -373,6 +403,7 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\n")
         io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
+        io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "gap") then
         io.write("FT   gap             ")

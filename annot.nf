@@ -62,7 +62,7 @@ process sanitize_input {
     file 'sanitized.fasta' into sanitized_genome_file
 
     """
-    sed 's/['\\''+ &]/_/g' ${genome_file} > sanitized.fasta
+    sed 's/['\\''+ &]/_/g' ${genome_file} | trim_wildcards.lua > sanitized.fasta
     """
 }
 
@@ -78,9 +78,6 @@ if (params.do_contiguation) {
         file sanitized_genome_file
         file ref_chr
         file ref_dir
-        val params.ref_species
-        val params.GENOME_PREFIX
-        val params.ABACAS_BIN_CHR
 
         output:
         file 'pseudo.pseudochr.fasta' into pseudochr_seq
@@ -92,7 +89,8 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          ${ref_chr} ${sanitized_genome_file} 500 85 0 3000
+          "${ref_chr}" "${sanitized_genome_file}" "${params.ABACAS_MATCH_SIZE}" \
+          "${params.ABACAS_MATCH_SIM}" 0 3000
         abacas_combine.lua . pseudo "${ref_dir}" "${params.ref_species}" \
           "${params.GENOME_PREFIX}" "${params.ABACAS_BIN_CHR}" \
           "${params.GENOME_PREFIX}"
@@ -589,7 +587,6 @@ process integrate_genemodels {
     input:
     file 'merged.gff3' from merged_gff3
     file 'sequence.fasta' from pseudochr_seq_integrate
-    val params.WEIGHT_FILE
 
     output:
     file 'integrated.gff3' into integrated_gff3
@@ -787,7 +784,6 @@ process split_splice_models_at_gaps {
 process add_polypeptides {
     input:
     file 'input.gff3' from genemodels_with_gaps_split_gff3
-    val params.CHR_PATTERN
 
     output:
     file 'output.gff3' into genemodels_with_polypeptides_gff3
@@ -854,7 +850,6 @@ proteins_target.into{ proteins_orthomcl
 process make_ref_input_for_orthomcl {
     input:
     file omcl_pepfile
-    val params.ref_species
 
     output:
     file 'out.gg' into gg_file
@@ -873,7 +868,6 @@ process make_ref_input_for_orthomcl {
 process make_target_input_for_orthomcl {
     input:
     file 'pepfile.fas' from proteins_orthomcl
-    val params.GENOME_PREFIX
 
     output:
     file 'out.gg' into gg_file_ref
@@ -1135,9 +1129,7 @@ if (params.use_reference) {
         input:
         file 'in.protein.fasta' from refcomp_protein_in
         set file('pseudo.in.annotation.gff3'), file('scafs.in.annotation.gff3') from refcomp_gff3_in
-        val params.GENOME_PREFIX
         file ref_dir
-        val params.ref_species
 
         output:
         file 'tree_selection.fasta' into tree_fasta
@@ -1245,9 +1237,6 @@ if (params.do_contiguation && params.do_circos) {
         file 'refannot.gff3' from ref_annot
         file 'blast.in' from circos_blastout
         file ref_dir
-        val params.ref_species
-        val params.CHR_PATTERN
-        val params.ABACAS_BIN_CHR
 
         output:
         file 'links.txt' into circos_input_links
@@ -1405,7 +1394,6 @@ process make_report {
     input:
     set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from report_inseq
     set file('pseudo.gff3'), file('scaf.gff3') from report_gff3
-    val params.SPECK_TEMPLATE
     val specfile
 
     output:

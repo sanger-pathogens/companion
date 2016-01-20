@@ -63,16 +63,20 @@ function stream:process_current_cluster()
 
   -- count and collect gaps between scaffolds -- these always need to be broken
   for _,n in ipairs(self.curr_gene_set) do
-    if n:get_type() == "gap"
-        and n:get_attribute("gap_type")  == "between scaffolds" then
-      table.insert(gaps, n)
+    if n:get_type() == "gap" then
+      table.insert(stream.outqueue, n)
+      if n:get_attribute("gap_type")  == "between scaffolds" then
+        table.insert(gaps, n)
+      end
     end
   end
 
-  -- no gaps in cluster, so just pass along genes
+  -- no relevant gaps in cluster, so just pass along genes
   if #gaps == 0 then
     for _,n in ipairs(self.curr_gene_set) do
-      table.insert(stream.outqueue, n)
+      if n:get_type() ~= "gap" then
+        table.insert(stream.outqueue, n)
+      end
     end
     return 0
   end
@@ -132,7 +136,6 @@ function stream:process_current_cluster()
         end
         if not skip_gene then
           table.insert(outbuf, cur_gene)
-          table.insert(outbuf, g)
         end
         cur_gene = rest
       end
