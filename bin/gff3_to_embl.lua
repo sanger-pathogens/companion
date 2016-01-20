@@ -166,6 +166,8 @@ function embl_vis:visit_feature(fn)
         io.write("XX   \n")
         io.write("AC   XXX;\n")
         io.write("XX   \n")
+        io.write("AC * _" .. fn:get_seqid() .. ";\n")
+        io.write("XX   \n")
       else
         io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
                    .. "genomic DNA; STD; UNC; "
