@@ -788,10 +788,18 @@ process add_polypeptides {
     output:
     file 'output.gff3' into genemodels_with_polypeptides_gff3
 
-    """
-    create_polypeptides.lua input.gff3 ${params.GENOME_PREFIX} \
-        "${params.CHR_PATTERN}" | gt gff3 -sort -retainids -tidy > output.gff3
-    """
+    script:
+    if (params.alphanumeric_ids)
+        """
+        create_polypeptides.lua -r input.gff3 ${params.GENOME_PREFIX} \
+            "${params.CHR_PATTERN}" | gt gff3 -sort -retainids -tidy > output.gff3
+        """
+    else
+        """
+        create_polypeptides.lua input.gff3 ${params.GENOME_PREFIX} \
+            "${params.CHR_PATTERN}" | gt gff3 -sort -retainids -tidy > output.gff3
+        """
+
 }
 
 // TMHMM
