@@ -1095,7 +1095,6 @@ process make_distribution_seqs {
     """
 }
 
-
 result_seq.into{ stats_inseq
 				 circos_inseq
 				 report_inseq
