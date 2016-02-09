@@ -28,7 +28,9 @@ op:option{"-e", action='store_true', dest='embl_compliant',
                 help="output reduced 'ENA compliant' format"}
 op:option{"-o", action='store_true', dest='only_on_seq',
                 help="ignore features for which no sequence is found"}
-options,args = op:parse({embl_compliant=false, only_on_seq=false})
+op:option{"-p", action='store', dest='projectid',
+                help="ENA project ID (e.g. 'PRJEB1234')"}
+options,args = op:parse({embl_compliant=false, only_on_seq=false, projectid='00000000'})
 
 function usage()
   op:help()
@@ -176,7 +178,7 @@ function embl_vis:visit_feature(fn)
         io.write("AC   " .. fn:get_seqid() .. ";\n")
         io.write("XX   \n")
       end
-      io.write("PR   Project:00000000;\n")
+      io.write("PR   Project:" .. options.projectid .. ";\n")
       io.write("XX   \n")
       io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
       io.write("XX   \n")
@@ -254,7 +256,10 @@ function embl_vis:visit_feature(fn)
         end
         io.write("\n")
         local pp = self.pps[node:get_attribute("ID")]
-        format_embl_attrib(node , "ID", "locus_tag", nil)
+        format_embl_attrib(fn , "ID", "locus_tag",
+          function (s)
+            return split(s,':')[1]
+          end)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
         end
@@ -279,8 +284,11 @@ function embl_vis:visit_feature(fn)
             end)
         -- add gene to 'unroll' multiple spliceforms
         local geneid = fn:get_attribute("ID")
-        if geneid then
-          io.write("FT                   /gene=\"".. geneid .. "\"\n")
+        local genesym = fn:get_attribute("Name")
+        if genesym then
+          io.write("FT                   /gene=\"".. genesym .. "\"\n")
+        else
+          io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
         end
         -- translation
         local protseq = nil
@@ -310,7 +318,6 @@ function embl_vis:visit_feature(fn)
             if start_phase > 0 then
               cdnaseq = cdnaseq:sub(start_phase + 1)
             end
---            print(">"..geneid .."\n"..protseq)
             protseq = gt.translate_dna(cdnaseq)
           end
 
@@ -416,10 +423,11 @@ function embl_vis:visit_feature(fn)
         io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
       elseif string.match(node:get_type(), "gap") then
-        io.write("FT   gap             ")
+        io.write("FT   assembly_gap    ")
         io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
         io.write("\n")
         io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
+        io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
       end
     end
   else
