@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2015 Genome Research Ltd
+  Copyright (c) 2015-2016 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -109,6 +109,63 @@ function gene_cmp_by_length(a, b)
   end
 end
 
+function frame_agreement(f1, f1type, f2, f2type)
+  local okay = true
+  if f1:get_strand() ~= f2:get_strand() then
+    if options.debug then
+      io.stderr:write("found strands in disagreement in frame check\n")
+    end
+    return false
+  else
+    local c1 = nil
+    local c2 = nil
+    if f1:get_strand() == '-' then
+      -- minus strand: take stop position of last coding feature
+      for c in f1:children() do
+        if c:get_type() == f1type then
+          c1 = c:get_range():get_end()
+        end
+      end
+      for c in f2:children() do
+        if c:get_type() == f2type then
+          c2 = c:get_range():get_end()
+        end
+      end
+    else
+      -- plus/unknown strand: take start position of first coding feature
+      for c in f1:children() do
+        if c:get_type() == f1type then
+          c1 = c:get_range():get_start()
+          break
+        end
+      end
+      for c in f2:children() do
+        if c:get_type() == f2type then
+          c2 = c:get_range():get_start()
+          break
+        end
+      end
+    end
+    if not (c1 and c2) then
+      if options.debug then
+        io.stderr:write("could not find feature type to determine frame agreement\n")
+      end
+      return false
+    end
+    if (c1 % 3) ~= (c2 % 3) then
+      if options.debug then
+        io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
+      end
+      return false
+    else
+      if options.debug then
+        io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
+      end
+      return true
+    end
+  end
+end
+
 stream = gt.custom_stream_new_unsorted()
 stream.outqueue = {}
 stream.curr_gene_set = {}
@@ -161,62 +218,6 @@ function stream:process_current_cluster()
       if c:get_type() == "CDS" then
         table.insert(genes, v)
         break
-      end
-    end
-  end
-  local frame_agreement = function (f1, f1type, f2, f2type)
-    local okay = true
-    if f1:get_strand() ~= f2:get_strand() then
-      if options.debug then
-        io.stderr:write("found strands in disagreement in frame check\n")
-      end
-      return false
-    else
-      local c1 = nil
-      local c2 = nil
-      if f1:get_strand() == '-' then
-        -- minus strand: take stop position of last coding feature
-        for c in f1:children() do
-          if c:get_type() == f1type then
-            c1 = c:get_range():get_end()
-          end
-        end
-        for c in f2:children() do
-          if c:get_type() == f2type then
-            c2 = c:get_range():get_end()
-          end
-        end
-      else
-        -- plus/unknown strand: take start position of first coding feature
-        for c in f1:children() do
-          if c:get_type() == f1type then
-            c1 = c:get_range():get_start()
-            break
-          end
-        end
-        for c in f2:children() do
-          if c:get_type() == f2type then
-            c2 = c:get_range():get_start()
-            break
-          end
-        end
-      end
-      if not (c1 and c2) then
-        if options.debug then
-          io.stderr:write("could not find feature type to determine frame agreement\n")
-        end
-        return false
-      end
-      if (c1 % 3) ~= (c2 % 3) then
-        if options.debug then
-          io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
-        end
-        return false
-      else
-        if options.debug then
-          io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
-        end
-        return true
       end
     end
   end
