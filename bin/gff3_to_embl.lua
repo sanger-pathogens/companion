@@ -266,7 +266,17 @@ function embl_vis:visit_feature(fn)
         format_embl_attrib(pp, "product", "product",
           function (s)
             local pr_a = gff3_extract_structure(s)
-            local gprod = pr_a[1].term
+            local gprod = nil
+            if #pr_a > 0 and pr_a[1].term then
+              gprod = pr_a[1].term
+            end
+            -- use preferred term if defined
+            for _,pr in ipairs(pr_a) do
+              if pr.is_preferred and pr.term then
+                gprod = pr.term
+                break
+              end
+            end
             if gprod then
               return gprod
             else
