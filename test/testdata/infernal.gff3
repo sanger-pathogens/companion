@@ -10,50 +10,50 @@
 ##sequence-region   Laet.30 243636 243716
 ##sequence-region   Laet.31 221457 221603
 Laet.05	GenomeTools	gene	404573	404691	90.2	+	.	ID=ncRNA9
-Laet.05	INFERNAL	rRNA	404573	404691	90.2	+	.	ID=ncRNA9:rRNA;Parent=ncRNA9;Name=5S_rRNA;gc=0.52;evalue=1.5e-18;score=90.2;model_name=RF00001;model_range=1-119
+Laet.05	INFERNAL	rRNA	404573	404691	90.2	+	.	ID=ncRNA9:rRNA;Parent=ncRNA9;Name=5S_rRNA;gc=0.52;evalue=1.5e-18;score=90.2;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.09	GenomeTools	gene	268141	268259	93	-	.	ID=ncRNA2
-Laet.09	INFERNAL	rRNA	268141	268259	93	-	.	ID=ncRNA2:rRNA;Parent=ncRNA2;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.09	INFERNAL	rRNA	268141	268259	93	-	.	ID=ncRNA2:rRNA;Parent=ncRNA2;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.09	GenomeTools	gene	400508	400626	93	+	.	ID=ncRNA3
-Laet.09	INFERNAL	rRNA	400508	400626	93	+	.	ID=ncRNA3:rRNA;Parent=ncRNA3;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.09	INFERNAL	rRNA	400508	400626	93	+	.	ID=ncRNA3:rRNA;Parent=ncRNA3;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.09	GenomeTools	gene	413108	413226	93	-	.	ID=ncRNA4
-Laet.09	INFERNAL	rRNA	413108	413226	93	-	.	ID=ncRNA4:rRNA;Parent=ncRNA4;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.09	INFERNAL	rRNA	413108	413226	93	-	.	ID=ncRNA4:rRNA;Parent=ncRNA4;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.11	GenomeTools	gene	166398	166516	93	-	.	ID=ncRNA5
-Laet.11	INFERNAL	rRNA	166398	166516	93	-	.	ID=ncRNA5:rRNA;Parent=ncRNA5;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.11	INFERNAL	rRNA	166398	166516	93	-	.	ID=ncRNA5:rRNA;Parent=ncRNA5;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.11	GenomeTools	gene	390005	390123	93	+	.	ID=ncRNA6
-Laet.11	INFERNAL	rRNA	390005	390123	93	+	.	ID=ncRNA6:rRNA;Parent=ncRNA6;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.11	INFERNAL	rRNA	390005	390123	93	+	.	ID=ncRNA6:rRNA;Parent=ncRNA6;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.15	GenomeTools	gene	329926	330044	95.8	+	.	ID=ncRNA1
-Laet.15	INFERNAL	rRNA	329926	330044	95.8	+	.	ID=ncRNA1:rRNA;Parent=ncRNA1;Name=5S_rRNA;gc=0.50;evalue=5.1e-20;score=95.8;model_name=RF00001;model_range=1-119
+Laet.15	INFERNAL	rRNA	329926	330044	95.8	+	.	ID=ncRNA1:rRNA;Parent=ncRNA1;Name=5S_rRNA;gc=0.50;evalue=5.1e-20;score=95.8;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.19	GenomeTools	gene	666693	666765	49.8	+	.	ID=ncRNA16
-Laet.19	INFERNAL	snoRNA	666693	666765	49.8	+	.	ID=ncRNA16:snoRNA;Parent=ncRNA16;Name=snoTBR7;gc=0.48;evalue=3.2e-07;score=49.8;model_name=RF00295;model_range=1-75
+Laet.19	INFERNAL	snoRNA	666693	666765	49.8	+	.	ID=ncRNA16:snoRNA;Parent=ncRNA16;Name=snoTBR7;gc=0.48;evalue=3.2e-07;score=49.8;model_name=snoTBR7;model_acc=RF00295;model_range=1-75
 ###
 Laet.19	GenomeTools	gene	666864	666952	106	+	.	ID=ncRNA14
-Laet.19	INFERNAL	snoRNA	666864	666952	106	+	.	ID=ncRNA14:snoRNA;Parent=ncRNA14;Name=snoTBR5;gc=0.58;evalue=3.6e-27;score=106.3;model_name=RF00292;model_range=1-96
+Laet.19	INFERNAL	snoRNA	666864	666952	106	+	.	ID=ncRNA14:snoRNA;Parent=ncRNA14;Name=snoTBR5;gc=0.58;evalue=3.6e-27;score=106.3;model_name=snoTBR5;model_acc=RF00292;model_range=1-96
 ###
 Laet.19	GenomeTools	gene	667052	667337	83.3	+	.	ID=ncRNA15
-Laet.19	INFERNAL	snoRNA	667052	667337	83.3	+	.	ID=ncRNA15:snoRNA;Parent=ncRNA15;Name=snoTBR17;gc=0.71;evalue=2.2e-22;score=83.3;model_name=RF00294;model_range=1-288
+Laet.19	INFERNAL	snoRNA	667052	667337	83.3	+	.	ID=ncRNA15:snoRNA;Parent=ncRNA15;Name=snoTBR17;gc=0.71;evalue=2.2e-22;score=83.3;model_name=snoTBR17;model_acc=RF00294;model_range=1-288
 ###
 Laet.21	GenomeTools	gene	158723	158841	93	-	.	ID=ncRNA7
-Laet.21	INFERNAL	rRNA	158723	158841	93	-	.	ID=ncRNA7:rRNA;Parent=ncRNA7;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=RF00001;model_range=1-119
+Laet.21	INFERNAL	rRNA	158723	158841	93	-	.	ID=ncRNA7:rRNA;Parent=ncRNA7;Name=5S_rRNA;gc=0.50;evalue=2.8e-19;score=93.0;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.21	GenomeTools	gene	444914	445032	88.3	+	.	ID=ncRNA10
-Laet.21	INFERNAL	rRNA	444914	445032	88.3	+	.	ID=ncRNA10:rRNA;Parent=ncRNA10;Name=5S_rRNA;gc=0.51;evalue=4.4e-18;score=88.3;model_name=RF00001;model_range=1-119
+Laet.21	INFERNAL	rRNA	444914	445032	88.3	+	.	ID=ncRNA10:rRNA;Parent=ncRNA10;Name=5S_rRNA;gc=0.51;evalue=4.4e-18;score=88.3;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.23	GenomeTools	gene	246602	246720	92.5	-	.	ID=ncRNA8
-Laet.23	INFERNAL	rRNA	246602	246720	92.5	-	.	ID=ncRNA8:rRNA;Parent=ncRNA8;Name=5S_rRNA;gc=0.52;evalue=3.7e-19;score=92.5;model_name=RF00001;model_range=1-119
+Laet.23	INFERNAL	rRNA	246602	246720	92.5	-	.	ID=ncRNA8:rRNA;Parent=ncRNA8;Name=5S_rRNA;gc=0.52;evalue=3.7e-19;score=92.5;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.24	GenomeTools	gene	629826	629923	56.5	-	.	ID=ncRNA13
-Laet.24	INFERNAL	snRNA	629826	629923	56.5	-	.	ID=ncRNA13:snRNA;Parent=ncRNA13;Name=U6;gc=0.49;evalue=8.8e-13;score=56.5;model_name=RF00026;model_range=1-106
+Laet.24	INFERNAL	snRNA	629826	629923	56.5	-	.	ID=ncRNA13:snRNA;Parent=ncRNA13;Name=U6;gc=0.49;evalue=8.8e-13;score=56.5;model_name=U6;model_acc=RF00026;model_range=1-106
 ###
 Laet.30	GenomeTools	gene	243636	243716	17.9	-	.	ID=ncRNA11
-Laet.30	INFERNAL	rRNA	243636	243716	17.9	-	.	ID=ncRNA11:rRNA;Parent=ncRNA11;Name=5S_rRNA;gc=0.51;evalue=5.5;score=17.9;model_name=RF00001;model_range=1-119
+Laet.30	INFERNAL	rRNA	243636	243716	17.9	-	.	ID=ncRNA11:rRNA;Parent=ncRNA11;Name=5S_rRNA;gc=0.51;evalue=5.5;score=17.9;model_name=5S_rRNA;model_acc=RF00001;model_range=1-119
 ###
 Laet.31	GenomeTools	gene	221457	221603	85.6	-	.	ID=ncRNA12
-Laet.31	INFERNAL	snRNA	221457	221603	85.6	-	.	ID=ncRNA12:snRNA;Parent=ncRNA12;Name=U2;gc=0.40;evalue=7.3e-24;score=85.6;model_name=RF00004;model_range=1-192
+Laet.31	INFERNAL	snRNA	221457	221603	85.6	-	.	ID=ncRNA12:snRNA;Parent=ncRNA12;Name=U2;gc=0.40;evalue=7.3e-24;score=85.6;model_name=U2;model_acc=RF00004;model_range=1-192
 ###
