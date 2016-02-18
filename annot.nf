@@ -4,7 +4,7 @@ VERSION = "1.0.1"
 
 /*
     Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-    Copyright (c) 2014-2015 Genome Research Ltd
+    Copyright (c) 2014-2016 Genome Research Ltd
 
     Permission to use, copy, modify, and distribute this software for any
     purpose with or without fee is hereby granted, provided that the above
