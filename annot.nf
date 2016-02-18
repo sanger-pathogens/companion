@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 /*
     Author: Sascha Steinbiss <ss34@sanger.ac.uk>
