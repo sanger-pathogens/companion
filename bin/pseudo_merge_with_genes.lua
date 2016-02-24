@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2015 Genome Research Ltd
+  Copyright (c) 2015-2016 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -30,18 +30,25 @@ op = OptionParser:new({usage="%prog <options> merged_gff_file.gff3 sequence.fas"
 op:option{"-t", action='store', dest='threshold',
                 help="minimum gene coverage ratio threshold for pseudogene "
                   .. "required to replace a gene (e.g. 0.6 for 60%)"}
-op:option{"-sm", action='store', dest='minratio',
+op:option{"-m", action='store', dest='minratio',
                 help="minimal 'stitching' gene coverage ratio "
                   .. "required to replace multiple genes (e.g. 0.8 for 80%)"}
-op:option{"-sx", action='store', dest='maxratio',
+op:option{"-x", action='store', dest='maxratio',
                 help="maximal 'stitching' gene coverage ratio "
                   .. "required to replace multiple genes (e.g. 1.2 for 120%)"}
+op:option{"-i", action='store_true', dest='ignore_frame_agreement',
+                help="do not require frame agreement for pseudogene "
+                  .. "calling (default: false)"}
 op:option{"-r", action='store', dest='rejectfile',
                 help="file to store 'rejected' pseudogene candidates in GFF3 format"}
-op:option{"-d", action='store', dest='debug',
+op:option{"-l", action='store', dest='longest_until',
+                help="pick candidate with median length if at least "
+                  .. "<LONGEST_UNTIL> candidates per locus"}
+op:option{"-d", action='store_true', dest='debug',
                 help="output debug information on stderr"}
 options,args = op:parse({threshold=0.6, minratio=0.8, maxratio=1.2,
-                         debug=false, rejectfile=nil})
+                         debug=false, rejectfile=nil,
+                         ignore_frame_agreement=false, longest_until=4})
 
 function usage()
   op:help()
@@ -102,6 +109,63 @@ function gene_cmp_by_length(a, b)
   end
 end
 
+function frame_agreement(f1, f1type, f2, f2type)
+  local okay = true
+  if f1:get_strand() ~= f2:get_strand() then
+    if options.debug then
+      io.stderr:write("found strands in disagreement in frame check\n")
+    end
+    return false
+  else
+    local c1 = nil
+    local c2 = nil
+    if f1:get_strand() == '-' then
+      -- minus strand: take stop position of last coding feature
+      for c in f1:children() do
+        if c:get_type() == f1type then
+          c1 = c:get_range():get_end()
+        end
+      end
+      for c in f2:children() do
+        if c:get_type() == f2type then
+          c2 = c:get_range():get_end()
+        end
+      end
+    else
+      -- plus/unknown strand: take start position of first coding feature
+      for c in f1:children() do
+        if c:get_type() == f1type then
+          c1 = c:get_range():get_start()
+          break
+        end
+      end
+      for c in f2:children() do
+        if c:get_type() == f2type then
+          c2 = c:get_range():get_start()
+          break
+        end
+      end
+    end
+    if not (c1 and c2) then
+      if options.debug then
+        io.stderr:write("could not find feature type to determine frame agreement\n")
+      end
+      return false
+    end
+    if (c1 % 3) ~= (c2 % 3) then
+      if options.debug then
+        io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
+      end
+      return false
+    else
+      if options.debug then
+        io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
+      end
+      return true
+    end
+  end
+end
+
 stream = gt.custom_stream_new_unsorted()
 stream.outqueue = {}
 stream.curr_gene_set = {}
@@ -118,8 +182,14 @@ function stream:find_best_by_length(set)
       end
     end
     table.sort(pseudogenes, gene_cmp_by_length)
-    -- select pseudogene with median length
-    local out = pseudogenes[math.floor(#pseudogenes/2)]
+    -- select pseudogene with median length if more than a set number of hits,
+    -- otherwise pick longest one
+    local out = nil
+    if #pseudogenes < options.longest_until then
+      out = pseudogenes[#pseudogenes]
+    else
+      out = pseudogenes[math.max(1,math.floor(#pseudogenes/2))]
+    end
     return out
   end
 end
@@ -148,62 +218,6 @@ function stream:process_current_cluster()
       if c:get_type() == "CDS" then
         table.insert(genes, v)
         break
-      end
-    end
-  end
-  local frame_agreement = function (f1, f1type, f2, f2type)
-    local okay = true
-    if f1:get_strand() ~= f2:get_strand() then
-      if options.debug then
-        io.stderr:write("found strands in disagreement in frame check\n")
-      end
-      return false
-    else
-      local c1 = nil
-      local c2 = nil
-      if f1:get_strand() == '-' then
-        -- minus strand: take stop position of last coding feature
-        for c in f1:children() do
-          if c:get_type() == f1type then
-            c1 = c:get_range():get_end()
-          end
-        end
-        for c in f2:children() do
-          if c:get_type() == f2type then
-            c2 = c:get_range():get_end()
-          end
-        end
-      else
-        -- plus/unknown strand: take start position of first coding feature
-        for c in f1:children() do
-          if c:get_type() == f1type then
-            c1 = c:get_range():get_start()
-            break
-          end
-        end
-        for c in f2:children() do
-          if c:get_type() == f2type then
-            c2 = c:get_range():get_start()
-            break
-          end
-        end
-      end
-      if not (c1 and c2) then
-        if options.debug then
-          io.stderr:write("could not find feature type to determine frame agreement\n")
-        end
-        return false
-      end
-      if (c1 % 3) ~= (c2 % 3) then
-        if options.debug then
-          io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
-        end
-        return false
-      else
-        if options.debug then
-          io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
-        end
-        return true
       end
     end
   end
@@ -239,12 +253,8 @@ function stream:process_current_cluster()
           table.insert(self.outqueue, deep_copy(best, nil, to_gene))
         else
           -- this is an aligned part with no mutations but no start/stop
-          -- codons either, ignore for now
-          if options.debug then
-            io.stderr:write("partial alignment ".. tostring(best) ..
-                            " ignored as it is not degenerated\n")
-          end
-          table.insert(self.outqueue, deep_copy(best, nil))
+          -- codons either
+          table.insert(self.outqueue, best)
         end
       end
     elseif #genes == 1 then
@@ -255,10 +265,13 @@ function stream:process_current_cluster()
         --io.stderr:write("HSP and gene identical " .. best:get_attribute("ID") .. "\n")
         table.insert(self.outqueue, genes[1])
       elseif not genes[1]:get_range():contains(best:get_range()) then
-        if frame_agreement(genes[1], "CDS", best, "pseudogenic_exon") then
+        if options.ignore_frame_agreement or frame_agreement(genes[1], "CDS", best, "pseudogenic_exon") then
           -- only handle in-frame cases
-          local ratio = genes[1]:get_range():length()/best:get_range():length()
-          if ratio < tonumber(options.threshold) then
+          local ratio = best:get_range():length()/genes[1]:get_range():length()
+          if options.debug then
+            io.stderr:write(ratio .. "\n")
+          end
+          if ratio > tonumber(options.threshold) then
             -- if in frame and length ratio is below threshold
             if options.debug then
               io.stderr:write("replaced gene " .. genes[1]:get_attribute("ID") .. "\n")

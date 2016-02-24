@@ -369,10 +369,10 @@ for name, values in pairs(refs.species) do
   io.flush()
 
   -- prepare GAF
-  if file_exists(values.gaf) then
+  if values.gaf and file_exists(values.gaf) then
     os.execute("cp " .. values.gaf .. " " .. name .. "/go.gaf")
   else
-    io.stderr:write("warning: GAF for " .. name .. " does not exist in " .. values.gaf .. "\n")
+    io.stderr:write("warning: GAF for " .. name .. " does not exist in " .. tostring(values.gaf) .. "\n")
   end
   values.gaf = nil
 

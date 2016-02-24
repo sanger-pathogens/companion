@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014 Genome Research Ltd
+  Copyright (c) 2014-2016 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -17,11 +17,18 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
--- TODO: make this dynamic
-models = {}
-models.rRNA = {"SSU_rRNA_eukarya","5S_rRNA", "5_8S_rRNA"}
-models.snRNA = {"U1", "U2", "U4", "U5", "U6"}
-models.snoRNA = {"snoTBR5", "snoTBR17", "snoTBR7"}
+-- please curate these
+function assign_type(name)
+  if name:match("rRNA") then
+    return 'rRNA'
+  elseif name:match("[Ss][Nn][Oo][RT]") then
+    return 'snoRNA'
+  elseif name:match("U%d") then
+    return 'snRNA'
+  end
+  -- catch all
+  return 'ncRNA'
+end
 
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
@@ -63,14 +70,27 @@ while true do
     if strand == '-' then
       sfrom, sto = sto, sfrom
     end
-    print(seqid .. "\tGenomeTools\tgene\t" .. sfrom .. "\t" .. sto .. "\t"
-            .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i)
-    print(seqid .. "\tINFERNAL\t" .. qry2type(qry) .. "\t" .. sfrom .. "\t"
-            .. sto .. "\t" .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i
-            .. ":" .. qry2type(qry) .. ";Parent=ncRNA"
-            .. i ..";Name=" .. qry .. ";gc=" .. gc .. ";evalue=" .. evalue
-            ..";score=" .. score ..";model_name=" .. qryacc .. ";model_range="
-            .. mfrom .. "-" .. mto)
-    i = i + 1
+    if qry ~= 'tRNA' then
+      print(seqid .. "\tGenomeTools\tgene\t" .. sfrom .. "\t" .. sto .. "\t"
+              .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i)
+      local toptype = assign_type(qry)
+      print(seqid .. "\tINFERNAL\t" .. gff3_encode(toptype) .. "\t"
+              .. sfrom .. "\t"
+              .. sto .. "\t"
+              .. score .. "\t"
+              .. strand .. "\t"
+              .. ".\t"
+              .. "ID=ncRNA" .. i
+              .. ":" .. gff3_encode(toptype)
+                .. ";Parent=ncRNA" .. i
+                .. ";Name=" .. qry
+                .. ";gc=" .. gc
+                .. ";evalue=" .. evalue
+                .. ";score=" .. score
+                .. ";model_name=" .. gff3_encode(qry)
+                .. ";model_acc=" .. gff3_encode(qryacc)
+                .. ";model_range=" .. mfrom .. "-" .. mto)
+      i = i + 1
+    end
   end
 end
