@@ -62,7 +62,7 @@ process sanitize_input {
     file 'sanitized.fasta' into sanitized_genome_file
 
     """
-    sed 's/['\\''+ &]/_/g' ${genome_file} | trim_wildcards.lua > sanitized.fasta
+    sed 's/['\\''+&]/_/g' ${genome_file} | trim_wildcards.lua > sanitized.fasta
     """
 }
 
