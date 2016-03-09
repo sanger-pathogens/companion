@@ -1052,6 +1052,9 @@ process annotate_pfam {
     file 'with_pfam.gaf' into gaf_with_pfam
 
     """
+    if [ ! -s pfam.gff3 ]; then
+        echo '##gff-version 3' > pfam.gff3
+    fi
     iproscan_gff3_merge.lua with_ortho.gff3 pfam.gff3 | \
       gt gff3 -tidy -sort -retainids > with_pfam.gff3
     iproscan_gaf_merge.lua with_pfam.gff3 pfam.gff3 \
