@@ -437,7 +437,9 @@ function embl_vis:visit_feature(fn)
         io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
         io.write("\n")
         io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
-        io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
+        if node:get_attribute('gap_type') then
+          io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
+        end
       end
     end
   else
