@@ -17,80 +17,33 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
--- please curate these
-function assign_type(name)
-  if name:match("rRNA") then
-    return 'rRNA'
-  elseif name:match("[Ss][Nn][Oo][RT]") then
-    return 'snoRNA'
-  elseif name:match("U%d") then
-    return 'snRNA'
-  end
-  -- catch all
-  return 'ncRNA'
-end
-
 package.path = gt.script_dir .. "/?.lua;" .. package.path
 require("lib")
 
-function qry2type(qry)
-  for m in pairs(models) do
-    for _,s in ipairs(models[m]) do
-      if qry == s then
-        return m
+-- overlapping cluster handler, picks feature with best e-value
+function reconcile_overlaps(cluster)
+  local best = nil
+  local min_eval = nil
+  for _,n in ipairs(cluster) do
+    for c in n:children() do
+      this_eval = tonumber(c:get_attribute('evalue'))
+      if this_eval then
+        if not min_eval or this_eval < min_eval then
+          best = n
+          min_eval = this_eval
+        end
       end
     end
   end
-  return qry
+  assert(best)
+  return {best}
 end
 
-print("##gff-version\t 3")
-local i = 1
-while true do
-  local line = io.read()
-  if line == nil then break end
+instream = infernal_in_stream_new(io.stdin)
+ovlstream = overlap_stream_new(instream, nil, reconcile_overlaps)
+outstream = gt.gff3_out_stream_new(ovlstream)
 
-  if string.len(line) > 0 and string.sub(line, 1, 1) ~= "#" then
-    la = split(line, '%s+')
-    seqid = la[1]
-    seqacc = la[2]
-    qry = la[3]
-    qryacc = la[4]
-    mfrom = la[6]
-    mto = la[7]
-    sfrom = la[8]
-    sto = la[9]
-    strand = la[10]
-    trunc = la[11]
-    gc = la[13]
-    score = la[15]
-    evalue = la[16]
-    inc = la[17]
-
-    if strand == '-' then
-      sfrom, sto = sto, sfrom
-    end
-    if qry ~= 'tRNA' then
-      print(seqid .. "\tGenomeTools\tgene\t" .. sfrom .. "\t" .. sto .. "\t"
-              .. score .. "\t" .. strand .. "\t.\tID=ncRNA" .. i)
-      local toptype = assign_type(qry)
-      print(seqid .. "\tINFERNAL\t" .. gff3_encode(toptype) .. "\t"
-              .. sfrom .. "\t"
-              .. sto .. "\t"
-              .. score .. "\t"
-              .. strand .. "\t"
-              .. ".\t"
-              .. "ID=ncRNA" .. i
-              .. ":" .. gff3_encode(toptype)
-                .. ";Parent=ncRNA" .. i
-                .. ";Name=" .. qry
-                .. ";gc=" .. gc
-                .. ";evalue=" .. evalue
-                .. ";score=" .. score
-                .. ";model_name=" .. gff3_encode(qry)
-                .. ";model_acc=" .. gff3_encode(qryacc)
-                .. ";model_range=" .. mfrom .. "-" .. mto)
-      i = i + 1
-    end
-  end
+local n = outstream:next_tree()
+while n do
+  n = outstream:next_tree()
 end
