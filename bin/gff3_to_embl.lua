@@ -440,7 +440,7 @@ function embl_vis:visit_feature(fn)
         if node:get_attribute('gap_type') then
           io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
           if node:get_attribute('gap_type') == 'within scaffold' then
-            io.write("FT                   /linkage_evidence=\"align_genus\"\n")
+            io.write("FT                   /linkage_evidence=\"align genus\"\n")
           end
         end
       end
