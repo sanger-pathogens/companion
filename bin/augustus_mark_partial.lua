@@ -39,140 +39,157 @@ function remove_codons_visitor:visit_feature(fn)
   return 0
 end
 
-regions = {}
+function join_first(fn)
+-- join intron with first CDS/exon, drop first intron
+  if fn:get_strand() == '+' then
+    local rng = nil
+    for i in fn:children() do
+      if i:get_type() == 'intron' then
+        rng = i:get_range()
+        fn:remove_leaf(i)
+        break
+      end
+    end
+    if rng then
+      for c in fn:children() do
+        if c:get_type() == 'CDS' then
+          c:set_range(c:get_range():join(rng))
+          break
+        end
+      end
+      for c in fn:children() do
+        if c:get_type() == 'exon' then
+          c:set_range(c:get_range():join(rng))
+          break
+        end
+      end
+    end
+  end
+  if fn:get_strand() == '-' then
+    local lintron, lcds, lexon = nil, nil, nil
+    for i in fn:children() do
+      if i:get_type() == 'intron' then
+        lintron = i
+      end
+    end
+    if lintron then
+      for c in fn:children() do
+        if c:get_type() == 'CDS' then
+          lcds = c
+        end
+      end
+      for c in fn:children() do
+        if c:get_type() == 'exon' then
+          lexon = c
+        end
+      end
+      if lcds and lexon then
+        lcds:set_range(lexon:get_range():join(lintron:get_range()))
+        lexon:set_range(lexon:get_range():join(lintron:get_range()))
+        fn:remove_leaf(lintron)
+      end
+    end
+  end
+end
+
+function join_last(fn)
+  -- join first intron with first CDS/exon, drop it afterwards
+  if fn:get_strand() == '-' then
+    rng = nil
+    for i in fn:children() do
+      if i:get_type() == 'intron' then
+        rng = i:get_range()
+        fn:remove_leaf(i)
+        break
+      end
+    end
+    if rng then
+      for c in fn:children() do
+        if c:get_type() == 'CDS' then
+          c:set_range(c:get_range():join(rng))
+          break
+        end
+      end
+      for c in fn:children() do
+        if c:get_type() == 'exon' then
+          c:set_range(c:get_range():join(rng))
+          break
+        end
+      end
+    end
+  end
+  if fn:get_strand() == '+' then
+    local lintron, lcds, lexon = nil, nil, nil
+    for i in fn:children() do
+      if i:get_type() == 'intron' then
+        lintron = i
+      end
+    end
+    if lintron then
+      for c in fn:children() do
+        if c:get_type() == 'CDS' then
+          lcds = c
+        end
+      end
+      for c in fn:children() do
+        if c:get_type() == 'exon' then
+          lexon = c
+        end
+      end
+      if lcds and lexon then
+        lcds:set_range(lexon:get_range():join(lintron:get_range()))
+        lexon:set_range(lexon:get_range():join(lintron:get_range()))
+        fn:remove_leaf(lintron)
+      end
+    end
+  end
+end
+
 mark_partial_visitor = gt.custom_visitor_new()
 function mark_partial_visitor:visit_feature(fn)
   has_start, has_stop, has_intron = false, false, false
   if fn:get_type() == 'gene' then
     -- determine if gene is partial
-    for n in fn:children() do
-      if n:get_type() == 'start_codon' then
-        has_start = true
-      elseif n:get_type() == 'stop_codon' then
-        has_stop = true
-      elseif n:get_type() == 'intron' then
-        has_intron = true
-      end
-    end
-    -- set corresponding attributes
-    if not has_start then
-      fn:add_attribute("fiveEndPartial","true")
-      if fn:get_strand() == "+" then
-        fn:add_attribute("Start_range",".,.")
-      elseif fn:get_strand() == "-" then
-        fn:add_attribute("End_range",".,.")
-      end
-    end
-    if not has_stop then
-      fn:add_attribute("threeEndPartial","true")
-      if fn:get_strand() == "-" then
-        fn:add_attribute("Start_range",".,.")
-      elseif fn:get_strand() == "+" then
-        fn:add_attribute("End_range",".,.")
-      end
-    end
-  end
-  if not has_start and has_intron then
-    -- join intron with first CDS/exon, drop first intron
-    if fn:get_strand() == '+' then
-      rng = nil
-      for i in fn:children() do
-        if i:get_type() == 'intron' then
-          rng = i:get_range()
-          fn:remove_leaf(i)
-          break
+    for fn2 in fn:children() do
+      if fn2:get_type() == 'mRNA' then
+        local nof_children = 0
+        for n in fn2:children() do
+          nof_children = nof_children + 1
         end
-      end
-      if rng then
-        for c in fn:children() do
-          if c:get_type() == 'CDS' then
-            c:set_range(c:get_range():join(rng))
-            break
+        local i = 1
+        for n in fn2:children() do
+          if n:get_type() == 'start_codon' then
+            has_start = true
+          elseif n:get_type() == 'stop_codon' then
+            has_stop = true
+          elseif n:get_type() == 'intron' then
+            has_intron = true
           end
         end
-        for c in fn:children() do
-          if c:get_type() == 'exon' then
-            c:set_range(c:get_range():join(rng))
-            break
+        -- set corresponding attributes
+        if not has_start then
+          fn:add_attribute("fiveEndPartial","true")
+          if fn:get_strand() == "+" then
+            fn:add_attribute("Start_range",".,.")
+          elseif fn:get_strand() == "-" then
+            fn:add_attribute("End_range",".,.")
+          end
+        end
+        if not has_stop then
+          fn:add_attribute("threeEndPartial","true")
+          if fn:get_strand() == "-" then
+            fn:add_attribute("Start_range",".,.")
+          elseif fn:get_strand() == "+" then
+            fn:add_attribute("End_range",".,.")
           end
         end
       end
-    end
-    if fn:get_strand() == '-' then
-      local lintron, lcds, lexon = nil, nil, nil
-      for i in fn:children() do
-        if i:get_type() == 'intron' then
-          lintron = i
-        end
+      -- disable the leading/trailing intron joining for now
+      if not has_start and has_intron then
+        -- join_first(fn2)
       end
-      if lintron then
-        for c in fn:children() do
-          if c:get_type() == 'CDS' then
-            lcds = c
-          end
-        end
-        for c in fn:children() do
-          if c:get_type() == 'exon' then
-            lexon = c
-          end
-        end
-        if lcds and lexon then
-          lcds:set_range(lexon:get_range():join(lintron:get_range()))
-          lexon:set_range(lexon:get_range():join(lintron:get_range()))
-          fn:remove_leaf(lintron)
-        end
-      end
-    end
-  end
-  if not has_stop and has_intron then
-    -- join first intron with first CDS/exon, drop it afterwards
-    if fn:get_strand() == '-' then
-      rng = nil
-      for i in fn:children() do
-        if i:get_type() == 'intron' then
-          rng = i:get_range()
-          fn:remove_leaf(i)
-          break
-        end
-      end
-      if rng then
-        for c in fn:children() do
-          if c:get_type() == 'CDS' then
-            c:set_range(c:get_range():join(rng))
-            break
-          end
-        end
-        for c in fn:children() do
-          if c:get_type() == 'exon' then
-            c:set_range(c:get_range():join(rng))
-            break
-          end
-        end
-      end
-    end
-    if fn:get_strand() == '+' then
-      local lintron, lcds, lexon = nil, nil, nil
-      for i in fn:children() do
-        if i:get_type() == 'intron' then
-          lintron = i
-        end
-      end
-      if lintron then
-        for c in fn:children() do
-          if c:get_type() == 'CDS' then
-            lcds = c
-          end
-        end
-        for c in fn:children() do
-          if c:get_type() == 'exon' then
-            lexon = c
-          end
-        end
-        if lcds and lexon then
-          lcds:set_range(lexon:get_range():join(lintron:get_range()))
-          lexon:set_range(lexon:get_range():join(lintron:get_range()))
-          fn:remove_leaf(lintron)
-        end
+      if not has_stop and has_intron then
+        -- join_last(fn2)
       end
     end
   end

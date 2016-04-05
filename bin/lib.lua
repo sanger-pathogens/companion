@@ -1,6 +1,6 @@
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2014-2015 Genome Research Ltd
+  Copyright (c) 2014-2016 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -373,4 +373,200 @@ function print_r ( t )
         sub_print_r(t,"  ")
     end
     print()
+end
+
+function overlap_stream_new(instream, types, func)
+  local overlap_stream = gt.custom_stream_new_unsorted()
+  overlap_stream.instream = instream
+  overlap_stream.func = func
+  overlap_stream.outqueue = {}
+  overlap_stream.curr_gene_set = {}
+  overlap_stream.curr_rng = nil
+  overlap_stream.last_seqid = nil
+  overlap_stream.inkeys = nil
+  overlap_stream.end_reached = false
+
+  -- register relevant types as keys for set queries later
+  if types then
+    for _,v in ipairs(types) do
+      if not self.inkeys then
+        self.inkeys = {}
+      end
+      overlap_stream.inkeys[v] = true
+    end
+  end
+
+  -- handler function for each cluster
+  function overlap_stream:process_current_cluster()
+    bestset = self.func(self.curr_gene_set)
+    for _,v in ipairs(bestset) do
+      table.insert(self.outqueue, v)
+    end
+    self.curr_gene_set = {}
+  end
+
+  function overlap_stream:next_tree()
+    local complete_cluster = false
+    local mygn = nil
+    if #self.outqueue > 0  then
+      return table.remove(self.outqueue, 1)
+    else
+      if self.end_reached then
+        return nil
+      else
+        complete_cluster = false
+      end
+    end
+    while not complete_cluster do
+      mygn = self.instream:next_tree()
+      if mygn then
+        rval, err = pcall(GenomeTools_genome_node.get_type, mygn)
+        if rval then
+          local fn = mygn
+          local new_rng = mygn:get_range()
+          if not self.inkeys or self.inkeys[fn:get_type()] then
+            if #self.curr_gene_set == 0 then
+              table.insert(self.curr_gene_set, fn)
+              self.curr_rng = new_rng
+            else
+              if self.last_seqid == fn:get_seqid()
+                  and self.curr_rng:overlap(new_rng) then
+                table.insert(self.curr_gene_set, fn)
+                self.curr_rng = self.curr_rng:join(new_rng)
+              else
+                -- no more overlap
+                self:process_current_cluster()
+                table.insert(self.curr_gene_set, fn)
+                self.curr_rng = new_rng
+                if #self.outqueue > 0  then
+                  outgn = table.remove(self.outqueue, 1)
+                  complete_cluster = true
+                end
+              end
+            end
+            self.last_seqid = mygn:get_seqid()
+          end
+        else
+          -- no feature node
+          self:process_current_cluster()
+          table.insert(self.outqueue, fn)
+          if #self.outqueue > 0  then
+            outgn = table.remove(self.outqueue, 1)
+            complete_cluster = true
+          end
+        end
+      else
+        -- end of annotation
+        outgn = mygn
+        if #self.curr_gene_set > 0 then
+          self:process_current_cluster()
+          table.insert(self.outqueue, fn)
+        end
+        outgn = table.remove(self.outqueue, 1)
+        complete_cluster = true
+        self.end_reached = true
+      end
+    end
+    return outgn
+  end
+  return overlap_stream
+end
+
+function infernal_in_stream_new(myio)
+  local assign_type = function (name)
+    if name:match("rRNA") then
+      return 'rRNA'
+    elseif name:match("[Ss][Nn][Oo][RT]") then
+      return 'snoRNA'
+    elseif name:match("U%d") then
+      return 'snRNA'
+    end
+    -- catch all
+    return 'ncRNA'
+  end
+
+  local feats = {}
+  local i = 1
+  while true do
+    local line = myio:read()
+    if line == nil then break end
+
+    if string.len(line) > 0 and string.sub(line, 1, 1) ~= "#" then
+      la = split(line, '%s+')
+      seqid = la[1]
+      seqacc = la[2]
+      qry = la[3]
+      qryacc = la[4]
+      mfrom = la[6]
+      mto = la[7]
+      sfrom = la[8]
+      sto = la[9]
+      strand = la[10]
+      trunc = la[11]
+      gc = la[13]
+      score = la[15]
+      evalue = la[16]
+      inc = la[17]
+
+      if strand == '-' then
+        sfrom, sto = sto, sfrom
+      end
+      if qry ~= 'tRNA' then
+        local newgene = gt.feature_node_new(seqid, "gene", sfrom, sto, strand)
+        newgene:set_score(tonumber(score))
+        newgene:set_attribute("ID", "ncRNA" .. tostring(i))
+        newgene:set_source("GenomeTools")
+
+        local toptype = assign_type(qry)
+        local newrna = gt.feature_node_new(seqid, toptype, sfrom, sto, strand)
+        newrna:set_score(tonumber(score))
+        newrna:set_attribute("ID", "ncRNA" .. tostring(i) .. ":" .. gff3_encode(toptype))
+        newrna:set_attribute("Name", gff3_encode(qry))
+        newrna:set_attribute("gc", gff3_encode(gc))
+        newrna:set_attribute("evalue", gff3_encode(evalue))
+        newrna:set_attribute("score", gff3_encode(score))
+        newrna:set_attribute("model_name", gff3_encode(qry))
+        newrna:set_attribute("model_acc", gff3_encode(qryacc))
+        newrna:set_attribute("model_range", tostring(mfrom) .. "-" .. tostring(mto))
+        newrna:set_source("INFERNAL")
+        newgene:add_child(newrna)
+        table.insert(feats, newgene)
+        i = i + 1
+      end
+    end
+  end
+
+  local s = gt.custom_stream_new_unsorted()
+  s.feats = feats
+  table.sort(s.feats, function(a,b)
+    -- XXX: this should best be done in gt by wrapping genome_node_compare()
+    if a:get_seqid() < b:get_seqid() then
+      return true
+    elseif  a:get_seqid() > b:get_seqid() then
+      return false
+    end
+    local arng = a:get_range()
+    local brng = b:get_range()
+    if arng:get_start() < brng:get_start() then
+      return true
+    elseif arng:get_start() > brng:get_start() then
+      return false
+    else
+      assert(arng:get_start() == brng:get_start())
+      if arng:get_end() < brng:get_end() then
+        return true
+      else
+        return false
+      end
+    end
+  end)
+  function s:next_tree()
+    if #self.feats > 0 then
+      local t = table.remove(self.feats, 1)
+      return t
+    else
+      return nil
+    end
+  end
+  return s
 end
