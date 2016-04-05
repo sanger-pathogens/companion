@@ -41,7 +41,7 @@ end
 
 instream = infernal_in_stream_new(io.stdin)
 ovlstream = overlap_stream_new(instream, nil, reconcile_overlaps)
-outstream = gt.gff3_out_stream_new(ovlstream)
+outstream = gt.gff3_out_stream_new_retainids(ovlstream)
 
 local n = outstream:next_tree()
 while n do
