@@ -54,34 +54,33 @@ log.info ""
 // INPUT SANITIZATION
 // ==================
 
+if (params.truncate_input_headers) {
+    process truncate_input_headers {
+
+        input:
+        file genome_file
+
+        output:
+        file 'truncated.fasta' into truncated_genome_file
+
+        """
+        truncate_header.lua < ${genome_file} > truncated.fasta
+        """
+    }
+} else {
+    genome_file.into { truncated_genome_file }
+}
+
 process sanitize_input {
     input:
-    file genome_file
+    file 'truncated.fasta' from truncated_genome_file
 
     output:
     file 'sanitized.fasta' into sanitized_genome_file
 
     """
-    sed 's/['\\''+&]/_/g' ${genome_file} | trim_wildcards.lua > sanitized.fasta
+    sed 's/['\\''+&= ]/_/g' truncated.fasta | trim_wildcards.lua > sanitized.fasta
     """
-}
-
-if (params.truncate_input_headers) {
-    process truncate_input_headers {
-        afterScript 'rm -f sanitized.fasta'
-
-        input:
-        file 'sanitized.fasta' from sanitized_genome_file
-
-        output:
-        file 'sanitized.truncated.fasta' into truncated_genome_file
-
-        """
-        truncate_header.lua < sanitized.fasta > sanitized.truncated.fasta
-        """
-    }
-} else {
-    sanitized_genome_file.into { truncated_genome_file }
 }
 
 // PSEUDOCHROMOSOME CONTIGUATION
@@ -93,7 +92,7 @@ if (params.do_contiguation) {
         afterScript 'rm -rf Ref.* Res.*'
 
         input:
-        file truncated_genome_file
+        file sanitized_genome_file
         file ref_chr
         file ref_dir
 
@@ -107,7 +106,7 @@ if (params.do_contiguation) {
 
         """
         abacas2.nonparallel.sh \
-          "${ref_chr}" "${truncated_genome_file}" "${params.ABACAS_MATCH_SIZE}" \
+          "${ref_chr}" "${sanitized_genome_file}" "${params.ABACAS_MATCH_SIZE}" \
           "${params.ABACAS_MATCH_SIM}" 0 3000
         abacas_combine.lua . pseudo "${ref_dir}" "${params.ref_species}" \
           "${params.GENOME_PREFIX}" "${params.ABACAS_BIN_CHR}" \
@@ -117,7 +116,7 @@ if (params.do_contiguation) {
 } else {
     process prepare_noncontiguated_input {
         input:
-        file truncated_genome_file
+        file sanitized_genome_file
 
         output:
         file 'pseudo.pseudochr.fasta' into pseudochr_seq
@@ -127,7 +126,7 @@ if (params.do_contiguation) {
         file 'pseudo.contigs.fasta' into contigs_seq
 
         """
-        no_abacas_prepare.lua ${truncated_genome_file} pseudo
+        no_abacas_prepare.lua ${sanitized_genome_file} pseudo
         """
     }
 }
