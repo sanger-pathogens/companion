@@ -228,7 +228,6 @@ process merge_ncrnas {
     """
 }
 
-hints = Channel.create()
 
 // PROTEIN-DNA ALIGNMENT
 // =====================
