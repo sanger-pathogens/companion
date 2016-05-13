@@ -134,6 +134,7 @@ function format_embl_sequence(sequence)
                                             other .. " other;\n")
   local i = 1
   local pos = 0
+  local last_line = true
   -- format and output sequence
   io.write("     ")
   for c in sequence:gmatch("%a", 10) do
@@ -142,11 +143,20 @@ function format_embl_sequence(sequence)
       io.write(" ")
     end
     if i % 60 == 0 then
-      io.write(string.format("%9s\n     ", i))
+      io.write(string.format("%9s\n", i))
+      -- this is to address the situation where a sequence fills the last line
+      -- completely
+      if i == l then
+        last_line = false
+      else
+        io.write("     ")
+      end
     end
     i = i + 1
   end
-  io.write(string.format(string.rep(' ',(80-i%60-(i%60)/10-13)) .. "%10d\n", i-1))
+  if last_line then
+    io.write(string.format(string.rep(' ',(80-i%60-(i%60)/10-13)) .. "%10d\n", i-1))
+  end
 end
 
 embl_vis = gt.custom_visitor_new()
