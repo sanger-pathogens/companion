@@ -134,6 +134,7 @@ function format_embl_sequence(sequence)
                                             other .. " other;\n")
   local i = 1
   local pos = 0
+  local last_line = true
   -- format and output sequence
   io.write("     ")
   for c in sequence:gmatch("%a", 10) do
@@ -142,17 +143,77 @@ function format_embl_sequence(sequence)
       io.write(" ")
     end
     if i % 60 == 0 then
-      io.write(string.format("%9s\n     ", i))
+      io.write(string.format("%9s\n", i))
+      -- this is to address the situation where a sequence fills the last line
+      -- completely
+      if i == l then
+        last_line = false
+      else
+        io.write("     ")
+      end
     end
     i = i + 1
   end
-  io.write(string.format(string.rep(' ',(80-i%60-(i%60)/10-13)) .. "%10d\n", i-1))
+  if last_line then
+    io.write(string.format(string.rep(' ',(80-i%60-(i%60)/10-13)) .. "%10d\n", i-1))
+  end
 end
 
 embl_vis = gt.custom_visitor_new()
 embl_vis.pps = collect_vis.pps
 embl_vis.gos = parse_obo(obofile)
 embl_vis.last_seqid = nil
+
+function print_generic(fn, mtype, etype)
+  local cnt = 0
+  for c in fn:children() do
+    if c:get_type() == mtype then
+      cnt = cnt + 1
+    end
+  end
+  if cnt == 0 then
+    return false
+  end
+  -- TODO: make spacing automatic
+  io.write("FT   " .. etype .. "           ")
+  if fn:get_strand() == "-" then
+    io.write("complement(")
+  end
+  if cnt > 1 then
+    io.write("join(")
+  end
+  local i = 1
+  local coding_length = 0
+  local start_phase = 0
+  local end_phase = 0
+  for c in fn:children() do
+    if c:get_type() == mtype then
+      if i == 1 and fn:get_attribute("Start_range") then
+        io.write("<")
+      end
+      io.write(c:get_range():get_start())
+      io.write("..")
+      if i == cnt and fn:get_attribute("End_range") then
+        io.write(">")
+      end
+      io.write(c:get_range():get_end())
+      if i ~= cnt then
+        io.write(",")
+      end
+      coding_length = coding_length + c:get_range():length()
+      i = i + 1
+    end
+  end
+  if cnt > 1 then
+    io.write(")")
+  end
+  if fn:get_strand() == "-" then
+    io.write(")")
+  end
+  io.write("\n")
+  return true
+end
+
 function embl_vis:visit_feature(fn)
   if collect_vis.seqs[fn:get_seqid()] then
     if embl_vis.last_seqid ~= fn:get_seqid() then
@@ -386,6 +447,30 @@ function embl_vis:visit_feature(fn)
                                                   ";evidence=" .. v.evidence .. "\"\n")
             end
           end
+        end
+        -- add UTRs
+        -- TODO: clean this up
+        if print_generic(fn, 'five_prime_UTR', "5'UTR") then
+          if genesym then
+            io.write("FT                   /gene=\"".. genesym .. "\"\n")
+          else
+            io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
+          end
+          format_embl_attrib(node , "ID", "locus_tag",
+            function (s)
+              return split(s,':')[1]
+            end)
+        end
+        if print_generic(fn, 'three_prime_UTR', "3'UTR") then
+          if genesym then
+            io.write("FT                   /gene=\"".. genesym .. "\"\n")
+          else
+            io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
+          end
+          format_embl_attrib(node , "ID", "locus_tag",
+            function (s)
+              return split(s,':')[1]
+            end)
         end
       elseif node:get_type() == "tRNA" then
         io.write("FT   tRNA            ")
