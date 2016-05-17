@@ -449,12 +449,17 @@ function embl_vis:visit_feature(fn)
           end
         end
         -- add UTRs
+        -- TODO: clean this up
         if print_generic(fn, 'five_prime_UTR', "5'UTR") then
           if genesym then
             io.write("FT                   /gene=\"".. genesym .. "\"\n")
           else
             io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
           end
+          format_embl_attrib(node , "ID", "locus_tag",
+            function (s)
+              return split(s,':')[1]
+            end)
         end
         if print_generic(fn, 'three_prime_UTR', "3'UTR") then
           if genesym then
@@ -462,6 +467,10 @@ function embl_vis:visit_feature(fn)
           else
             io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
           end
+          format_embl_attrib(node , "ID", "locus_tag",
+            function (s)
+              return split(s,':')[1]
+            end)
         end
       elseif node:get_type() == "tRNA" then
         io.write("FT   tRNA            ")
