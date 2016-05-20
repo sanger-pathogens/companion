@@ -1,0 +1,527 @@
+
+PII0_00
+4442143 nucleotides in sequence
+Mean G+C content = 27.0%
+ 
+--
+    tRNA-Ala(cgc)
+    73 bases, %GC = 60.3
+    Sequence c[2087288,2087360]
+ 
+
+--
+    tRNA-Arg(ccg)
+    74 bases, %GC = 63.5
+    Sequence c[2087414,2087487]
+ 
+
+--
+    tRNA-Phe(gaa)
+    73 bases, %GC = 61.6
+    Sequence [2087592,2087664]
+ 
+
+--
+    tRNA-Phe(gaa)
+    73 bases, %GC = 61.6
+    Sequence c[3281931,3282003]
+ 
+
+--
+    tRNA-Val(cac)
+    73 bases, %GC = 61.6
+    Sequence [3282229,3282301]
+ 
+
+--
+
+PII0_1
+87691 nucleotides in sequence
+Mean G+C content = 34.8%
+
+--
+
+PII0_10
+476884 nucleotides in sequence
+Mean G+C content = 34.6%
+
+--
+
+PII0_11
+507905 nucleotides in sequence
+Mean G+C content = 32.2%
+ 
+--
+    tRNA-His(gtg)
+    72 bases, %GC = 52.8
+    Sequence [152397,152468]
+ 
+
+--
+
+PII0_12
+608069 nucleotides in sequence
+Mean G+C content = 34.9%
+
+--
+
+PII0_13
+344139 nucleotides in sequence
+Mean G+C content = 33.8%
+
+--
+
+PII0_14
+420797 nucleotides in sequence
+Mean G+C content = 35.2%
+
+--
+
+PII0_15
+419505 nucleotides in sequence
+Mean G+C content = 29.5%
+
+--
+
+PII0_16
+602924 nucleotides in sequence
+Mean G+C content = 32.6%
+
+--
+
+PII0_17
+414859 nucleotides in sequence
+Mean G+C content = 32.5%
+ 
+--
+    tRNA-Asp(gtc)
+    72 bases, %GC = 58.3
+    Sequence c[197844,197915]
+ 
+
+--
+    tRNA-Ser(gct)
+    81 bases, %GC = 59.3
+    Sequence [198021,198101]
+ 
+
+--
+    tRNA-Ala(agc)
+    76 bases, %GC = 55.3
+    Sequence [198170,198245]
+ 
+
+--
+
+PII0_18
+120390 nucleotides in sequence
+Mean G+C content = 19.6%
+
+--
+
+PII0_19
+708469 nucleotides in sequence
+Mean G+C content = 34.3%
+ 
+--
+    tRNA-Arg(acg)
+    72 bases, %GC = 54.2
+    Sequence [263155,263226]
+ 
+
+--
+
+PII0_2
+244522 nucleotides in sequence
+Mean G+C content = 32.9%
+
+--
+
+PII0_20
+693120 nucleotides in sequence
+Mean G+C content = 35.5%
+
+--
+
+PII0_21
+471850 nucleotides in sequence
+Mean G+C content = 35.7%
+ 
+--
+    tRNA-Asn(att)
+    73 bases, %GC = 63.0
+    Sequence c[388779,388851]
+ 
+
+--
+    tRNA-Asp(atc)
+    73 bases, %GC = 64.4
+    Sequence c[389724,389796]
+ 
+
+--
+
+PII0_22
+225657 nucleotides in sequence
+Mean G+C content = 26.8%
+ 
+--
+    tRNA-Trp(cca)
+    74 bases, %GC = 54.1
+    Sequence c[144301,144374]
+ 
+
+--
+
+PII0_23
+277125 nucleotides in sequence
+Mean G+C content = 41.3%
+
+--
+
+PII0_24
+553755 nucleotides in sequence
+Mean G+C content = 26.8%
+
+--
+
+PII0_25
+637111 nucleotides in sequence
+Mean G+C content = 27.8%
+
+--
+
+PII0_26
+772639 nucleotides in sequence
+Mean G+C content = 37.3%
+ 
+--
+    tRNA-Leu(taa)
+    84 bases, %GC = 56.0
+    Sequence c[221276,221359]
+ 
+
+--
+    tRNA-Gln(ctg)
+    74 bases, %GC = 54.1
+    Sequence c[221417,221490]
+ 
+
+--
+    tRNA-Ile(aat)
+    75 bases, %GC = 56.0
+    Sequence [221578,221652]
+ 
+
+--
+
+PII0_27
+1630301 nucleotides in sequence
+Mean G+C content = 33.5%
+ 
+--
+    tRNA-Gly(ccc)
+    72 bases, %GC = 62.5
+    Sequence [352060,352131]
+ 
+
+--
+    tRNA-Leu(aag)
+    84 bases, %GC = 54.8
+    Sequence [352210,352293]
+ 
+
+--
+
+PII0_28
+261796 nucleotides in sequence
+Mean G+C content = 31.1%
+
+--
+
+PII0_29
+683580 nucleotides in sequence
+Mean G+C content = 28.1%
+
+--
+
+PII0_3
+333958 nucleotides in sequence
+Mean G+C content = 34.5%
+
+--
+
+PII0_30
+772158 nucleotides in sequence
+Mean G+C content = 36.9%
+
+--
+
+PII0_31
+456808 nucleotides in sequence
+Mean G+C content = 23.5%
+
+--
+
+PII0_32
+934648 nucleotides in sequence
+Mean G+C content = 39.9%
+
+--
+
+PII0_33
+1034439 nucleotides in sequence
+Mean G+C content = 31.7%
+ 
+--
+    tRNA-seC(tca)
+    86 bases, %GC = 61.6
+    Sequence [528766,528851]
+ 
+
+--
+    tRNA-Arg(acg)
+    72 bases, %GC = 54.2
+    Sequence [676870,676941]
+ 
+
+--
+    tRNA-Lys(ctt)
+    74 bases, %GC = 64.9
+    Sequence c[676983,677056]
+ 
+
+--
+    tRNA-Arg(tcg)
+    74 bases, %GC = 59.5
+    Sequence c[677531,677604]
+ 
+
+--
+    tRNA-Thr(tgt)
+    74 bases, %GC = 59.5
+    Sequence [677691,677764]
+ 
+
+--
+    tRNA-Leu(cag)
+    82 bases, %GC = 56.1
+    Sequence [677828,677909]
+ 
+
+--
+    tRNA-Gly(tcc)
+    72 bases, %GC = 62.5
+    Sequence c[677950,678021]
+ 
+
+--
+    tRNA-Lys(ctt)
+    74 bases, %GC = 64.9
+    Sequence c[678260,678333]
+ 
+
+--
+    tRNA-Val(tac)
+    73 bases, %GC = 57.5
+    Sequence c[678404,678476]
+ 
+
+--
+    tRNA-Gln(ttg)
+    73 bases, %GC = 47.9
+    Sequence c[678541,678613]
+ 
+
+--
+    tRNA-Ile(tat)
+    74 bases, %GC = 58.1
+    Sequence [678698,678771]
+ 
+
+--
+
+PII0_34
+1040902 nucleotides in sequence
+Mean G+C content = 37.3%
+ 
+--
+    tRNA-Leu(tag)
+    82 bases, %GC = 63.4
+    Sequence c[771658,771739]
+ 
+
+--
+    tRNA-Ser(tga)
+    81 bases, %GC = 54.3
+    Sequence [771821,771901]
+ 
+
+--
+    tRNA-Met(cat)
+    73 bases, %GC = 60.3
+    Sequence c[771921,771993]
+ 
+
+--
+    tRNA-Glu(ctc)
+    74 bases, %GC = 55.4
+    Sequence [772071,772144]
+ 
+
+--
+
+PII0_35
+1298246 nucleotides in sequence
+Mean G+C content = 34.8%
+
+--
+
+PII0_36
+1696502 nucleotides in sequence
+Mean G+C content = 37.3%
+ 
+--
+    tRNA-???(.ga)
+    81 bases, %GC = 55.6
+    Sequence [858164,858244]
+ 
+
+--
+
+PII0_37
+1073136 nucleotides in sequence
+Mean G+C content = 34.6%
+ 
+--
+    tRNA-Pro(tgg)
+    72 bases, %GC = 56.9
+    Sequence c[181716,181787]
+ 
+
+--
+    tRNA-Met(cat)
+    72 bases, %GC = 58.3
+    Sequence [181865,181936]
+ 
+
+--
+    tRNA-Leu(aag)
+    83 bases, %GC = 55.4
+    Sequence [181997,182079]
+ 
+
+--
+    tRNA-Asn(gtt)
+    73 bases, %GC = 60.3
+    Sequence [893008,893080]
+ 
+
+--
+    tRNA-Ala(tgc)
+    73 bases, %GC = 57.5
+    Sequence c[893122,893194]
+ 
+
+--
+    tRNA-Arg(tct)
+    73 bases, %GC = 52.1
+    Sequence [893282,893354]
+ 
+
+--
+    tRNA-Lys(ttt)
+    74 bases, %GC = 60.8
+    Sequence [893411,893484]
+ 
+
+--
+    tRNA-Arg(cct)
+    73 bases, %GC = 57.5
+    Sequence [893549,893621]
+ 
+
+--
+
+PII0_38
+530449 nucleotides in sequence
+Mean G+C content = 27.2%
+
+--
+
+PII0_39
+3518600 nucleotides in sequence
+Mean G+C content = 37.8%
+ 
+--
+    tRNA-Cys(gca)
+    74 bases, %GC = 56.8
+    Sequence [1133800,1133873]
+ 
+
+--
+    tRNA-Gly(gcc)
+    71 bases, %GC = 64.8
+    Sequence c[2650020,2650090]
+ 
+
+--
+    tRNA-Thr(agt)
+    73 bases, %GC = 65.8
+    Sequence [2650172,2650244]
+ 
+
+--
+    tRNA-Gly(gcc)
+    71 bases, %GC = 64.8
+    Sequence c[2682229,2682299]
+ 
+
+--
+
+PII0_40
+1296860 nucleotides in sequence
+Mean G+C content = 35.5%
+
+--
+
+PII0_41
+1224833 nucleotides in sequence
+Mean G+C content = 26.2%
+ 
+--
+    tRNA-Ile(aat)
+    75 bases, %GC = 56.0
+    Sequence c[228437,228511]
+ 
+
+--
+
+PII0_5
+199034 nucleotides in sequence
+Mean G+C content = 39.3%
+
+--
+
+PII0_6
+398294 nucleotides in sequence
+Mean G+C content = 33.2%
+
+--
+
+PII0_7
+552626 nucleotides in sequence
+Mean G+C content = 28.0%
+
+--
+
+PII0_8
+353812 nucleotides in sequence
+Mean G+C content = 32.1%
+
+--
+
+PII0_9
+705526 nucleotides in sequence
+Mean G+C content = 33.3%
+

@@ -18,7 +18,7 @@ RUN apt-get update -qq
 # we need blast2 for ABACAS2 as it does not use BLAST+ yet
 #
 RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
-                    unzip cpanminus mummer infernal exonerate mafft fasttree \
+                    unzip mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 netcat genometools \
                     last-align libboost-iostreams-dev libgsl2 libgsl-dev \

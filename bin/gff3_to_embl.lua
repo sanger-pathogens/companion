@@ -440,11 +440,21 @@ function embl_vis:visit_feature(fn)
         if geneid then
           if self.gaf and self.gaf[geneid] and not embl_compliant then
             for _,v in ipairs(self.gaf[geneid]) do
-              io.write("FT                   /GO=\"aspect=" .. v.aspect ..
-                                                  ";GOid=" .. v.goid ..
-                                                  ";term=" .. self.gos[v.goid] ..
-                                                  ";with=" .. v.withfrom ..
-                                                  ";evidence=" .. v.evidence .. "\"\n")
+              if self.gos[v.goid] then
+                io.write("FT                   /GO=\"aspect=" .. v.aspect ..
+                                                    ";GOid=" .. v.goid ..
+                                                    ";term=" .. self.gos[v.goid])
+                if v.withfrom and string.len(v.withfrom) > 0 then
+                  io.write(";with=" .. v.withfrom)
+                end
+                if v.evidence then
+                  io.write(";evidence=" .. v.evidence)
+                end
+                io.write("\"\n")
+              else
+                io.stderr:write('no GO entry found for ' .. v.goid ..
+                                ' -- possibly outdated GO OBO file\n')
+              end
             end
           end
         end
