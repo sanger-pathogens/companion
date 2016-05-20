@@ -17,6 +17,8 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
+package.path = gt.script_dir .. "/?.lua;" .. package.path
+require("lib")
 local src = "Aragorn_1.2.36"
 
 print("##gff-version\t 3")
@@ -34,7 +36,7 @@ while true do
     gc = m
   end
   c, spos, epos = string.match(line2, "Sequence (%a?)%[(%d+),(%d+)%]")
-  m1, m2 = string.match(line2, "tRNA%-%??([a-zA-Z|()]+)%((%w+)%)")
+  m1, m2 = string.match(line2, "tRNA%-([a-zA-Z|().?]+)%(([a-z.]+)%)")
   if m1 then
     aa = m1
   end
@@ -56,7 +58,7 @@ while true do
         strand = '+'
       end
       print(seqid .. "\t" .. src .. "\tgene\t" .. spos .. "\t" .. epos .. "\t.\t" .. strand .. "\t.\tID=" .. geneid)
-      print(seqid .. "\t" .. src .. "\ttRNA\t" .. spos .. "\t" .. epos .. "\t.\t" .. strand .. "\t.\tID=" .. geneid ..".trna;Parent=" .. geneid .. ";aa=" .. aa .. ";anticodon=" .. anticodon .. ";gc_content=" .. gc)
+      print(seqid .. "\t" .. src .. "\ttRNA\t" .. spos .. "\t" .. epos .. "\t.\t" .. strand .. "\t.\tID=" .. geneid ..".trna;Parent=" .. geneid .. ";aa=" .. gff3_encode(aa) .. ";anticodon=" .. anticodon .. ";gc_content=" .. gc)
       aa = nil
       anticodon = nil
     end

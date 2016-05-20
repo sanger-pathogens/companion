@@ -15,6 +15,12 @@ Test do
   run_test("#{$bin}gt gff3validator gff3")
 end
 
+Name "aragorn: aragorn_to_gff3 special case ('???' amino acid, '.XX' anticodon)"
+Keywords "aragorn aragorn_to_gff3"
+Test do
+  run_test("#{$bin}gt #{$bindir}/aragorn_to_gff3.lua < #{$testdata}/aragorn.unreliable_codons.out")
+end
+
 Name "aragorn: aragorn_to_gff3 malformed file (incomplete lines)"
 Keywords "aragorn aragorn_to_gff3"
 Test do
