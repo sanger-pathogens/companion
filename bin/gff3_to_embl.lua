@@ -323,8 +323,13 @@ function embl_vis:visit_feature(fn)
           end)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
+          --io.write("FT                   /pseudogene=\"unknown\"\n")
         end
-        format_embl_attrib(pp, "product", "product",
+        local target_product = "product"
+        if fn:get_type() == "pseudogene" and embl_compliant then
+          target_product = "note"
+        end
+        format_embl_attrib(pp, "product", target_product,
           function (s)
             local pr_a = gff3_extract_structure(s)
             local gprod = nil
