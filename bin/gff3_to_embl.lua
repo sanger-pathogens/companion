@@ -28,9 +28,12 @@ op:option{"-e", action='store_true', dest='embl_compliant',
                 help="output reduced 'ENA compliant' format"}
 op:option{"-o", action='store_true', dest='only_on_seq',
                 help="ignore features for which no sequence is found"}
+op:option{"-s", action='store_true', dest='contig_as_source',
+                help="emit 'source' features for 'contig' input features"}
 op:option{"-p", action='store', dest='projectid',
                 help="ENA project ID (e.g. 'PRJEB1234')"}
-options,args = op:parse({embl_compliant=false, only_on_seq=false, projectid='00000000'})
+options,args = op:parse({embl_compliant=false, only_on_seq=false,
+                         contig_as_source=false, projectid='00000000'})
 
 function usage()
   op:help()
@@ -42,6 +45,7 @@ if #args < 4 then
 end
 
 embl_compliant = options.embl_compliant ~= false
+contig_as_source = options.contig_as_source ~= false
 seqfile = args[4]
 gaffile = args[5]
 obofile = args[2]
@@ -254,9 +258,11 @@ function embl_vis:visit_feature(fn)
       io.write("XX   \n")
       io.write("FH   Key             Location/Qualifiers\n")
       io.write("FH   \n")
-      io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
-      io.write("FT                   /organism=\"" .. organismname .. "\"\n")
-      io.write("FT                   /mol_type=\"genomic DNA\"\n")
+      if not contig_as_source then
+        io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
+        io.write("FT                   /organism=\"" .. organismname .. "\"\n")
+        io.write("FT                   /mol_type=\"genomic DNA\"\n")
+      end
     end
 
     for node in fn:get_children() do
@@ -323,8 +329,13 @@ function embl_vis:visit_feature(fn)
           end)
         if fn:get_type() == "pseudogene" then
           io.write("FT                   /pseudo\n")
+          --io.write("FT                   /pseudogene=\"unknown\"\n")
         end
-        format_embl_attrib(pp, "product", "product",
+        local target_product = "product"
+        if fn:get_type() == "pseudogene" and embl_compliant then
+          target_product = "note"
+        end
+        format_embl_attrib(pp, "product", target_product,
           function (s)
             local pr_a = gff3_extract_structure(s)
             local gprod = nil
@@ -538,6 +549,12 @@ function embl_vis:visit_feature(fn)
             io.write("FT                   /linkage_evidence=\"align genus\"\n")
           end
         end
+      elseif string.match(node:get_type(), "contig") and contig_as_source then
+        io.write("FT   source          ")
+        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write("\n")
+        io.write("FT                   /organism=\"" .. organismname .. "\"\n")
+        io.write("FT                   /mol_type=\"unassigned DNA\"\n")
       end
     end
   else
