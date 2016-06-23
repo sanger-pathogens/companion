@@ -22,7 +22,7 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 netcat genometools \
                     last-align libboost-iostreams-dev libgsl2 libgsl-dev \
-                    libcolamd2.9.1 liblpsolve55-dev libstdc++6 aragorn tantan \
+                    libcolamd2 liblpsolve55-dev libstdc++6 aragorn tantan \
                     libstorable-perl libbio-perl-perl libsqlite3-dev \
                      --yes --force-yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
