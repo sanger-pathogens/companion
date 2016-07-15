@@ -22,8 +22,8 @@ require("lib")
 require("optparse")
 
 op = OptionParser:new({usage="%prog <options> <GFF annotation> <GO OBO file> <organism name> <sequence> [GAF]",
-                       oneliner="For a GFF3 file produced by annotation pipeline, output EMBL format.",
-                       version="0.1"})
+                       oneliner="For a Sanger Pathogens style GFF3 file, output EMBL format.",
+                       version="0.2"})
 op:option{"-e", action='store_true', dest='embl_compliant',
                 help="output reduced 'ENA compliant' format"}
 op:option{"-o", action='store_true', dest='only_on_seq',
@@ -32,8 +32,19 @@ op:option{"-s", action='store_true', dest='contig_as_source',
                 help="emit 'source' features for 'contig' input features"}
 op:option{"-p", action='store', dest='projectid',
                 help="ENA project ID (e.g. 'PRJEB1234')"}
+op:option{"-1", action='store_true', dest='add_onebase_gap',
+                help="add gap features for single-base Ns"}
+op:option{"-d", action='store_true', dest='remove_duplicate_gene',
+                help="remove duplicate gene qualifiers"}
+op:option{"-n", action='store', dest='note',
+                help="add custom note to features"}
+op:option{"-t", action='store_true', dest='trim_flanking_n',
+                help="trim leading/trailing Ns in sequences, " ..
+                     "adjusting coordinates"}
 options,args = op:parse({embl_compliant=false, only_on_seq=false,
-                         contig_as_source=false, projectid='00000000'})
+                         contig_as_source=false, projectid='00000000',
+                         add_onebase_gap=false, remove_duplicate_gene=false,
+                         trim_flanking_n=false, note=nil})
 
 function usage()
   op:help()
@@ -168,7 +179,7 @@ embl_vis.pps = collect_vis.pps
 embl_vis.gos = parse_obo(obofile)
 embl_vis.last_seqid = nil
 
-function print_generic(fn, mtype, etype)
+function print_generic(fn, mtype, etype, adjust)
   local cnt = 0
   for c in fn:children() do
     if c:get_type() == mtype then
@@ -190,17 +201,21 @@ function print_generic(fn, mtype, etype)
   local coding_length = 0
   local start_phase = 0
   local end_phase = 0
+  local offset = 0
+  if adjust then
+    offset = adjust[c:get_seqid()]
+  end
   for c in fn:children() do
     if c:get_type() == mtype then
       if i == 1 and fn:get_attribute("Start_range") then
         io.write("<")
       end
-      io.write(c:get_range():get_start())
+      io.write(c:get_range():get_start() - offset)
       io.write("..")
       if i == cnt and fn:get_attribute("End_range") then
         io.write(">")
       end
-      io.write(c:get_range():get_end())
+      io.write(c:get_range():get_end() - offset)
       if i ~= cnt then
         io.write(",")
       end
@@ -218,53 +233,96 @@ function print_generic(fn, mtype, etype)
   return true
 end
 
+function output_note()
+  if options.note then
+    io.write("FT                   /note=\"".. options.note .. "\"\n")
+  end
+end
+
+function output_single_base_gaps(seq)
+  local i_end = 0
+  while true do
+    i_start, i_end = string.find(seq, "[Nn]+", i_end + 1)
+    if i_start == nil then break end
+    if i_start == i_end then
+      io.write("FT   assembly_gap    ")
+      io.write(i_start .. ".." .. i_end)
+      io.write("\n")
+      io.write("FT                   /estimated_length=" .. (i_end - i_start + 1) .. "\n")
+      io.write("FT                   /gap_type=\"unknown\"\n")
+    end
+  end
+end
+
+function output_embl_header(fn)
+  if embl_vis.last_seqid ~= fn:get_seqid() then
+    if embl_vis.last_seqid then
+      if not collect_vis.seqs[embl_vis.last_seqid] then
+        warning("sequence " .. embl_vis.last_seqid .. " not in collected set")
+      end
+      if options.add_onebase_gap then
+        output_single_base_gaps(collect_vis.seqs[embl_vis.last_seqid])
+      end
+      format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
+      io.write("//\n")
+      io.output():close()
+    end
+    embl_vis.last_seqid = fn:get_seqid()
+    io.output(fn:get_seqid()..".embl", "w+")
+    if embl_compliant then
+      io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+      io.write("XX   \n")
+      io.write("AC   XXX;\n")
+      io.write("XX   \n")
+      io.write("AC * _" .. fn:get_seqid() .. ";\n")
+      io.write("XX   \n")
+    else
+      io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
+                 .. "genomic DNA; STD; UNC; "
+                 .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
+      io.write("XX   \n")
+      io.write("AC   " .. fn:get_seqid() .. ";\n")
+      io.write("XX   \n")
+    end
+    io.write("PR   Project:" .. options.projectid .. ";\n")
+    io.write("XX   \n")
+    io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
+    io.write("XX   \n")
+    io.write("KW   \n")
+    io.write("XX   \n")
+    io.write("RN   [1]\n")
+    io.write("RA   Authors;\n")
+    io.write("RT   Title;\n")
+    io.write("RL   Unpublished.\n")
+    io.write("XX   \n")
+    io.write("OS   " .. organismname .. "\n")
+    io.write("XX   \n")
+    io.write("FH   Key             Location/Qualifiers\n")
+    io.write("FH   \n")
+    if not contig_as_source then
+      io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
+      io.write("FT                   /organism=\"" .. organismname .. "\"\n")
+      io.write("FT                   /mol_type=\"genomic DNA\"\n")
+    end
+  end
+end
+
+function embl_vis:output_gene_qualifier(genesym, geneid)
+  if not genesym then
+    genesym = split(geneid,":")[1]
+  end
+  if not options.remove_duplicate_gene or not self.seen_gene_names[genesym] then
+    io.write("FT                   /gene=\"".. genesym .. "\"\n")
+  end
+end
+
 function embl_vis:visit_feature(fn)
   if collect_vis.seqs[fn:get_seqid()] then
-    if embl_vis.last_seqid ~= fn:get_seqid() then
-      if embl_vis.last_seqid then
-        format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
-        io.write("//\n")
-        io.output():close()
-      end
-      embl_vis.last_seqid = fn:get_seqid()
-      io.output(fn:get_seqid()..".embl", "w+")
-      if embl_compliant then
-        io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
-        io.write("XX   \n")
-        io.write("AC   XXX;\n")
-        io.write("XX   \n")
-        io.write("AC * _" .. fn:get_seqid() .. ";\n")
-        io.write("XX   \n")
-      else
-        io.write("ID   " .. fn:get_seqid() .. "; SV 1; linear; "
-                   .. "genomic DNA; STD; UNC; "
-                   .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
-        io.write("XX   \n")
-        io.write("AC   " .. fn:get_seqid() .. ";\n")
-        io.write("XX   \n")
-      end
-      io.write("PR   Project:" .. options.projectid .. ";\n")
-      io.write("XX   \n")
-      io.write("DE   " .. organismname .. ", " .. fn:get_seqid() .. ".\n")
-      io.write("XX   \n")
-      io.write("KW   \n")
-      io.write("XX   \n")
-      io.write("RN   [1]\n")
-      io.write("RA   Authors;\n")
-      io.write("RT   Title;\n")
-      io.write("RL   Unpublished.\n")
-      io.write("XX   \n")
-      io.write("OS   " .. organismname .. "\n")
-      io.write("XX   \n")
-      io.write("FH   Key             Location/Qualifiers\n")
-      io.write("FH   \n")
-      if not contig_as_source then
-        io.write("FT   source          1.." .. collect_vis.lengths[fn:get_seqid()] .. "\n")
-        io.write("FT                   /organism=\"" .. organismname .. "\"\n")
-        io.write("FT                   /mol_type=\"genomic DNA\"\n")
-      end
+    output_embl_header(fn)
+    local offset = 0
+    if self.adjust then
+      offset = self.adjust[fn:get_seqid()]
     end
-
     for node in fn:get_children() do
       if node:get_type() == "mRNA" or node:get_type() == "pseudogenic_transcript" then
         local cnt = 0
@@ -297,7 +355,7 @@ function embl_vis:visit_feature(fn)
               end
               io.write("<")
             end
-            io.write(cds:get_range():get_start())
+            io.write(cds:get_range():get_start() - offset)
             io.write("..")
             if i == cnt and fn:get_attribute("End_range") then
               if fn:get_strand() == '-' then
@@ -307,7 +365,7 @@ function embl_vis:visit_feature(fn)
               end
               io.write(">")
             end
-            io.write(cds:get_range():get_end())
+            io.write(cds:get_range():get_end() - offset)
             if i ~= cnt then
               io.write(",")
             end
@@ -331,6 +389,7 @@ function embl_vis:visit_feature(fn)
           io.write("FT                   /pseudo\n")
           --io.write("FT                   /pseudogene=\"unknown\"\n")
         end
+        output_note()
         local target_product = "product"
         if fn:get_type() == "pseudogene" and embl_compliant then
           target_product = "note"
@@ -367,11 +426,7 @@ function embl_vis:visit_feature(fn)
         -- add gene to 'unroll' multiple spliceforms
         local geneid = fn:get_attribute("ID")
         local genesym = fn:get_attribute("Name")
-        if genesym then
-          io.write("FT                   /gene=\"".. genesym .. "\"\n")
-        else
-          io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
-        end
+        self:output_gene_qualifier(geneid, genesym)
         -- translation
         local protseq = nil
         if node:get_type() == "mRNA" then
@@ -471,23 +526,15 @@ function embl_vis:visit_feature(fn)
         end
         -- add UTRs
         -- TODO: clean this up
-        if print_generic(fn, 'five_prime_UTR', "5'UTR") then
-          if genesym then
-            io.write("FT                   /gene=\"".. genesym .. "\"\n")
-          else
-            io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
-          end
+        if print_generic(fn, 'five_prime_UTR', "5'UTR", self.adjust) then
+          self:output_gene_qualifier(geneid, genesym)
           format_embl_attrib(node , "ID", "locus_tag",
             function (s)
               return split(s,':')[1]
             end)
         end
-        if print_generic(fn, 'three_prime_UTR', "3'UTR") then
-          if genesym then
-            io.write("FT                   /gene=\"".. genesym .. "\"\n")
-          else
-            io.write("FT                   /gene=\"".. split(geneid,":")[1] .. "\"\n")
-          end
+        if print_generic(fn, 'three_prime_UTR', "3'UTR", self.adjust) then
+          self:output_gene_qualifier(geneid, genesym)
           format_embl_attrib(node , "ID", "locus_tag",
             function (s)
               return split(s,':')[1]
@@ -498,7 +545,7 @@ function embl_vis:visit_feature(fn)
         if node:get_strand() == "-" then
           io.write("complement(")
         end
-        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
         if node:get_strand() == "-" then
           io.write(")")
         end
@@ -512,12 +559,13 @@ function embl_vis:visit_feature(fn)
           io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         end
         format_embl_attrib(node , "ID", "locus_tag", nil)
+        output_note()
       elseif string.match(node:get_type(), "snRNA") or string.match(node:get_type(), "snoRNA") then
         io.write("FT   ncRNA            ")
         if node:get_strand() == "-" then
           io.write("complement(")
         end
-        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
         if node:get_strand() == "-" then
           io.write(")")
         end
@@ -525,12 +573,27 @@ function embl_vis:visit_feature(fn)
         io.write("FT                   /ncRNA_class=\"" .. node:get_type() .. "\"\n")
         io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
+        output_note()
+      elseif string.match(node:get_type(), "ncRNA") then
+        io.write("FT   ncRNA            ")
+        if node:get_strand() == "-" then
+          io.write("complement(")
+        end
+        io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
+        if node:get_strand() == "-" then
+          io.write(")")
+        end
+        io.write("\n")
+        io.write("FT                   /ncRNA_class=\"other\"\n")
+        io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
+        format_embl_attrib(node , "ID", "locus_tag", nil)
+        output_note()
       elseif string.match(node:get_type(), "rRNA") then
         io.write("FT   rRNA            ")
         if node:get_strand() == "-" then
           io.write("complement(")
         end
-        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
         if node:get_strand() == "-" then
           io.write(")")
         end
@@ -538,20 +601,26 @@ function embl_vis:visit_feature(fn)
         io.write("FT                   /product=\"" .. node:get_type() .. "\"\n")
         io.write("FT                   /gene=\"" .. fn:get_attribute("ID") .. "\"\n")
         format_embl_attrib(node , "ID", "locus_tag", nil)
+        output_note()
       elseif string.match(node:get_type(), "gap") then
-        io.write("FT   assembly_gap    ")
-        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
-        io.write("\n")
-        io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
-        if node:get_attribute('gap_type') then
-          io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
-          if node:get_attribute('gap_type') == 'within scaffold' then
-            io.write("FT                   /linkage_evidence=\"align genus\"\n")
+        if node:get_range():get_start() >= offset
+            and node:get_range():get_end() <= collect_vis.seqs[node:get_seqid()]:len() then
+          io.write("FT   assembly_gap    ")
+          io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
+          io.write("\n")
+          io.write("FT                   /estimated_length=" .. node:get_range():length() .. "\n")
+          if node:get_attribute('gap_type') then
+            io.write("FT                   /gap_type=\"" .. node:get_attribute('gap_type') .. "\"\n")
+            if node:get_attribute('gap_type') == 'within scaffold' then
+              io.write("FT                   /linkage_evidence=\"align genus\"\n")
+            end
+          else
+            io.write("FT                   /gap_type=\"unknown\"\n")
           end
         end
       elseif string.match(node:get_type(), "contig") and contig_as_source then
         io.write("FT   source          ")
-        io.write(node:get_range():get_start() .. ".." .. node:get_range():get_end())
+        io.write(node:get_range():get_start() - offset .. ".." .. node:get_range():get_end() - offset)
         io.write("\n")
         io.write("FT                   /organism=\"" .. organismname .. "\"\n")
         io.write("FT                   /mol_type=\"unassigned DNA\"\n")
@@ -564,6 +633,42 @@ function embl_vis:visit_feature(fn)
     end
   end
   return 0
+end
+function embl_vis:visit_region(rn)
+  if collect_vis.seqs[rn:get_seqid()] then
+    if self.last_seqid ~= rn:get_seqid() then
+      output_embl_header(rn)
+      self.last_seqid = rn:get_seqid()
+    end
+  end
+end
+
+function clip_flanking_ns(seqs)
+  local adjust = {}
+  for k,v in pairs(seqs) do
+    local leading = 0
+    local trailing = 0
+    local m = v:match("^[Nn]+")
+    if m then
+      io.stderr:write("sequence " .. k .. " has " .. m:len() .. " leading Ns, trimming...\n")
+      leading = m:len()
+    end
+    if leading == v:len() then
+      io.stderr:write("sequence " .. k .. " is empty, removing it...\n")
+      seqs[k] = nil
+    else
+      m = v:match("[Nn]+$")
+      if m then
+        io.stderr:write("sequence " .. k .. " has " .. m:len() .. " trailing Ns, trimming...\n")
+        trailing = m:len()
+      end
+      if leading > 0 or trailing > 0 then
+        seqs[k] = v:sub(1+leading, v:len()-trailing)
+      end
+    end
+    adjust[k] = leading
+  end
+  return adjust, seqs
 end
 
 -- load GAF
@@ -603,7 +708,11 @@ while (gn) do
   gn = visitor_stream:next_tree()
 end
 
-keys, seqs = get_fasta_nosep(seqfile)
+_, seqs = get_fasta_nosep(seqfile)
+local adjust = nil
+if options.trim_flanking_n then
+  adjust, seqs = clip_flanking_ns(seqs)
+end
 collect_vis.seqs = {}
 collect_vis.lengths = {}
 for k,v in pairs(seqs) do
@@ -616,11 +725,16 @@ visitor_stream.instream = gt.gff3_in_stream_new_sorted(gff3file)
 visitor_stream.vis = embl_vis
 embl_vis.obo = gos
 embl_vis.gaf = gaf_store
+embl_vis.seen_gene_names = {}
+embl_vis.adjust = adjust
 local gn = visitor_stream:next_tree()
 while (gn) do
   gn = visitor_stream:next_tree()
 end
 -- output last seq
+if options.add_onebase_gap then
+  output_single_base_gaps(collect_vis.seqs[embl_vis.last_seqid])
+end
 format_embl_sequence(collect_vis.seqs[embl_vis.last_seqid])
 io.write("//\n")
 io.output():close()
