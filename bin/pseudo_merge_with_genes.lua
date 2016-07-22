@@ -154,12 +154,16 @@ function frame_agreement(f1, f1type, f2, f2type)
     end
     if (c1 % 3) ~= (c2 % 3) then
       if options.debug then
-        io.stderr:write("different frames: " .. tostring(f2:get_attribute("ID")) .. " " .. c1 % 3 .. " vs " .. c2 % 3 .. " (" .. tostring(f2:get_strand()) ..")\n")
+        io.stderr:write("different frames: " ..
+                        tostring(f2:get_attribute("ID")) ..
+                        " " .. c1 % 3 .. " vs " .. c2 % 3 ..
+                        " (" .. tostring(f2:get_strand()) ..")\n")
       end
       return false
     else
       if options.debug then
-        io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) .. "\n")
+        io.stderr:write("same frame " .. tostring(f2:get_attribute("ID")) ..
+                        "\n")
       end
       return true
     end
