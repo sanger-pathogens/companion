@@ -270,7 +270,9 @@ function output_embl_header(fn)
     embl_vis.last_seqid = fn:get_seqid()
     io.output(fn:get_seqid()..".embl", "w+")
     if embl_compliant then
-      io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+      io.write("ID   XXX; XXX; linear; "
+                 .. "genomic DNA; STD; UNC; "
+                 .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
       io.write("XX   \n")
       io.write("AC   XXX;\n")
       io.write("XX   \n")
