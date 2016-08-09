@@ -2,7 +2,7 @@
 
 --[[
   Author: Sascha Steinbiss <ss34@sanger.ac.uk>
-  Copyright (c) 2015 Genome Research Ltd
+  Copyright (c) 2015-2016 Genome Research Ltd
 
   Permission to use, copy, modify, and distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -43,19 +43,21 @@ function print_gff(seqid, type, start, stop, strand, name)
            .. "\t.\tgrp=" .. name .. ";src=" .. options.hint_type)
 end
 
-local feats = {}
 
+feats = {}
 -- parse from GTF input
-for l in io.lines() do
-  local larr = split(l:gsub('"'," "), "%s")
-  if not feats[larr[15]] then
-    feats[larr[15]] = {}
+for f in gtf_lines(io.stdin) do
+  if f.type == 'exon' and f.attribs.transcript_id then
+    if not feats[f.attribs.transcript_id] then
+      feats[f.attribs.transcript_id] = {}
+    end
+    table.insert(feats[f.attribs.transcript_id], {seq = f.seqid,
+                                                  f.attribs.gene_id,
+                                                 tid = f.attribs.transcript_id,
+                                                 start = f.from,
+                                                 stop = f.to,
+                                                 strand=f.strand})
   end
-  table.insert(feats[larr[15]], {seq = larr[1], name = larr[11],
-    tid = larr[15],
-                                 start = tonumber(larr[4]),
-                                 stop = tonumber(larr[5]),
-                                 strand=larr[7]})
 end
 
 -- create hints file
