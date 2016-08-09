@@ -270,7 +270,9 @@ function output_embl_header(fn)
     embl_vis.last_seqid = fn:get_seqid()
     io.output(fn:get_seqid()..".embl", "w+")
     if embl_compliant then
-      io.write("ID   XXX; XXX; linear; XXX; XXX; XXX; XXX.\n")
+      io.write("ID   XXX; XXX; linear; "
+                 .. "genomic DNA; STD; UNC; "
+                 .. tostring(collect_vis.lengths[fn:get_seqid()]) .." BP.\n")
       io.write("XX   \n")
       io.write("AC   XXX;\n")
       io.write("XX   \n")
@@ -433,16 +435,16 @@ function embl_vis:visit_feature(fn)
           cdnaseq = node:extract_sequence("CDS", true, region_mapping)
           protseq = node:extract_and_translate_sequence("CDS", true,
                                                         region_mapping)
-          local startcodon = cdnaseq:sub(start_phase + 1, start_phase + 3):lower()
-          if embl_compliant and startcodon:match('^[tc]tg$') then
+          --local startcodon = cdnaseq:sub(start_phase + 1, start_phase + 3):lower()
+          --if embl_compliant and startcodon:match('^[tc]tg$') then
             -- The ENA expects non-M start codons (e.g. Ls) to be represented as
             -- Ms in the literal translation (according to their validator
             -- output). Emulating this behaviour here, diverging from the actual
             -- translation table.
-            if protseq:sub(1,1):upper() == 'L' then
-              protseq = 'M' .. protseq:sub(2)
-            end
-          end
+          --  if protseq:sub(1,1):upper() == 'L' then
+          --    protseq = 'M' .. protseq:sub(2)
+          --  end
+          --end
           if embl_compliant and cdnaseq:len() % 3 > 0 then
             -- The ENA expects translations for DNA sequences with a length
             -- which is not a multiple of three in a different way from the one

@@ -219,6 +219,37 @@ function get_fasta_nosep(filename)
   return get_fasta(filename, "")
 end
 
+function gtf_lines(in_io)
+  -- returns, for each GTF line, a table with the 8 first column values as
+  -- strings/numbers; attributes are given in a sub-table called 'attribs'
+  assert(in_io)
+  return function()
+    local line = in_io:read()
+    while (line and line:sub(1,1) == '#') do
+      line = in_io:read()
+    end
+    if line then
+      local larr = split(line, "\t")
+      if #larr ~= 9 then
+        error('could not parse 9 columns from input line "' .. line .. '"')
+      end
+      local seqid, source, type, from, to, score, strand, phase,
+            attr = unpack(larr)
+      local feat = {seqid = seqid, source = source, type = type,
+                    from = tonumber(from), to = tonumber(to),
+                    score = tonumber(score), strand = strand, phase = phase}
+      local attr_table = {}
+      attr:gsub('([%a_]+) "([^"]+)";', function(k,v)
+        attr_table[k] = v
+      end)
+      feat.attribs = attr_table
+      return feat
+    else
+      return nil
+    end
+  end
+end
+
 function visitor_stream_new(instream, vis)
   -- make simple visitor stream, just applies given visitor to every node
   local visitor_stream = gt.custom_stream_new_unsorted()
