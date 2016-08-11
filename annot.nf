@@ -944,7 +944,7 @@ process blast_for_orthomcl {
     file 'blastout' into orthomcl_blastout
 
     """
-    blastall -p blastp -W 4 -e 0.00001 -F T -d mapped.fasta -m 8 \
+    blastall -p blastp -W 4 -F 'm S' -v 100000 -b 100000 -d mapped.fasta -m 8 \
       -i mapped_chunk.fasta > blastout
     """
 }
