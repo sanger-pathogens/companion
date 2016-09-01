@@ -270,6 +270,7 @@ if (params.run_exonerate) {
         cache 'deep'
         // this process can fail for rogue exonerate processes
         errorStrategy 'ignore'
+        time '3h'
 
         input:
         file 'index.esi' from exn_index_esi.first()
