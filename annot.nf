@@ -284,7 +284,7 @@ if (params.run_exonerate) {
         """
         get_unused_port.sh > port
         reaper.sh exonerate-server --port `cat port` --input index.esi &
-        sleep 5
+        sleep 10
         exonerate -E false --model p2g --showvulgar no --showalignment no \
           --showquerygff no --showtargetgff yes --percent 80 --geneseed 250 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
