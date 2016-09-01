@@ -23,7 +23,15 @@ genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
 ref_dir = file(params.ref_dir)
+obo = new File(params.GO_OBO)
+if(!(obo.exists() && obo.isFile())) {
+    exit 1, "cannot find GO OBO file: ${params.GO_OBO}, please download and place into correct location"
+}
 go_obo = file(params.GO_OBO)
+ncrna = new File(params.NCRNA_MODELS)
+if(!(ncrna.exists() && ncrna.isFile())) {
+    exit 1, "cannot find ncRNA CMs: ${params.NCRNA_MODELS}, place into correct location"
+}
 ncrna_models = file(params.NCRNA_MODELS)
 extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
