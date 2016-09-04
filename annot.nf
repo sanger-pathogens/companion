@@ -23,7 +23,15 @@ genome_file = file(params.inseq)
 ref_annot = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
 ref_seq = file(params.ref_dir + "/" + params.ref_species + "/genome.fasta")
 ref_dir = file(params.ref_dir)
+obo = new File(params.GO_OBO)
+if(!(obo.exists() && obo.isFile())) {
+    exit 1, "cannot find GO OBO file: ${params.GO_OBO}, please download and place into correct location"
+}
 go_obo = file(params.GO_OBO)
+ncrna = new File(params.NCRNA_MODELS)
+if(!(ncrna.exists() && ncrna.isFile())) {
+    exit 1, "cannot find ncRNA CMs: ${params.NCRNA_MODELS}, place into correct location"
+}
 ncrna_models = file(params.NCRNA_MODELS)
 extrinsic_cfg = file(params.AUGUSTUS_EXTRINSIC_CFG)
 omcl_gfffile = file(params.ref_dir + "/" + params.ref_species + "/annotation.gff3")
@@ -270,6 +278,7 @@ if (params.run_exonerate) {
         cache 'deep'
         // this process can fail for rogue exonerate processes
         errorStrategy 'ignore'
+        time '3h'
 
         input:
         file 'index.esi' from exn_index_esi.first()
@@ -283,7 +292,7 @@ if (params.run_exonerate) {
         """
         get_unused_port.sh > port
         reaper.sh exonerate-server --port `cat port` --input index.esi &
-        sleep 5
+        sleep 10
         exonerate -E false --model p2g --showvulgar no --showalignment no \
           --showquerygff no --showtargetgff yes --percent 80 --geneseed 250 \
           --ryo \"AveragePercentIdentity: %pi\n\" prot.fasta \
@@ -944,7 +953,7 @@ process blast_for_orthomcl {
     file 'blastout' into orthomcl_blastout
 
     """
-    blastall -p blastp -W 4 -e 0.00001 -F T -d mapped.fasta -m 8 \
+    blastall -p blastp -W 4 -F 'm S' -v 100000 -b 100000 -d mapped.fasta -m 8 \
       -i mapped_chunk.fasta > blastout
     """
 }
