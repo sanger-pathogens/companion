@@ -29,7 +29,7 @@ curl -fsSL get.nextflow.io | bash
 
 With Nextflow installed, the easiest way to use the pipeline is to use the prepared Docker container (https://hub.docker.com/r/satta/companion/) which contains all external dependencies.
 ```
-docker pull satta/companion
+docker pull sangerpathogens/companion
 ```
 
 ### [Running the pipeline](#running)
