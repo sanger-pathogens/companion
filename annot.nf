@@ -1418,6 +1418,8 @@ if (params.make_embl) {
 
 specfile = file(params.SPECFILE)
 process make_report {
+    validExitStatus 0,1,2
+
     input:
     set file('pseudo.fasta.gz'), file('scaf.fasta.gz') from report_inseq
     set file('pseudo.gff3'), file('scaf.gff3') from report_gff3
