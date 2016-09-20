@@ -1429,10 +1429,14 @@ process make_report {
     set file('pseudo.report.html'), file('scaf.report.html') into report_output
 
     """
+    touch pseudo.report.html
+    touch scaf.report.html
     gt speck -specfile ${specfile} -matchdescstart -seqfile pseudo.fasta.gz \
-      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" pseudo.gff3 > pseudo.report.html
+      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" \
+      pseudo.gff3 > pseudo.report.html || true
     gt speck -specfile ${specfile} -matchdescstart -seqfile scaf.fasta.gz \
-      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" scaf.gff3 > scaf.report.html
+      -provideindex -typecheck so -output "${params.SPECK_TEMPLATE}" \
+      scaf.gff3 > scaf.report.html || true
     """
 }
 
