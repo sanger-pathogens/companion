@@ -32,6 +32,8 @@ op:option{"-s", action='store_true', dest='contig_as_source',
                 help="emit 'source' features for 'contig' input features"}
 op:option{"-p", action='store', dest='projectid',
                 help="ENA project ID (e.g. 'PRJEB1234')"}
+op:option{"-f", action='store', dest='gaf_level',
+                help="value of GAF 'DB Object Type' column (transcript/gene)"}
 op:option{"-1", action='store_true', dest='add_onebase_gap',
                 help="add gap features for single-base Ns"}
 op:option{"-d", action='store_true', dest='remove_duplicate_gene',
@@ -44,7 +46,7 @@ op:option{"-t", action='store_true', dest='trim_flanking_n',
 options,args = op:parse({embl_compliant=false, only_on_seq=false,
                          contig_as_source=false, projectid='00000000',
                          add_onebase_gap=false, remove_duplicate_gene=false,
-                         trim_flanking_n=false, note=nil})
+                         trim_flanking_n=false, gaf_level='gene', note=nil})
 
 function usage()
   op:help()
@@ -239,6 +241,38 @@ function output_note()
   end
 end
 
+function is_multi_transcript_gene(fn)
+  if fn:get_type() == 'gene' then
+    local nof_mrnas = 0
+    for n in fn:children() do
+      if n:get_type() == 'mRNA' then
+        nof_mrnas = nof_mrnas + 1
+      end
+    end
+    return (nof_mrnas > 1)
+  else
+    return false
+  end
+end
+
+function output_multi_transcript_qualifiers(gene, mrna)
+  local other_mrnas = {}
+  local gene_id = gene:get_attribute("ID")
+  local transcript_id = mrna:get_attribute("ID")
+  for n in gene:children() do
+    if n:get_type() == 'mRNA' then
+      if mrna:get_attribute("ID") ~= n:get_attribute("ID") then
+        table.insert(other_mrnas, n:get_attribute("ID"))
+      end
+    end
+  end
+  io.write("FT                   /shared_id=\"" .. gene_id .. "\"\n")
+  io.write("FT                   /systematic_id=\"" .. transcript_id .. "\"\n")
+  for _, v in ipairs(other_mrnas) do
+    io.write("FT                   /other_transcript=\"" .. v .. "\"\n")
+  end
+end
+
 function output_single_base_gaps(seq)
   local i_end = 0
   while true do
@@ -429,6 +463,13 @@ function embl_vis:visit_feature(fn)
         local geneid = fn:get_attribute("ID")
         local genesym = fn:get_attribute("Name")
         self:output_gene_qualifier(geneid, genesym)
+
+        -- output multi-transcript qualifiers, as outlined in
+        -- http://mediawiki.internal.sanger.ac.uk/index.php/Annotation_of_alternately_spliced_genes
+        if not embl_compliant and is_multi_transcript_gene(fn) then
+          output_multi_transcript_qualifiers(fn, node)
+        end
+
         -- translation
         local protseq = nil
         if node:get_type() == "mRNA" then
@@ -504,10 +545,13 @@ function embl_vis:visit_feature(fn)
           io.write("FT                   /primary_name=\"".. name .. "\"\n")
         end
         -- GO terms
-        local geneid = fn:get_attribute("ID")
-        if geneid then
-          if self.gaf and self.gaf[geneid] and not embl_compliant then
-            for _,v in ipairs(self.gaf[geneid]) do
+        local gaf_relevant_id = fn:get_attribute("ID")
+        if options.gaf_level == 'transcript' then
+          gaf_relevant_id = node:get_attribute("ID")
+        end
+        if gaf_relevant_id then
+          if self.gaf and self.gaf[gaf_relevant_id] and not embl_compliant then
+            for _,v in ipairs(self.gaf[gaf_relevant_id]) do
               if self.gos[v.goid] then
                 io.write("FT                   /GO=\"aspect=" .. v.aspect ..
                                                     ";GOid=" .. v.goid ..
@@ -527,20 +571,25 @@ function embl_vis:visit_feature(fn)
           end
         end
         -- add UTRs
-        -- TODO: clean this up
-        if print_generic(fn, 'five_prime_UTR', "5'UTR", self.adjust) then
+        if print_generic(node, 'five_prime_UTR', "5'UTR", self.adjust) then
           self:output_gene_qualifier(geneid, genesym)
           format_embl_attrib(node , "ID", "locus_tag",
             function (s)
               return split(s,':')[1]
             end)
+          if is_multi_transcript_gene(fn) and not embl_compliant then
+            io.write("FT                   /shared_id=\"" .. geneid .. "\"\n")
+          end
         end
-        if print_generic(fn, 'three_prime_UTR', "3'UTR", self.adjust) then
+        if print_generic(node, 'three_prime_UTR', "3'UTR", self.adjust) then
           self:output_gene_qualifier(geneid, genesym)
           format_embl_attrib(node , "ID", "locus_tag",
             function (s)
               return split(s,':')[1]
             end)
+          if is_multi_transcript_gene(fn) and not embl_compliant then
+            io.write("FT                   /shared_id=\"" .. geneid .. "\"\n")
+          end
         end
       elseif node:get_type() == "tRNA" then
         io.write("FT   tRNA            ")
