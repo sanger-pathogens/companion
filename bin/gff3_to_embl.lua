@@ -466,8 +466,14 @@ function embl_vis:visit_feature(fn)
 
         -- output multi-transcript qualifiers, as outlined in
         -- http://mediawiki.internal.sanger.ac.uk/index.php/Annotation_of_alternately_spliced_genes
-        if not embl_compliant and is_multi_transcript_gene(fn) then
-          output_multi_transcript_qualifiers(fn, node)
+        if not embl_compliant then
+          if is_multi_transcript_gene(fn) then
+            output_multi_transcript_qualifiers(fn, node)
+          else
+            if node:get_attribute("ID") then
+              io.write("FT                   /systematic_id=\"" .. node:get_attribute("ID") .. "\"\n")
+            end
+          end
         end
 
         -- translation
