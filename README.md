@@ -1,11 +1,22 @@
 # Companion
-
 A portable, scalable eukaryotic genome annotation pipeline implemented in Nextflow.
 
-### [Purpose](#platforms)
+[![Build Status](https://travis-ci.org/sanger-pathogens/companion.svg?branch=master)](https://travis-ci.org/sanger-pathogens/companion)  
+[![License: ISC](https://img.shields.io/badge/License-ISC-brightgreen.svg)](https://github.com/sanger-pathogens/companion/blob/master/LICENSE)  
+[![status](https://img.shields.io/badge/NAR-10.1093%2Fnar.gkw292-brightgreen.svg)](https://doi.org/10.1093/nar/gkw292)
 
-This software is a comprehensive computational pipeline for the annotation of
-eukaryotic genomes (like protozoan parasites). It performs the following tasks:
+## Content
+  * [Introduction](#introduction)
+  * [Installation](#installation)
+    * [Required dependencies](#required-dependencies)
+  * [Usage](#usage)
+    * [Preparing reference annotations](#preparing-reference-annotations)
+  * [License](#license)
+  * [Feedback/Issues](#feedbackissues)
+  * [Citation](#citation)
+
+## Introduction
+This software is a comprehensive computational pipeline for the annotation of eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
   - Fast generation of pseudomolecules from scaffolds by ordering and orientating against a reference
   - Accurate transfer of highly conserved gene models from the reference
@@ -20,36 +31,46 @@ eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
 It supports parallelized execution on a single machine as well as on large cluster platforms (LSF, SGE, ...).
 
-### [Requirements](#requirements)
+## Installation
+Companion has the following dependencies:
 
-The pipeline is built on [Nextflow](http://nextflow.io) as a workflow engine, so it needs to be installed first:
+### Required dependencies
+ * [Nextflow](http://nextflow.io)
+
+To install Nextflow, run:
 ```
 curl -fsSL get.nextflow.io | bash
 ```
 
-With Nextflow installed, the easiest way to use the pipeline is to use the prepared Docker container (https://hub.docker.com/r/satta/companion/) which contains all external dependencies.
+There are a number of ways to install Companion. Details for installing using Docker are described below. If you encounter an issue when installing Companion please contact your local system administrator. If you encounter a bug please log it [here](https://github.com/sanger-pathogens/companion/issues) or email us at path-help@sanger.ac.uk.
+
+The easiest way to use the pipeline is to use the prepared [Docker container](https://hub.docker.com/r/sangerpathogens/companion/) which contains all external dependencies.
 ```
 docker pull sangerpathogens/companion
 ```
+## Usage
 
-### [Running the pipeline](#running)
-
-Here's how to start an example run using Docker (using the example dataset and parameterization included in the distribution):
+Start an example run using Docker (using the example dataset and parameterization included in the distribution):
 ```
-$ nextflow run sanger-pathogens/companion -profile docker
+nextflow run sanger-pathogens/companion -profile docker
 ```
 
 For your own runs, provide your own file names, paths, parameters, etc. as defined in the `nextflow.config` file.
 
-### [Preparing reference annotations](#reference)
+### Preparing reference annotations
 
-The reference annotations used in the pipeline need to be pre-processed before they can be used.
-See [the HOWTO on the GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families. Please contact the authors via the email address below to obtain them.
+The reference annotations used in the pipeline need to be pre-processed before they can be used. See the the [GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families.
 
-### [Contact](#contact)
+## License
+Companion is free software, licensed under [ISC](https://github.com/sanger-pathogens/companion/blob/master/LICENSE).
 
-Sascha Steinbiss (ss34@sanger.ac.uk)
+## Feedback/Issues
+Please report any issues to the [issues page](https://github.com/sanger-pathogens/companion/issues) or email path-help@sanger.ac.uk
 
-###[Build status](#build)
-
-![Travis status](https://travis-ci.org/sanger-pathogens/companion.svg)
+## Citation
+If you use this software please cite:
+  
+__Companion: a web server for annotation and analysis of parasite genomes.__  
+Steinbiss S, Silva-Franco F, Brunk B, Foth B, Hertz-Fowler C et al.
+Nucleic Acids Research, 44:W29-W34, 2016.  
+DOI: [10.1093/nar/gkw292](http://dx.doi.org/10.1093/nar/gkw292)  
