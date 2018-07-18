@@ -24,14 +24,17 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     last-align libboost-iostreams-dev libgslcblas0 libgsl-dev \
                     libcolamd2 liblpsolve55-dev libstdc++6 aragorn tantan \
                     libstorable-perl libbio-perl-perl libsqlite3-dev \
-                  --yes
+                    --yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
 
 #
 # Install AUGUSTUS
 #
-# ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
-ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
+
+# bam2hints dependencies
+RUN apt-get install bamtools libbamtools-dev --yes
+
+ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.1.tar.gz /opt/augustus-3.3.1.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
     rm -rf *.tar.gz && \
