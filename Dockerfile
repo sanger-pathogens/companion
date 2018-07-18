@@ -21,15 +21,16 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 netcat genometools \
-                    last-align libboost-iostreams-dev libgsl2 libgsl-dev \
+                    last-align libboost-iostreams-dev libgslcblas0 libgsl-dev \
                     libcolamd2 liblpsolve55-dev libstdc++6 aragorn tantan \
                     libstorable-perl libbio-perl-perl libsqlite3-dev \
-                     --yes --force-yes
+                  --yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
 
 #
 # Install AUGUSTUS
 #
+# ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
 ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
 RUN cd /opt && \
     tar -xzvf augustus* && \
