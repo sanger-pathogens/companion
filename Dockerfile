@@ -31,8 +31,38 @@ RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
 # Install AUGUSTUS
 #
 
+# additional dependencies for 3.3.1
+RUN apt-get install libboost-graph-dev libsuitesparse-dev zlib1g-dev libbam-dev --yes # libhts-dev
+
+# Augustus 3.3.1 includes bam2hints and bam2wig which have dependencies
 # bam2hints dependencies
 RUN apt-get install bamtools libbamtools-dev --yes
+# bam2wig dependencies
+# htslib, bcftools, samtools & tabix must be downloaded & built from github, rather than installed from debian repo
+RUN apt-get install autoconf zlib1g-dev libbz2-dev liblzma-dev libcurl4-openssl-dev libcrypto++-dev libssl-dev libncurses5-dev --yes 
+ADD https://github.com/samtools/htslib/archive/develop.zip /opt/htslib-develop.zip
+RUN cd /opt && unzip htslib-develop.zip && cd /opt/htslib-develop && \
+    autoheader && autoconf && ./configure && \
+    make && make install && \
+    rm -rf /opt/htslib-develop*
+ADD https://github.com/samtools/bcftools/archive/develop.zip  /opt/bcftools-develop.zip
+RUN cd /opt && unzip bcftools-develop.zip && cd /opt/bcftools-develop && \
+    autoheader && autoconf && ./configure && \
+    make && make install && \
+    rm -rf /opt/bcftools-develop*
+ADD https://github.com/samtools/samtools/archive/develop.zip  /opt/samtools-develop.zip
+RUN cd /opt && unzip samtools-develop.zip && cd /opt/samtools-develop && \
+    autoheader && autoconf -Wno-syntax && ./configure && \
+    make && make install && \
+    rm -rf /opt/samtools-develop*
+ADD https://github.com/samtools/tabix/archive/master.zip /opt/tabix-master.zip
+RUN cd /opt && unzip tabix-master.zip && cd /opt/tabix-master && \
+    make && \
+    rm -rf /opt/tabix-master*
+
+# augustus compile looks in non-existence /root/tools for things that just got installed in /usr/local/include
+# temporary (yeah, right...) workaround:
+RUN ln -s /usr/local/include /root/tools
 
 ADD http://bioinf.uni-greifswald.de/augustus/binaries/augustus-3.3.1.tar.gz /opt/augustus-3.3.1.tar.gz
 RUN cd /opt && \
