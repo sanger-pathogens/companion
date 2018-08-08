@@ -6,6 +6,7 @@ before_install:
 
 install:
   - sudo apt-get install --yes --force-yes circos build-essential wget fasttree hmmer lua5.1 blast2 ncbi-blast+ unzip cpanminus mummer python-setuptools exonerate snap infernal mafft netcat libboost-iostreams-dev libgsl0ldbl libcolamd2.8.0 libstdc++6
+  = sudo apt-get install --yes curl software-properties-common
   - sudo add-apt-repository --yes ppa:openjdk-r/ppa && \
   - sudo add-apt-repository --yes ppa:jochenkemnade/openjdk-8 && \
   - sudo apt-get update -qq && \
