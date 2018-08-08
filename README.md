@@ -31,20 +31,53 @@ This software is a comprehensive computational pipeline for the annotation of eu
 
 It supports parallelized execution on a single machine as well as on large cluster platforms (LSF, SGE, ...).
 
-## Installation
+## Dependencies
+
 Companion has the following dependencies:
 
-### Required dependencies
+ * Java 8 or later
  * [Nextflow](http://nextflow.io)
+ * Docker (if using the Docker image to satisfy dependencies)
+
+To check if you have Java installed, and the version, use the command `java -version`.  Note that this will give you a version number
+of 1.8 for Java 8, 1.9 for Java 9, etc.
+
+If you need to install Java, on an Ubuntu system run:
+```
+apt-get install default-jre
+```
+(for other Linux systems, please consult your distribution documentation.)
 
 To install Nextflow, run:
 ```
 curl -fsSL get.nextflow.io | bash
 ```
+This will create an executable called 'nextflow', which should be moved to a suitable directory, for example:
+```
+mv /home/vagrant/nextflow /usr/local/bin/
+```
+Use the command `which nextflow` to check that it is found in your path.
 
-There are a number of ways to install Companion. Details for installing using Docker are described below. If you encounter an issue when installing Companion please contact your local system administrator. If you encounter a bug please log it [here](https://github.com/sanger-pathogens/companion/issues) or email us at path-help@sanger.ac.uk.
+### Docker
 
-The easiest way to use the pipeline is to use the prepared [Docker container](https://hub.docker.com/r/sangerpathogens/companion/) which contains all external dependencies.
+Docker is required if you intended to use the Docker image, as recommended below, to satisfy the dependencies.
+
+To install Docker, see the installation guide for
+[Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/),
+[Centos](https://docs.docker.com/install/linux/docker-ce/centos/),
+[Debian](https://docs.docker.com/install/linux/docker-ce/debian/) or
+[Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/).
+
+Users running Companion with Docker will need to be added to the docker group.  Do do this for user `<username>`, run:
+```
+usermod -aG docker <username>
+```
+
+## Installation
+
+There are a number of ways to install Companion. Details for an installation using Docker are described below. If you encounter an issue when installing Companion please contact your local system administrator. If you encounter a bug please log it [here](https://github.com/sanger-pathogens/companion/issues) or email us at path-help@sanger.ac.uk.
+
+The easiest way to use the pipeline is to use the prepared [Docker image](https://hub.docker.com/r/sangerpathogens/companion/) which contains all external dependencies.
 ```
 docker pull sangerpathogens/companion
 ```
@@ -69,8 +102,7 @@ Please report any issues to the [issues page](https://github.com/sanger-pathogen
 
 ## Citation
 If you use this software please cite:
-  
-__Companion: a web server for annotation and analysis of parasite genomes.__  
+__Companion: a web server for annotation and analysis of parasite genomes.__
 Steinbiss S, Silva-Franco F, Brunk B, Foth B, Hertz-Fowler C et al.
 Nucleic Acids Research, 44:W29-W34, 2016.  
-DOI: [10.1093/nar/gkw292](http://dx.doi.org/10.1093/nar/gkw292)  
+DOI: [10.1093/nar/gkw292](http://dx.doi.org/10.1093/nar/gkw292)
