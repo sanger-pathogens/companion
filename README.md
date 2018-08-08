@@ -37,7 +37,7 @@ Companion has the following dependencies:
 
  * Java 8 or later
  * [Nextflow](http://nextflow.io)
- * Docker (if using the Docker image to satisfy dependencies)
+ * [Docker](https://www.docker.com/) (if using the Docker image to satisfy dependencies)
 
 To check if you have Java installed, and the version, use the command `java -version`.  Note that this will give you a version number
 of 1.8 for Java 8, 1.9 for Java 9, etc.
@@ -54,7 +54,7 @@ curl -fsSL get.nextflow.io | bash
 ```
 This will create an executable called 'nextflow', which should be moved to a suitable directory, for example:
 ```
-mv /home/vagrant/nextflow /usr/local/bin/
+mv nextflow /usr/local/bin/
 ```
 Use the command `which nextflow` to check that it is found in your path.
 
