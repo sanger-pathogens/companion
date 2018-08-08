@@ -26,6 +26,7 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     libstorable-perl libbio-perl-perl libsqlite3-dev \
                     --yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
+RUN ln -s /usr/lib/snap/snap /usr/local/bin/snap
 
 # 
 # Install AUGUSTUS
