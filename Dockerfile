@@ -21,37 +21,24 @@ RUN apt-get install build-essential hmmer lua5.1 ncbi-blast+ blast2 snap \
                     unzip mummer infernal exonerate mafft fasttree \
                     circos libsvg-perl libgd-svg-perl python-setuptools \
                     libc6-i386 lib32stdc++6 lib32gcc1 netcat genometools \
-                    last-align libboost-iostreams-dev libgsl2 libgsl-dev \
+                    last-align libboost-iostreams-dev libgslcblas0 libgsl-dev \
                     libcolamd2 liblpsolve55-dev libstdc++6 aragorn tantan \
                     libstorable-perl libbio-perl-perl libsqlite3-dev \
-                     --yes --force-yes
+                    --yes
 RUN ln -fs /usr/bin/fasttree /usr/bin/FastTree
+RUN ln -s /usr/lib/snap/snap /usr/local/bin/snap
 
-#
+# 
 # Install AUGUSTUS
-#
-ADD http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.2.tar.gz /opt/augustus-3.2.tar.gz
-RUN cd /opt && \
-    tar -xzvf augustus* && \
-    rm -rf *.tar.gz && \
-    mv augustus* augustus && \
-    rm -rf augustus/docs && \
-    cd augustus && \
-    make -j2
+# 
+RUN apt-get install augustus --yes
 
-#
-# Install GenomeTools (most recent git master)
-#
-ADD https://github.com/genometools/genometools/archive/master.zip /opt/genometools-master.zip
-RUN cd /opt && \
-    unzip genometools-master.zip && \
-    cd /opt/genometools-master && \
-    make -j3 cairo=no curses=no prefix=/usr && \
-    make -j3 cairo=no curses=no prefix=/usr install && \
-    cd gtpython && \
-    python setup.py install && \
-    cd / && \
-    rm -rf /opt/genometools-master*
+
+# 
+# Install GenomeTools
+# 
+RUN apt-get install genometools --yes
+
 
 #
 # Install and configure OrthoMCL
@@ -97,7 +84,7 @@ RUN cd /opt/pfam && \
     hmmpress Pfam-A.hmm && \
     rm -f Pfam-A.hmm
 
-#
+# 
 # copy data dir
 #
 RUN mkdir -p /opt/data

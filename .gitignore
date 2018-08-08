@@ -5,3 +5,10 @@ trace.csv*
 *.[eo]
 *.i1*
 *_out/
+# testing data
+Eh_frozen_ass.fa
+example-data/ts24*test*.fasta
+# nextflow runtime
+.nextflow
+# vagrant stuff
+ubuntu-xenial-*-cloudimg-console.log
