@@ -12,8 +12,8 @@ install:
   - sudo apt-get update -qq
   - sudo apt-get install --yes openjdk-8-jre
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
-  - sudo apt-get install augustus --yes
-  - sudo apt-get install genometools --yes
+  - sudo test/travis.setup-augustus.sh > /dev/null 
+  - sudo test/travis.setup-gt.sh > /dev/null 
   - sudo test/travis.setup-last.sh > /dev/null 
   - sudo test/travis.setup-orthomcl.sh > /dev/null
   - sudo test/travis.setup-aragorn.sh > /dev/null
