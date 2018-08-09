@@ -11,6 +11,7 @@ install:
   - sudo add-apt-repository --yes ppa:jochenkemnade/openjdk-8
   - sudo apt-get update -qq
   - sudo apt-get install --yes openjdk-8-jre
+  - sudo (update-java-alternatives --set java-1.8.0-openjdk-amd64 2&>/dev/null; exit 0) # sorry :-/
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
   - sudo test/travis.setup-augustus.sh > /dev/null 
   - sudo test/travis.setup-gt.sh > /dev/null 
