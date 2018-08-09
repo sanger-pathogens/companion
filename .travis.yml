@@ -11,8 +11,9 @@ install:
   - sudo add-apt-repository --yes ppa:jochenkemnade/openjdk-8
   - sudo apt-get update -qq
   - sudo apt-get install --yes openjdk-8-jre
-  - sudo (update-java-alternatives --set java-1.8.0-openjdk-amd64 2&>/dev/null; exit 0) # sorry :-/
+  - sudo (update-java-alternatives --set java-1.8.0-openjdk-amd64; exit 0) # sorry :-/
   - sudo ln -s /usr/bin/fasttree /usr/bin/FastTree
+  - sudo export LD_LIBRARY_PATH=/usr/lib/gcc-snapshot/lib/:$LD_LIBRARY_PATH
   - sudo test/travis.setup-augustus.sh > /dev/null 
   - sudo test/travis.setup-gt.sh > /dev/null 
   - sudo test/travis.setup-last.sh > /dev/null 
@@ -37,6 +38,7 @@ script:
   - cd test/testsuite
   - ./testsuite.rb -threads 2
   - cd ../..
+  - export LD_LIBRARY_PATH=/usr/lib/gcc-snapshot/lib/:$LD_LIBRARY_PATH
   - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false
   - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true
   - travis_wait ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false
