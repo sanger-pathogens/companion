@@ -90,8 +90,8 @@ docker pull sangerpathogens/companion
 
 ### Local copy of Companion
 
-To create a local copy of companion, you can download this repo from github (if you are familiar with git, you may want to
-of course want to _clone_ or _fork_ it).
+To create a local copy of companion, you can download this repo from github (if you are familiar with github, you may
+of course prefer to _clone_ or _fork_ it).
 ```
 curl https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
 unzip companion-master.zip
@@ -120,7 +120,8 @@ run, nextflow will have stored a local copy of the repository in `.nextflow/asse
 the command again it will this time use the _local_ copy instead of pulling a copy from the repository.  You can
 edit the files in your local copy, and nextflow will work from your (now different) version of sanger-pathogens/companion.
 
-If you are not familiar with repositories, and the workflow appropriate to using them, this can become quite confusing.
+If you are familiar with repositories, and the workflow appropriate to using them, this can be a very convenient way of
+working;   otherwise it can become quite confusing, and you may find it easier to work with a simple local copy.
 
 
 ### Preparing reference annotations
