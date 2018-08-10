@@ -46,7 +46,7 @@ If you need to install Java, on an Ubuntu system run:
 ```
 apt-get install default-jre
 ```
-(for other Linux systems, please consult your distribution documentation.)
+> _For other Linux systems, please consult your distribution documentation._
 
 To install Nextflow, run:
 ```
@@ -68,10 +68,14 @@ To install Docker, see the installation guide for
 [Debian](https://docs.docker.com/install/linux/docker-ce/debian/) or
 [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/).
 
-Users running Companion with Docker will need to be added to the docker group.  Do do this for user `<username>`, run:
+Users running Companion with Docker will need to be added to the `docker` group (unix users can belong to one or more groups, which determine
+whether they can peform certain actions; adding a user to the docker group allows them to execute docker commands).  To add user `<username>`, to
+the docker group, run:
 ```
 usermod -aG docker <username>
 ```
+> _Some Linux systems may not have_ `usermod` _installed, as there are different programs that can be used to change user settings;_
+> _please consult your Linux distribution documentation if necessary._
 
 ## Installation
 
@@ -81,14 +85,43 @@ The easiest way to use the pipeline is to use the prepared [Docker image](https:
 ```
 docker pull sangerpathogens/companion
 ```
+
 ## Usage
 
-Start an example run using Docker (using the example dataset and parameterization included in the distribution):
+### Local copy of Companion
+
+To create a local copy of companion, you can download this repo from github (if you are familiar with git, you may want to
+of course want to _clone_ or _fork_ it).
+```
+curl https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
+unzip companion-master.zip
+mv companion-master my-companion-project # renaming it to something meaningful to you is a good idea
+```
+
+Now you can run Companion.   There is an example dataset and parameterization included in the distribution, so
+to get started just run:
+```
+nextflow run my-companion-project -profile docker
+```
+The argument `-profile docker` instructs nextflow to run the sangerpathogens/companion docker image for the dependencies.
+
+Have a look at the `nextflow.config` file to see the definition of the docker profile, and how the docker image is specified.
+You will also find file names, paths, parameters, etc. that you can edit to perform your own runs.
+
+### running Companion direct from a repository
+
+If you run nextflow with the name of a github repository, it will pull the contents of the repository and run with those.
+This command will do the same as the "local copy" example above:
 ```
 nextflow run sanger-pathogens/companion -profile docker
 ```
+It is best to use this with some caution.  After the command above is
+run, nextflow will have stored a local copy of the repository in `.nextflow/assets/sanger-pathogens`, and if you run
+the command again it will this time use the _local_ copy instead of pulling a copy from the repository.  You can
+edit the files in your local copy, and nextflow will work from your (now different) version of sanger-pathogens/companion.
 
-For your own runs, provide your own file names, paths, parameters, etc. as defined in the `nextflow.config` file.
+If you are not familiar with repositories, and the workflow appropriate to using them, this can become quite confusing.
+
 
 ### Preparing reference annotations
 
