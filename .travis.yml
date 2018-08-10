@@ -8,13 +8,14 @@ before_install:
   - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container trstickland/companion /bin/bash
   - sleep 5
   - docker container ls
-  - docker exec -w /tmp/companion companion_container ls
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'apt-get install --yes -q default-jre curl wget '
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'curl -fsSL get.nextflow.io | bash'
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'wget -q http://geneontology.org/ontology/go.obo'
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'wget -q http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz'
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'zcat Pfam-A.hmm.gz | test/split-hmm.lua 1000 > Pfam-A.hmm'
-  - docker exec -w /tmp/companion companion_container /bin/bash -c 'hmmpress Pfam-A.hmm && rm -f Pfam-A.hmm'
+  = docker exec --help
+  - docker exec --workdir /tmp/companion companion_container ls
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'apt-get install --yes -q default-jre curl wget '
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'curl -fsSL get.nextflow.io | bash'
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'wget -q http://geneontology.org/ontology/go.obo'
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'wget -q http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz'
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'zcat Pfam-A.hmm.gz | test/split-hmm.lua 1000 > Pfam-A.hmm'
+  - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'hmmpress Pfam-A.hmm && rm -f Pfam-A.hmm'
 
 cache:
   directories:
@@ -23,8 +24,8 @@ env:
   global:
     - ROOTDIR="$TRAVIS_BUILD_DIR"
 script:
-  - docker exec -w /tmp/companion/test/testsuite companion_container /bin/bash -c './testsuite.rb -threads 2'
-  - travis_wait docker exec -w /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false'
-  - travis_wait docker exec -w /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true'
-  - travis_wait docker exec -w /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false'
-  - travis_wait docker exec -w /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_snap=false'
+  - docker exec --workdir /tmp/companion/test/testsuite companion_container /bin/bash -c './testsuite.rb -threads 2'
+  - travis_wait docker exec --workdir /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false'
+  - travis_wait docker exec --workdir /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_exonerate=true'
+  - travis_wait docker exec --workdir /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --do_pseudo=false'
+  - travis_wait docker exec --workdir /tmp/companion companion_container /bin/bash -c './nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false --run_snap=false'
