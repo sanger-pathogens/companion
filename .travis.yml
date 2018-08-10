@@ -8,7 +8,7 @@ before_install:
   - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container trstickland/companion /bin/bash
   - sleep 5
   - docker container ls
-  = docker exec --help
+  - docker exec --help
   - docker exec --workdir /tmp/companion companion_container ls
   - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'apt-get install --yes -q default-jre curl wget '
   - docker exec --workdir /tmp/companion companion_container /bin/bash -c 'curl -fsSL get.nextflow.io | bash'
