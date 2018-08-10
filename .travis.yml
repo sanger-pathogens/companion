@@ -4,8 +4,8 @@ services:
    - docker
 
 before_install:
-  - docker pull trstickland/companion
-  - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container trstickland/companion /bin/bash
+  - docker build -t companion_image .
+  - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container companion_image /bin/bash
   - sleep 5
   - docker container ls
   - docker exec companion_container ls /tmp/companion
