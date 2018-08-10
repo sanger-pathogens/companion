@@ -100,8 +100,8 @@ ADD ./RATT /opt/RATT
 #
 ADD ./ABACAS2 /opt/ABACAS2
 
-ENV AUGUSTUS_CONFIG_PATH /opt/augustus/config
+ENV AUGUSTUS_CONFIG_PATH /usr/share/augustus/config
 ENV RATT_HOME /opt/RATT
 ENV GT_RETAINIDS yes
 ENV PERL5LIB /opt/ORTHOMCLV1.4/:/opt/RATT/:/opt/ABACAS2/:$PERL5LIB
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/augustus/bin:/opt/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2:$PATH
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/augustus/bin:/usr/share/augustus/scripts:/opt/ORTHOMCLV1.4:/opt/RATT:/opt/ABACAS2:$PATH
