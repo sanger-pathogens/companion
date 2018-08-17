@@ -5,8 +5,8 @@ services:
 
 before_install:
   - # docker build -t companion_image .
-  - docker pull trstickland/companion
-  - docker tag trstickland/companion companion_image
+  - docker pull sangerpathogens/companion
+  - docker tag sangerpathogens/companion companion_image
   - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container companion_image /bin/bash
   - sleep 5
   - docker container ls
