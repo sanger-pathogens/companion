@@ -2,9 +2,15 @@ dist: trusty
 sudo: required
 services:
    - docker
-
+   
+env:
+  global:
+    - ROOTDIR="$TRAVIS_BUILD_DIR"
+    
 before_install:
-  - docker build -t companion_image .
+  - # docker build -t companion_image .
+  - docker pull $DOCKER_IMAGE
+  - docker tag $DOCKER_IMAGE companion_image
   - docker run -dit -v $TRAVIS_BUILD_DIR:/tmp/companion --name companion_container companion_image /bin/bash
   - sleep 5
   - docker container ls
@@ -19,9 +25,7 @@ before_install:
 cache:
   directories:
     - work
-env:
-  global:
-    - ROOTDIR="$TRAVIS_BUILD_DIR"
+    
 script:
   - docker exec companion_container /bin/bash -c 'cd /tmp/companion/test/testsuite; ./testsuite.rb -threads 2'
   - travis_wait docker exec companion_container /bin/bash -c 'cd /tmp/companion; ./nextflow -c loc_travis.config -c params_default.config run annot.nf --do_circos=false'
