@@ -93,7 +93,7 @@ docker pull sangerpathogens/companion
 To create a local copy of companion, you can download this repo from github (if you are familiar with github, you may
 of course prefer to _clone_ or _fork_ it).
 ```
-curl https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
+curl -L -o companion-master.zip https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
 unzip companion-master.zip
 mv companion-master my-companion-project # renaming it to something meaningful to you is a good idea
 ```
