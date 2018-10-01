@@ -46,7 +46,7 @@ If you need to install Java, on an Ubuntu system run:
 ```
 apt-get install default-jre
 ```
-(for other Linux systems, please consult your distribution documentation.)
+> _For other Linux systems, please consult your distribution documentation._
 
 To install Nextflow, run:
 ```
@@ -68,10 +68,14 @@ To install Docker, see the installation guide for
 [Debian](https://docs.docker.com/install/linux/docker-ce/debian/) or
 [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/).
 
-Users running Companion with Docker will need to be added to the docker group.  Do do this for user `<username>`, run:
+Users running Companion with Docker will need to be added to the `docker` group (unix users can belong to one or more groups, which determine
+whether they can peform certain actions; adding a user to the docker group allows them to execute docker commands).  To add user `<username>`, to
+the docker group, run:
 ```
 usermod -aG docker <username>
 ```
+> _Some Linux systems may not have_ `usermod` _installed, as there are different programs that can be used to change user settings;_
+> _please consult your Linux distribution documentation if necessary._
 
 ## Installation
 
@@ -81,18 +85,96 @@ The easiest way to use the pipeline is to use the prepared [Docker image](https:
 ```
 docker pull sangerpathogens/companion
 ```
+
 ## Usage
 
-Start an example run using Docker (using the example dataset and parameterization included in the distribution):
+### Local copy of Companion
+
+To create a local copy of companion, you can download this repo from github (if you are familiar with github, you may
+of course prefer to _clone_ or _fork_ it).
+```
+curl https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
+unzip companion-master.zip
+mv companion-master my-companion-project # renaming it to something meaningful to you is a good idea
+```
+
+Now you can run Companion.   There is an example dataset and parameterization included in the distribution, so
+to get started just run:
+```
+nextflow run my-companion-project -profile docker
+```
+The argument `-profile docker` instructs nextflow to run the sangerpathogens/companion docker image for the dependencies.
+
+Have a look at the `nextflow.config` file to see the definition of the docker profile, and how the docker image is specified.
+You will also find file names, paths, parameters, etc. that you can edit to perform your own runs.  The following deserve
+special attention:
+
+*inseq*  The input FASTA file  (`${baseDir}/example-data/L_donovani.1.fasta` in the example parameter file included wirth the distribution)
+
+*ref_dir* The directory containing reference genomes (`${baseDir}/example-data/references` in the example file)
+
+*dist_dir* The directory that will contain the newly created output files (`${baseDir}/example-data-output` in the example file)
+
+*run_snap* We recommend SNAP is disabled, as it has not provided useful results in this pipeline (`false` in the example file)
+
+
+### Running Companion direct from a repository
+
+If you run nextflow with the name of a github repository, it will pull the contents of the repository and run with those.
+This command will do the same as the "local copy" example above:
 ```
 nextflow run sanger-pathogens/companion -profile docker
 ```
+It is best to use this with some caution.  After the command above is
+run, nextflow will have stored a local copy of the repository in `.nextflow/assets/sanger-pathogens`, and if you run
+the command again it will this time use the _local_ copy instead of pulling a copy from the repository.  You can
+edit the files in your local copy, and nextflow will work from your (now different) version of sanger-pathogens/companion.
 
-For your own runs, provide your own file names, paths, parameters, etc. as defined in the `nextflow.config` file.
+If you are familiar with repositories, and the workflow appropriate to using them, this can be a very convenient way of
+working;   otherwise it can become quite confusing, and you may find it easier to work with a simple local copy.
 
 ### Preparing reference annotations
 
-The reference annotations used in the pipeline need to be pre-processed before they can be used. See the the [GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets) for more details. There are also pre-generated reference sets for various parasite species/families.
+The reference annotations used in the pipeline need to be pre-processed before they can be used.  Only a few pre-generated
+reference sets for various parasite species/families are included in the distribution as examples.
+
+To add a reference organism, you will need:
+
+- a descriptive name of the organism
+- a short abbreviation for the organism
+- the genome sequence in a single FASTA file
+- a structural gene annotation in GFF3 format (see below for details)
+- functional GO annotation in GAF 1.0 format, on the gene level
+- a pattern matching chromosome headers, describing how to extract chromosome numbers from them
+- an [AUGUSTUS](http://bioinf.uni-greifswald.de/augustus/) model, trained on reference genes
+
+Insert these file names, etc., where `<placeholders>` are used in the steps below:
+
+* Create a new data directory (i.e. the equivalent of the `example-data` directory included in the distribution)
+* Edit `nextflow.config` (and any config files that are referenced) and change parameters such as
+`inseq` and `ref_dir` to your new data directory.
+* Copy the new reference genome (FASTA) into `your-data/genomes`
+* Copy GFF3 and GAF files into `your-data/genomes`
+* Copy Augustus model files into `data/augustus/species/<species_name>/`
+* Create new directory `your-data/references/<short_name>/`
+* Add new section to `amber-test-data/references/references-in.json`, using the
+short name (same as the directory name in the previous step); in this section add
+the names/paths of the files copied (above), a descriptive name, and
+a pattern for matching chromosomes in the FASTA files (in this example, <short_name>_<n>, where _n_ in any integer).
+```
+"<short_name>" : {   "gff"                : "../genomes/<gff3_filename>.gff3",
+                     "genome"             : "../genomes/<ref_genome_name>.fasta",
+                     "gaf"                : "../genomes/<ref_annot_filename>.gaf",
+                     "name"               : "<Descriptive Name of Reference Genome>",
+                     "augustus_model"     : "../../data/augustus/species/<species_name>/",
+                     "chromosome_pattern" : "<short_name>_(%d+)"
+                  }
+* Finally, change directory to `your-data/references` (you _must_ execute the following command in this directory)
+and run `../../bin/update_references.lua`.  This writes the file `your-data/references/references.json`.
+```
+
+Further documentation on preparing reference data can be found in the [GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets).
+
 
 ## License
 Companion is free software, licensed under [ISC](https://github.com/sanger-pathogens/companion/blob/master/LICENSE).
