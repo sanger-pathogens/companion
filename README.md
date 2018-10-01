@@ -93,7 +93,7 @@ docker pull sangerpathogens/companion
 To create a local copy of companion, you can download this repo from github (if you are familiar with github, you may
 of course prefer to _clone_ or _fork_ it).
 ```
-curl https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
+curl -L -o companion-master.zip https://github.com/trstickland/companion/archive/master.zip  # or click the green button on the guthub web page
 unzip companion-master.zip
 mv companion-master my-companion-project # renaming it to something meaningful to you is a good idea
 ```
@@ -106,8 +106,8 @@ nextflow run my-companion-project -profile docker
 The argument `-profile docker` instructs nextflow to run the sangerpathogens/companion docker image for the dependencies.
 
 Have a look at the `nextflow.config` file to see the definition of the docker profile, and how the docker image is specified.
-You will also find file names, paths, parameters, etc. that you can edit to perform your own runs.  The following deserve
-special attention:
+You will also find file names, paths, parameters, etc. that you can edit to perform your own runs.  The following warrant
+a special mention:
 
 *inseq*  The input FASTA file  (`${baseDir}/example-data/L_donovani.1.fasta` in the example parameter file included wirth the distribution)
 
@@ -148,16 +148,16 @@ To add a reference organism, you will need:
 - a pattern matching chromosome headers, describing how to extract chromosome numbers from them
 - an [AUGUSTUS](http://bioinf.uni-greifswald.de/augustus/) model, trained on reference genes
 
-Insert these file names, etc., where `<placeholders>` are used in the steps below:
+Insert these file names, etc., where `<placeholders>` appear in the steps below:
 
-* Create a new data directory (i.e. the equivalent of the `example-data` directory included in the distribution)
-* Edit `nextflow.config` (and any config files that are referenced) and change parameters such as
+1. Create a new data directory (i.e. the equivalent of the `example-data` directory included in the distribution)
+1. Edit `nextflow.config` (and any config files that are referenced) and change parameters such as
 `inseq` and `ref_dir` to your new data directory.
-* Copy the new reference genome (FASTA) into `your-data/genomes`
-* Copy GFF3 and GAF files into `your-data/genomes`
-* Copy Augustus model files into `data/augustus/species/<species_name>/`
-* Create new directory `your-data/references/<short_name>/`
-* Add new section to `amber-test-data/references/references-in.json`, using the
+1. Copy the new reference genome (FASTA) into `<new_data_dir>/genomes`
+1. Copy GFF3 and GAF files into `<new_data_dir>/genomes`
+1. Copy Augustus model files into `data/augustus/species/<species_name>/`
+1. Create new directory `<new_data_dir>/references/<short_name>/`
+1. Add new section to `amber-test-data/references/references-in.json`, using the
 short name (same as the directory name in the previous step); in this section add
 the names/paths of the files copied (above), a descriptive name, and
 a pattern for matching chromosomes in the FASTA files (in this example, <short_name>_<n>, where _n_ in any integer).
@@ -169,9 +169,11 @@ a pattern for matching chromosomes in the FASTA files (in this example, <short_n
                      "augustus_model"     : "../../data/augustus/species/<species_name>/",
                      "chromosome_pattern" : "<short_name>_(%d+)"
                   }
-* Finally, change directory to `your-data/references` (you _must_ execute the following command in this directory)
-and run `../../bin/update_references.lua`.  This writes the file `your-data/references/references.json`.
 ```
+1. Finally, change directory to `<new_data_dir>/references` (you _must_ execute the following command in this directory)
+and run `../../bin/update_references.lua`.  This writes the file `<new_data_dir>/references/references.json`.
+
+You can now run _Companion_, and the new reference will be included.
 
 Further documentation on preparing reference data can be found in the [GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets).
 
