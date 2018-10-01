@@ -140,24 +140,24 @@ reference sets for various parasite species/families are included in the distrib
 
 To add a reference organism, you will need:
 
-- a descriptive name of the organism
-- a short abbreviation for the organism
-- the genome sequence in a single FASTA file
-- a structural gene annotation in GFF3 format (see below for details)
-- functional GO annotation in GAF 1.0 format, on the gene level
-- a pattern matching chromosome headers, describing how to extract chromosome numbers from them
-- an [AUGUSTUS](http://bioinf.uni-greifswald.de/augustus/) model, trained on reference genes
+ - a descriptive name of the organism
+ - a short abbreviation for the organism
+ - the genome sequence in a single FASTA file
+ - a structural gene annotation in GFF3 format (see below for details)
+ - functional GO annotation in GAF 1.0 format, on the gene level
+ - a pattern matching chromosome headers, describing how to extract chromosome numbers from them
+ - an [AUGUSTUS](http://bioinf.uni-greifswald.de/augustus/) model, trained on reference genes
 
 Insert these file names, etc., where `<placeholders>` are used in the steps below:
 
-. Create a new data directory (i.e. the equivalent of the `example-data` directory included in the distribution)
-. Edit `nextflow.config` (and any config files that are referenced) and change parameters such as
+ . Create a new data directory (i.e. the equivalent of the `example-data` directory included in the distribution)
+ . Edit `nextflow.config` (and any config files that are referenced) and change parameters such as
 `inseq` and `ref_dir` to your new data directory.
-. Copy the new reference genome (FASTA) into `your-data/genomes`
-. Copy GFF3 and GAF files into `your-data/genomes`
-. Copy Augustus model files into `data/augustus/species/<species_name>/`
-. Create new directory `your-data/references/<short_name>/`
-. Add new section to `amber-test-data/references/references-in.json`, using the
+ . Copy the new reference genome (FASTA) into `your-data/genomes`
+ . Copy GFF3 and GAF files into `your-data/genomes`
+ . Copy Augustus model files into `data/augustus/species/<species_name>/`
+ . Create new directory `your-data/references/<short_name>/`
+ . Add new section to `amber-test-data/references/references-in.json`, using the
 short name (same as the directory name in the previous step); in this section add
 the names/paths of the files copied (above), a descriptive name, and
 a pattern for matching chromosomes in the FASTA files (in this example, <short_name>_<n>, where _n_ in any integer).
@@ -169,7 +169,7 @@ a pattern for matching chromosomes in the FASTA files (in this example, <short_n
                      "augustus_model"     : "../../data/augustus/species/<species_name>/",
                      "chromosome_pattern" : "<short_name>_(%d+)"
                   }
-. Finally, change directory to `your-data/references` (you _must_ execute the following command in this directory)
+ . Finally, change directory to `your-data/references` (you _must_ execute the following command in this directory)
 and run `../../bin/update_references.lua`.  This writes the file `your-data/references/references.json`.
 ```
 
