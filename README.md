@@ -170,7 +170,7 @@ a pattern for matching chromosomes in the FASTA files (in this example, <short_n
                      "chromosome_pattern" : "<short_name>_(%d+)"
                   }
 ```
-1 . Finally, change directory to `<new_data_dir>/references` (you _must_ execute the following command in this directory)
+1. Finally, change directory to `<new_data_dir>/references` (you _must_ execute the following command in this directory)
 and run `../../bin/update_references.lua`.  This writes the file `<new_data_dir>/references/references.json`.
 
 You can now run _Companion_, and the new reference will be included.
