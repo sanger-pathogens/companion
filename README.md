@@ -6,15 +6,18 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
 [![status](https://img.shields.io/badge/NAR-10.1093%2Fnar.gkw292-brightgreen.svg)](https://doi.org/10.1093/nar/gkw292)
 
 ## Content
-  * [Introduction](#introduction)
-  * [Installation](#installation)
-    * [Required dependencies](#required-dependencies)
-  * [Usage](#usage)
-    * [Preparing reference annotations](#preparing-reference-annotations)
-  * [License](#license)
-  * [Feedback/Issues](#feedbackissues)
-  * [Citation](#citation)
-
+ * [Introduction](#introduction)
+ * [Dependencies](#dependencies)
+   * [Docker](#docker)
+ * [Installation](#installation)
+ * [Usage](#usage)
+   * [Local copy of Companion](#local-copy-of-companion)
+   * [Running Companion direct from a repository](#running-companion-direct-from-a-repository)
+   * [Preparing reference annotations](#preparing-reference-annotations)
+ * [License](#license)
+ * [Feedback/Issues](#feedbackissues)
+ * [Citation](#citation)
+  
 ## Introduction
 This software is a comprehensive computational pipeline for the annotation of eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
@@ -170,7 +173,7 @@ a pattern for matching chromosomes in the FASTA files (in this example, <short_n
                      "chromosome_pattern" : "<short_name>_(%d+)"
                   }
 ```
-1. Finally, change directory to `<new_data_dir>/references` (you _must_ execute the following command in this directory)
+8. Finally, change directory to `<new_data_dir>/references` (you _must_ execute the following command in this directory)
 and run `../../bin/update_references.lua`.  This writes the file `<new_data_dir>/references/references.json`.
 
 You can now run _Companion_, and the new reference will be included.
