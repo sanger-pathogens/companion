@@ -5,6 +5,7 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
 [![License: ISC](https://img.shields.io/badge/License-ISC-brightgreen.svg)](https://github.com/sanger-pathogens/companion/blob/master/LICENSE)  
 [![status](https://img.shields.io/badge/NAR-10.1093%2Fnar.gkw292-brightgreen.svg)](https://doi.org/10.1093/nar/gkw292)
 
+
 ## Content
  * [Introduction](#introduction)
  * [Dependencies](#dependencies)
@@ -17,7 +18,8 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
  * [License](#license)
  * [Feedback/Issues](#feedbackissues)
  * [Citation](#citation)
-  
+
+
 ## Introduction
 This software is a comprehensive computational pipeline for the annotation of eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
