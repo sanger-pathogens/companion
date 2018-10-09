@@ -8,11 +8,9 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
 
 ## Contents
 
-   * [Contents](#contents)
    * [Introduction](#introduction)
    * [Quick start](#quick-start)
       * [1. Install dependencies](#1-install-dependencies)
-         * [Check](#check)
       * [2. Install <em>Companion</em>](#2-install-companion)
       * [3. Run <em>Companion</em> test job](#3-run-companion-test-job)
       * [4. Configure <em>Companion</em> for your annotation run](#4-configure-companion-for-your-annotation-run)
@@ -31,7 +29,7 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
    * [License](#license)
    * [Feedback/Issues](#feedbackissues)
    * [Citation](#citation)
-   
+
 ## Introduction
 This software is a comprehensive computational pipeline for the annotation of eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
@@ -57,7 +55,8 @@ This should get you up & running on an Ubuntu system, but please read the full d
 Execute these commands as root, e.g. using `sudo`
 ```
 apt-get install default-jre
-curl -fsSL get.nextflow.io | bash
+curl -fsSL get.nextflow.io | bash && \
+   mv nextflow /usr/local/bin
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && \
    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
    apt-get update && \
@@ -66,19 +65,19 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && 
    systemctl enable docker
 ```
 
-To enable you to use docker with your normal user account (i.e. without being root or needing to sue sudo),
-run the following command, with your username in place of `<username>`.  If more than one user will be using _Companion_,
-repeat this command with each of their usernames.
+To enable you to use docker with your normal user account (i.e. without being root or needing to use sudo),
+run the following command, with your username in place of `<username>`.
 ```
 usermod -aG docker <username>
 ```
+Log out and log back in again for this to take effect.
 
-#### Check
+#### Checks
 
   - `java -version` should say you have Java 1.8 or greater
   - `nextflow info` will print system information if nextflow has been installed successfully
   - `systemctl status docker` will tell you if docker is active (running)
-  - `docker info` will print information if docker has been instaleld successfully, and you have permission to use it
+  - `docker info` will print information if docker has been installed successfully, and you have permission to use it
 
 ### 2. Install _Companion_
 
@@ -87,7 +86,7 @@ Use a name that is meaningful to you in place of `<my-companion-project>`
 ```
 curl -L -o companion-master.zip https://github.com/sanger-pathogens/companion/archive/master.zip && \
    unzip companion-master.zip && \
-   mv companion-master <my-companion-project>
+   mv companion <my-companion-project>
 docker pull sangerpathogens/companion
 ```
 
@@ -216,7 +215,7 @@ To install Docker, see the installation guide for
 
 Users running Companion with Docker will need to be added to the `docker` group (unix users can belong to one or more groups, which determine
 whether they can peform certain actions; adding a user to the docker group allows them to execute docker commands).  To add the user with
-usrname `<username>`, to the docker group, run:
+username `<username>`, to the docker group, run:
 ```
 usermod -aG docker <username>
 ```
