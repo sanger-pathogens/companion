@@ -6,8 +6,32 @@ A portable, scalable eukaryotic genome annotation pipeline implemented in Nextfl
 [![status](https://img.shields.io/badge/NAR-10.1093%2Fnar.gkw292-brightgreen.svg)](https://doi.org/10.1093/nar/gkw292)
 
 
-## Content
+## Contents
 
+   * [Contents](#contents)
+   * [Introduction](#introduction)
+   * [Quick start](#quick-start)
+      * [1. Install dependencies](#1-install-dependencies)
+         * [Check](#check)
+      * [2. Install <em>Companion</em>](#2-install-companion)
+      * [3. Run <em>Companion</em> test job](#3-run-companion-test-job)
+      * [4. Configure <em>Companion</em> for your annotation run](#4-configure-companion-for-your-annotation-run)
+      * [5. Prepare reference annotations](#5-prepare-reference-annotations)
+      * [6. Run it!](#6-run-it)
+   * [Further technical information](#further-technical-information)
+      * [Dependencies](#dependencies)
+         * [Java](#java)
+         * [Nextflow](#nextflow)
+         * [Docker](#docker)
+      * [Installation](#installation)
+      * [Usage](#usage)
+         * [Local copy of Companion](#local-copy-of-companion)
+         * [Running Companion direct from a repository](#running-companion-direct-from-a-repository)
+         * [Preparing reference annotations](#preparing-reference-annotations)
+   * [License](#license)
+   * [Feedback/Issues](#feedbackissues)
+   * [Citation](#citation)
+   
 ## Introduction
 This software is a comprehensive computational pipeline for the annotation of eukaryotic genomes (like protozoan parasites). It performs the following tasks:
 
@@ -200,7 +224,7 @@ usermod -aG docker <username>
 > _Some Linux systems may not have_ `usermod` _installed, as there are different programs that can be used to change user settings;_
 > _please consult your Linux distribution documentation if necessary._
 
-#### Installation
+### Installation
 
 There are a number of ways to install Companion; details for an installation using Docker are described below. If you encounter an issue when installing Companion please contact your local system administrator. If you encounter a bug please log it [here](https://github.com/sanger-pathogens/companion/issues) or email us at path-help@sanger.ac.uk.
 
@@ -209,9 +233,9 @@ The easiest way to use the pipeline is to use the prepared [Docker image](https:
 docker pull sangerpathogens/companion
 ```
 
-#### Usage
+### Usage
 
-##### Local copy of Companion
+#### Local copy of Companion
 
 To create a local copy of companion, you can download this repo from github (if you are familiar with github, you may
 of course prefer to _clone_ or _fork_ it).
@@ -229,7 +253,7 @@ nextflow run my-companion-project -profile docker
 The argument `-profile docker` instructs nextflow to run the sangerpathogens/companion docker image for the dependencies;
 the `nextflow.config` file (and files referenced within it) define the docker profile and the docker image to be used.
 
-##### Running Companion direct from a repository
+#### Running Companion direct from a repository
 
 If you run nextflow with the name of a github repository, it will pull (download) the contents of the repository and run with those.
 For example, the following command will do the same as the "local copy" example above:
@@ -249,7 +273,7 @@ working.  You can create your own github repository to store and share your work
 If you are not familiar with git repositories, it can become quite confusing, and you should probably work with a simple local copy.
 
 
-##### Preparing reference annotations
+#### Preparing reference annotations
 
 Further documentation on preparing reference data can be found in the
 [GitHub wiki](https://github.com/sanger-pathogens/companion/wiki/Preparing-reference-data-sets).
