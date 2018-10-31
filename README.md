@@ -79,7 +79,7 @@ Log out and log back in again for this to take effect.
 
 ### 2. Install _Companion_
 
-Execute these command in the directory you want to keep your _Companion_ work in.  Do this as a normal user, i.e. not as root or using sudo.
+Execute these commands in the directory you want to keep your _Companion_ work in.  Do this as a normal user, i.e. not as root or using sudo.
 Use a name that is meaningful to you in place of `<my-companion-project>`
 ```
 curl -L -o companion-master.zip https://github.com/sanger-pathogens/companion/archive/master.zip && \
@@ -113,7 +113,7 @@ The file `params_default.config` configures the pipeline, and will need to be ed
 
 *CHR_PATTERN* Pattern matching your chromosome names (`LDON_(%w+)` in the example file, where `%w+` matches one or more letters or numbers)
 
-*ABACAS_BIN_CHR* Abacas bin chromosome <whut?> (`LDON_0` in the example file)
+*ABACAS_BIN_CHR* Abacas bin chromosome (`LDON_0` in the example file)
 
 *EMBL_AUTHORS* etc.; please provide suitable EMBL metadata (dummy values in the example file)
 
