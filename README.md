@@ -280,8 +280,7 @@ Further documentation on preparing reference data can be found in the
 Companion is free software, licensed under [ISC](https://github.com/sanger-pathogens/companion/blob/master/LICENSE).
 
 ## Feedback/Issues
-Please report any issues to the [issues page](https://github.com/sanger-pathogens/companion/issues) or email path-help@sanger.ac.uk
-
+Please report any issues to the [issues page](https://github.com/sanger-pathogens/companion/issues)
 ## Citation
 If you use this software please cite:
 __Companion: a web server for annotation and analysis of parasite genomes.__
